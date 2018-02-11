@@ -6,6 +6,7 @@ using System.Windows.Media;
 using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
+using Visualization.Controls.Tools;
 
 namespace Visualization.Controls.CirclePackaging
 {
@@ -67,6 +68,8 @@ namespace Visualization.Controls.CirclePackaging
             return _inverse.Transform(point);
         }
 
+        public IHighlighting Highlighing { get; set; }
+
 
         private void Draw(DrawingContext dc, HierarchicalData data)
         {
@@ -83,6 +86,11 @@ namespace Visualization.Controls.CirclePackaging
 
         private SolidColorBrush GetBrush(HierarchicalData data)
         {
+            if (Highlighing != null && Highlighing.IsHighlighted(data))
+            {
+                return ColorScheme.Highlight;
+            }
+
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {

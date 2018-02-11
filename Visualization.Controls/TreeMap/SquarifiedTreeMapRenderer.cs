@@ -4,6 +4,7 @@ using System.Windows.Media;
 using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
+using Visualization.Controls.Tools;
 
 namespace Visualization.Controls.TreeMap
 {
@@ -13,42 +14,6 @@ namespace Visualization.Controls.TreeMap
 
         // ReSharper disable once NotAccessedField.Local
         private int _level = -1;
-
-        /// <summary>
-        /// Enusre that SumAreaMetrics and NomrmalizeWeightMetric was called and
-        /// no node has an area of 0.
-        /// </summary>
-        public void LoadData(HierarchicalData data)
-        {
-            _data = data;
-        }
-
-        public Point Transform(Point mousePosition)
-        {
-            // We directly daw in screen coordinates.
-            return mousePosition;
-        }
-
-        public void RenderToDrawingContext(double actualWidth, double actualHeight, DrawingContext dc)
-        {
-            if (_data == null)
-            {
-                return;
-            }
-
-            // Calculate the layout
-            var layout = new SquarifiedTreeMapLayout();
-            layout.Layout(_data, actualWidth, actualHeight);
-
-            // Render to drawing context
-            _level = 0;
-            RenderToDrawingContext(dc, _data);
-        }
-
-        private static RectangularLayoutInfo GetLayout(HierarchicalData data)
-        {
-            return data.Layout as RectangularLayoutInfo;
-        }
 
 
         //private void DrawRectangle(Rect itemRect, object tag)
@@ -103,8 +68,52 @@ namespace Visualization.Controls.TreeMap
         }
         */
 
+
+        public IHighlighting Highlighing { get; set; }
+
+        /// <summary>
+        /// Enusre that SumAreaMetrics and NomrmalizeWeightMetric was called and
+        /// no node has an area of 0.
+        /// </summary>
+        public void LoadData(HierarchicalData data)
+        {
+            _data = data;
+        }
+
+        public void RenderToDrawingContext(double actualWidth, double actualHeight, DrawingContext dc)
+        {
+            if (_data == null)
+            {
+                return;
+            }
+
+            // Calculate the layout
+            var layout = new SquarifiedTreeMapLayout();
+            layout.Layout(_data, actualWidth, actualHeight);
+
+            // Render to drawing context
+            _level = 0;
+            RenderToDrawingContext(dc, _data);
+        }
+
+        public Point Transform(Point mousePosition)
+        {
+            // We directly daw in screen coordinates.
+            return mousePosition;
+        }
+
+        private static RectangularLayoutInfo GetLayout(HierarchicalData data)
+        {
+            return data.Layout as RectangularLayoutInfo;
+        }
+
         private SolidColorBrush GetBrush(HierarchicalData data)
         {
+            if (Highlighing != null && Highlighing.IsHighlighted(data))
+            {
+                return ColorScheme.Highlight;
+            }
+
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {

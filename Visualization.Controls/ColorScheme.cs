@@ -9,7 +9,12 @@ namespace Visualization.Controls
 
         public static readonly SolidColorBrush DefaultColor = Brushes.LightGray;
 
+
+        public static readonly SolidColorBrush Highlight = Brushes.Yellow;
+
         public static readonly GradientBrush RedToWhiteGradient;
+
+
 
         public static readonly GradientBrush WhiteToRedGradient;
         private static NameToColorMapper _mapper;
@@ -27,6 +32,8 @@ namespace Visualization.Controls
             WhiteToRedGradient.Freeze();
             BlackPen.Freeze();
         }
+
+     
 
         public static SolidColorBrush GetBrush(string key)
         {

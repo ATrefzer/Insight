@@ -8,14 +8,14 @@ using Visualization.Controls.Utility;
 
 namespace Visualization.Controls
 {
-    public class FilterViewModel : INotifyPropertyChanged
+    public class ToolViewModel : INotifyPropertyChanged
     {
         private double _maxArea;
         private double _maxWeight;
         private double _minArea;
         private double _minWeight;
 
-        public FilterViewModel(Range<double> areaRange, Range<double> weightRange)
+        public ToolViewModel(Range<double> areaRange, Range<double> weightRange)
         {
             AreaRange = areaRange;
             WeightRange = weightRange;
@@ -23,7 +23,10 @@ namespace Visualization.Controls
         }
 
         public event Action FilterChanged;
+        public event Action SearchPatternChanged;
+
         public event PropertyChangedEventHandler PropertyChanged;
+     
 
         public Range<double> AreaRange { get; }
 
@@ -36,6 +39,22 @@ namespace Visualization.Controls
                 {
                     _maxArea = value;
                     OnPropertyChanged();
+                    OnFilterChanged();
+                }
+            }
+        }
+
+        private string _searchPattern;
+        public string SearchPattern
+        {
+            get => _searchPattern;
+            set
+            {
+                if (_searchPattern != value)
+                {
+                    _searchPattern = value;
+                    OnPropertyChanged();
+                    OnSearchPatternChanged();
                 }
             }
         }
@@ -49,6 +68,7 @@ namespace Visualization.Controls
                 {
                     _maxWeight = value;
                     OnPropertyChanged();
+                    OnFilterChanged();
                 }
             }
         }
@@ -62,6 +82,7 @@ namespace Visualization.Controls
                 {
                     _minArea = value;
                     OnPropertyChanged();
+                    OnFilterChanged();
                 }
             }
         }
@@ -75,6 +96,7 @@ namespace Visualization.Controls
                 {
                     _minWeight = value;
                     OnPropertyChanged();
+                    OnFilterChanged();
                 }
             }
         }
@@ -104,11 +126,16 @@ namespace Visualization.Controls
             FilterChanged?.Invoke();
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnSearchPatternChanged()
         {
-            // Send a single event that any of the limits has changed.
-            OnFilterChanged();
+            SearchPatternChanged?.Invoke();
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {            
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+      
     }
 }

@@ -1,14 +1,14 @@
-﻿<Window x:Class="Visualization.Controls.FilterView"
+﻿<Window x:Class="Visualization.Controls.Tools.ToolView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Visualization.Controls"
         mc:Ignorable="d"
-        Title="{x:Static local:Strings.FilterToolWindowTitle}"
-        Height="250"
+        Title="{x:Static local:Strings.ToolWindowTitle}"
+        Height="325"
         Width="300"
-        WindowStyle="ToolWindow">
+        WindowStyle="ToolWindow" ResizeMode="NoResize" SizeToContent="Height">
     <StackPanel Margin="10 0 10 0">
 
         <TextBlock Margin="0 10 0 0">
@@ -68,5 +68,12 @@
                 Width="100"
                 HorizontalAlignment="Right"
                 Margin="0 10 0 0"/>
+        
+        <Separator Margin="0 10 0 10"/>
+
+        <TextBlock Margin="0 10 0 0" Text="{x:Static local:Strings.SearchPattern}"  />
+
+        <TextBox  Margin="0 10 0 10" Height="22"  Text="{Binding SearchPattern, Delay=200,UpdateSourceTrigger=PropertyChanged}"/>
+         
     </StackPanel>
 </Window>

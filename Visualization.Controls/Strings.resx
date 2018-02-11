@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="FilterToolWindowTitle" xml:space="preserve">
-    <value>Area / Weight Filtering</value>
+  <data name="ToolWindowTitle" xml:space="preserve">
+    <value>Tools</value>
   </data>
   <data name="MaximumArea" xml:space="preserve">
     <value>Maximum area</value>
@@ -134,5 +134,8 @@
   </data>
   <data name="Reset" xml:space="preserve">
     <value>Reset</value>
+  </data>
+    <data name="SearchPattern" xml:space="preserve">
+    <value>Search pattern</value>
   </data>
 </root>

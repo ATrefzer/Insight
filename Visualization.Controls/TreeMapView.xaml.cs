@@ -48,7 +48,7 @@ namespace Visualization.Controls
 
         private void TreeMap_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            HideFilterView();
+            HideToolView();
         }
     }
 }

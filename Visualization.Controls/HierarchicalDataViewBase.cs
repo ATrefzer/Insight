@@ -8,20 +8,18 @@ using Prism.Commands;
 using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
+using Visualization.Controls.Tools;
 
 namespace Visualization.Controls
 {
     public abstract class HierarchicalDataViewBase : UserControl
     {
-        protected readonly MenuItem _filterMenuItem = new MenuItem { Header = "Filter", Tag = null };
+        protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
 
         /// <summary>
         /// Filtered data
         /// </summary>
         protected HierarchicalData _filtered;
-
-        protected FilterView _filterView;
-        protected FilterViewModel _limits;
 
         protected IRenderer _renderer;
 
@@ -30,15 +28,26 @@ namespace Visualization.Controls
         /// </summary>
         protected HierarchicalData _root;
 
+        protected ToolViewModel _toolViewModel;
+
         /// <summary>
         /// Entry into _filtered data. This is the current level shown.
         /// </summary>
         protected HierarchicalData _zoomLevel;
 
+        protected ToolView ToolView;
+
         /// <summary>
         /// Commands that apply to leaf nodes of a hierarchical data.
         /// </summary>
         public HierarchicalDataCommands UserCommands { get; set; }
+
+
+        protected void ChangeSearchHighlightingCommand()
+        {
+            // Reuse zooming mechanism
+            ZoomLevelChanged(_zoomLevel);
+        }
 
         protected void ChangeZoomLevelCommand(HierarchicalData item)
         {
@@ -57,7 +66,7 @@ namespace Visualization.Controls
         protected void FilterLevelChanged()
         {
             _filtered = _root.Clone();
-            _filtered.RemoveLeafNodes(leaf => !_limits.IsAreaValid(leaf.AreaMetric) || !_limits.IsWeightValid(leaf.WeightMetric));
+            _filtered.RemoveLeafNodes(leaf => !_toolViewModel.IsAreaValid(leaf.AreaMetric) || !_toolViewModel.IsWeightValid(leaf.WeightMetric));
             try
             {
                 _filtered.RemoveLeafNodesWithoutArea();
@@ -77,24 +86,22 @@ namespace Visualization.Controls
         protected abstract DrawingCanvas GetCanvas();
 
 
-        protected void HideFilterView()
+        protected void HideToolView()
         {
             // When the control is no longer visible close the tool window.
-            _filterView?.Close();
+            ToolView?.Close();
             _filtered = null;
         }
 
 
-        protected void InitializeFiltering()
+        protected void InitializeTools()
         {
             var areaRange = _root.GetMinMaxArea();
             var weightRange = _root.GetMinMaxWeight();
 
-            _limits = new FilterViewModel(areaRange, weightRange);
-            _limits.FilterChanged += FilterLevelChanged;
-
-            // Initially no filtering so skip removing nodes.
-            _filtered = _root;
+            _toolViewModel = new ToolViewModel(areaRange, weightRange);
+            _toolViewModel.FilterChanged += FilterLevelChanged;
+            _toolViewModel.SearchPatternChanged += ChangeSearchHighlightingCommand;
         }
 
 
@@ -111,9 +118,9 @@ namespace Visualization.Controls
                 menu.Items.Clear();
 
                 // Item for filter tool window
-                _filterMenuItem.IsEnabled = _filterView == null || !_filterView.IsVisible;
-                _filterMenuItem.Command = new DelegateCommand(ShowFilterCommand);
-                menu.Items.Add(_filterMenuItem);
+                _toolMenuItem.IsEnabled = ToolView == null || !ToolView.IsVisible;
+                _toolMenuItem.Command = new DelegateCommand(ShowToolsCommand);
+                menu.Items.Add(_toolMenuItem);
 
                 UserCommands?.Fill(menu, hit);
 
@@ -126,50 +133,27 @@ namespace Visualization.Controls
             e.Handled = menu?.Items.Count == 0;
         }
 
-        private void FillZoomLevels(ContextMenu menu, HierarchicalData hit)
-        {
-            // From the current item (exclusive) up the the root 
-            // add an context menu entry for each zoom level.
-
-            var current = hit;
-            while (current != null)
-            {
-                // Avoid unnecessary context menus
-                if (current != _zoomLevel && current.IsLeafNode == false)
-                {
-                    AddZoomLevel(menu, current);
-                }
-
-                current = current.Parent;
-            }
-        }
-
-        private void AddZoomLevel(ContextMenu menu, HierarchicalData data)
-        {
-            var header = data.GetPathToRoot();
-            var menuItem = new MenuItem { Header = header };
-            menuItem.Command = new DelegateCommand(() => ChangeZoomLevelCommand(data));
-            menu.Items.Add(menuItem);
-        }
-
         protected void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             _root = DataContext as HierarchicalData;
             if (_root != null)
             {
-                InitializeFiltering();
+                InitializeTools();
+
+                // Initially no filtering so skip removing nodes.
+                _filtered = _root;
                 ZoomLevelChanged(_filtered);
             }
         }
 
 
-        protected void ShowFilterCommand()
+        protected void ShowToolsCommand()
         {
             // Filter
-            _filterView = new FilterView();
-            _filterView.Owner = Application.Current.MainWindow;
-            _filterView.DataContext = _limits;
-            _filterView.Show();
+            ToolView = new ToolView();
+            ToolView.Owner = Application.Current.MainWindow;
+            ToolView.DataContext = _toolViewModel;
+            ToolView.Show();
         }
 
 
@@ -208,7 +192,34 @@ namespace Visualization.Controls
             _zoomLevel = data;
             _renderer = CreateRenderer();
             _renderer.LoadData(_zoomLevel);
+            _renderer.Highlighing = new SearchHighlighting(_toolViewModel.SearchPattern);
             GetCanvas().DataContext = _renderer;
+        }
+
+        private void AddZoomLevel(ContextMenu menu, HierarchicalData data)
+        {
+            var header = data.GetPathToRoot();
+            var menuItem = new MenuItem { Header = header };
+            menuItem.Command = new DelegateCommand(() => ChangeZoomLevelCommand(data));
+            menu.Items.Add(menuItem);
+        }
+
+        private void FillZoomLevels(ContextMenu menu, HierarchicalData hit)
+        {
+            // From the current item (exclusive) up the the root 
+            // add an context menu entry for each zoom level.
+
+            var current = hit;
+            while (current != null)
+            {
+                // Avoid unnecessary context menus
+                if (current != _zoomLevel && current.IsLeafNode == false)
+                {
+                    AddZoomLevel(menu, current);
+                }
+
+                current = current.Parent;
+            }
         }
     }
 }

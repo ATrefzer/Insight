@@ -21,9 +21,9 @@ namespace Visualization.Controls.CirclePackaging
 
     Note
     There are two solutions to finding a tangend circle with two others.
-    (Unless the circles are too far apart)
-    Which circle do we use? The one that does not collide with the front chain
-    polygon. No parts of the circle is inside the polygon.
+    (Unless the circles are too far apart) Which circle do we use? 
+    I still do not have a mathematical tool to decide. Therefore I use a set of heuristics.
+    See SelectCircle.
 
     4. If there is no collision place the circle on the front chain between m and n.
     5. If the circle overlaps with another circle on the front chain at position j:

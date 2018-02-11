@@ -61,15 +61,6 @@ namespace Visualization.Controls {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Area / Weight Filtering.
-        /// </summary>
-        public static string FilterToolWindowTitle {
-            get {
-                return ResourceManager.GetString("FilterToolWindowTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Maximum area.
         /// </summary>
         public static string MaximumArea {
@@ -111,6 +102,24 @@ namespace Visualization.Controls {
         public static string Reset {
             get {
                 return ResourceManager.GetString("Reset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search pattern.
+        /// </summary>
+        public static string SearchPattern {
+            get {
+                return ResourceManager.GetString("SearchPattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools.
+        /// </summary>
+        public static string ToolWindowTitle {
+            get {
+                return ResourceManager.GetString("ToolWindowTitle", resourceCulture);
             }
         }
     }

@@ -1,13 +1,13 @@
 ﻿using System.Windows;
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Tools
 {
     /// <summary>
-    /// Interaction logic for FilterView.xaml
+    /// Interaction logic for ToolView.xaml
     /// </summary>
-    public sealed partial class FilterView : Window
+    public sealed partial class ToolView : Window
     {
-        public FilterView()
+        public ToolView()
         {
             InitializeComponent();
         }
@@ -15,7 +15,7 @@ namespace Visualization.Controls
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-            if (DataContext is FilterViewModel model)
+            if (DataContext is ToolViewModel model)
             {
                 model.Reset();
             }

@@ -114,7 +114,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Filter\FilterView.xaml">
+    <Page Include="Tools\ToolView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -126,10 +126,10 @@
     <Compile Include="ChordView.xaml.cs">
       <DependentUpon>ChordView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Filter\FilterView.xaml.cs">
-      <DependentUpon>FilterView.xaml</DependentUpon>
+    <Compile Include="Tools\ToolView.xaml.cs">
+      <DependentUpon>ToolView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Filter\FilterViewModel.cs" />
+    <Compile Include="Tools\ToolViewModel.cs" />
     <Compile Include="HierarchicalDataCommands.cs" />
     <Compile Include="HierarchicalDataViewBase.cs" />
     <Compile Include="Interfaces\IDataGridViewUserCommands.cs" />
@@ -145,6 +145,8 @@
     <Compile Include="CirclePackaging\DebugHelper.cs" />
     <Compile Include="CirclePackaging\Desmos.cs" />
     <Compile Include="CirclePackaging\FrontChain.cs" />
+    <Compile Include="Tools\IHighlighting.cs" />
+    <Compile Include="Tools\SearchHighlighting.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="TreeMap\RectangularLayoutInfo.cs" />
     <Compile Include="Drawing\DrawingCanvas.cs" />
@@ -186,6 +188,7 @@
     <EmbeddedResource Include="Strings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="packages.config" />
