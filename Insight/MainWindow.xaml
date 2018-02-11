@@ -1,0 +1,104 @@
+﻿<RibbonWindow x:Class="Insight.MainWindow"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+              xmlns:controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
+              xmlns:local="clr-namespace:Insight"
+              mc:Ignorable="d"
+              Icon="Resources/Lightswitch.ico"
+              Title="Insight"
+              Height="350"
+              Width="525"
+              Closing="MainWindow_OnClosing">
+    <DockPanel>
+
+        <Ribbon DockPanel.Dock="Top"
+                Visibility="Visible">
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu Visibility="Collapsed"/>
+            </Ribbon.ApplicationMenu>
+
+            <Ribbon.QuickAccessToolBar>
+                <x:Null/>
+            </Ribbon.QuickAccessToolBar>
+
+            <Ribbon.HelpPaneContent>
+                <x:Null/>
+            </Ribbon.HelpPaneContent>
+
+            <RibbonTab Header="{x:Static local:Strings.Home}">
+                <RibbonGroup Header="{x:Static local:Strings.Diagrams}">
+                    <StackPanel>
+                        <RibbonButton Label="{x:Static local:Strings.Save}"
+                                      SmallImageSource="Resources/export_16.png"
+                                      Margin="5,0,0,0"
+                                      Click="Save_Click"/>
+                        <RibbonButton Label="{x:Static local:Strings.Load}"
+                                      SmallImageSource="Resources/import_16.png"
+                                      Margin="5,0,0,0"
+                                      Click="Load_Click"/>
+                        <RibbonButton Label="{x:Static local:Strings.About}"
+                                      SmallImageSource="Lightswitch.ico"
+                                      Margin="5,0,0,0"
+                                      Click="About_Click"/>
+                    </StackPanel>
+                </RibbonGroup>
+
+                <RibbonGroup Header="{x:Static local:Strings.SourceControl}">
+                    <RibbonButton LargeImageSource="Resources/settings_64.png"
+                                  Label="{x:Static local:Strings.Settings}"
+                                  Click="Setup_Click"/>
+                    <RibbonButton LargeImageSource="Resources/sync_64.png"
+                                  Label="{x:Static local:Strings.UpdateCache}"
+                                  Click="Update_Click"
+                                  IsEnabled="{Binding IsProjectValid}"/>
+                </RibbonGroup>
+
+                <RibbonGroup Header="{x:Static local:Strings.Analysis}"
+                             IsEnabled="{Binding IsProjectValid}">
+                    <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
+                                  Label="{x:Static local:Strings.Knowledge}"
+                                  Click="AnalyzeKnowledge_Click"/>
+                    <RibbonButton LargeImageSource="Resources/fire_64.png"
+                                  Label="{x:Static local:Strings.Hotspots}"
+                                  Click="AnalyzeHotspots_Click"/>
+                    <RibbonButton LargeImageSource="Resources/birds-in-love_64.png"
+                                  Label="{x:Static local:Strings.Coupling}"
+                                  Click="AnalyzeChangeCouplings_Click"/>
+                    <RibbonButton LargeImageSource="Resources/pie-graph-split_64.png"
+                                  Label="{x:Static local:Strings.Work}"
+                                  Click="ShowWorkOnSingleFile_Click"/>
+                </RibbonGroup>
+
+                <RibbonGroup Header="{x:Static local:Strings.Export}">
+                    <RibbonButton LargeImageSource="Resources/csv-file-format-extension_64.png"
+                                  Label="{x:Static local:Strings.Summary}"
+                                  Click="ExportCsv_Click"/>
+                </RibbonGroup>
+            </RibbonTab>
+        </Ribbon>
+
+        <TabControl Name="_tabControl">
+            <TabItem Header="Circle Packaging View">
+                <controls:CirclePackagingView Name="_circlePackaging"/>
+            </TabItem>
+            <TabItem Header="TreeMap View">
+                <controls:TreeMapView Name="_treeMap"/>
+            </TabItem>
+            <TabItem Header="Image View">
+                <Image Name="_img"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Stretch="None"/>
+            </TabItem>
+            <TabItem Header="Data View">
+                <controls:DataGridView Name="_data" />
+            </TabItem>
+            <TabItem Header="Chord View">
+                <controls:ChordView Name="_chord"/>
+            </TabItem>
+        </TabControl>
+
+    </DockPanel>
+</RibbonWindow>

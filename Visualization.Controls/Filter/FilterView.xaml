@@ -1,0 +1,72 @@
+﻿<Window x:Class="Visualization.Controls.FilterView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Visualization.Controls"
+        mc:Ignorable="d"
+        Title="{x:Static local:Strings.FilterToolWindowTitle}"
+        Height="250"
+        Width="300"
+        WindowStyle="ToolWindow">
+    <StackPanel Margin="10 0 10 0">
+
+        <TextBlock Margin="0 10 0 0">
+            <Run Text="{x:Static local:Strings.MinimumArea}"/>
+            <Run Text=" ("/>
+            <Run Text="{Binding MinArea}"/>
+            <Run Text=")"/>
+        </TextBlock>
+        <Slider Minimum="{Binding AreaRange.Min}"
+                Maximum="{Binding AreaRange.Max}"
+                Value="{Binding MinArea}"
+                Delay="200"
+                TickFrequency="1"
+                IsSnapToTickEnabled="True"/>
+
+        <TextBlock Margin="0 10 0 0">
+            <Run Text="{x:Static local:Strings.MaximumArea}"/>
+            <Run Text=" ("/>
+            <Run Text="{Binding MaxArea}"/>
+            <Run Text=")"/>
+        </TextBlock>
+        <Slider Minimum="{Binding AreaRange.Min}"
+                Maximum="{Binding AreaRange.Max}"
+                Value="{Binding MaxArea}"
+                Delay="200"
+                TickFrequency="1"
+                IsSnapToTickEnabled="True"/>
+
+        <TextBlock Margin="0 10 0 0">
+            <Run Text="{x:Static local:Strings.MinimumWeight}"/>
+            <Run Text=" ("/>
+            <Run Text="{Binding MinWeight}"/>
+            <Run Text=")"/>
+        </TextBlock>
+        <Slider Minimum="{Binding WeightRange.Min}"
+                Maximum="{Binding WeightRange.Max}"
+                Value="{Binding MinWeight}"
+                Delay="200"
+                TickFrequency="1"
+                IsSnapToTickEnabled="True"/>
+
+        <TextBlock Margin="0 10 0 0">
+            <Run Text="{x:Static local:Strings.MaximumWeight}"/>
+            <Run Text=" ("/>
+            <Run Text="{Binding MaxWeight}"/>
+            <Run Text=")"/>
+        </TextBlock>
+        <Slider Minimum="{Binding WeightRange.Min}" Name="_maxWeightSlider"
+                Maximum="{Binding WeightRange.Max}"
+                Value="{Binding MaxWeight}"
+                Delay="200"
+                TickFrequency="1"
+                IsSnapToTickEnabled="True"/>
+
+        <Button Content="{x:Static local:Strings.Reset}"
+                Click="ButtonBase_OnClick"
+                Width="100"
+                HorizontalAlignment="Right"
+                Margin="0 10 0 0"/>
+    </StackPanel>
+</Window>

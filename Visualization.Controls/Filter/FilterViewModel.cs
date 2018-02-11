@@ -1,0 +1,114 @@
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+using Visualization.Controls.Utility;
+
+// ReSharper disable CompareOfFloatsByEqualityOperator
+
+namespace Visualization.Controls
+{
+    public class FilterViewModel : INotifyPropertyChanged
+    {
+        private double _maxArea;
+        private double _maxWeight;
+        private double _minArea;
+        private double _minWeight;
+
+        public FilterViewModel(Range<double> areaRange, Range<double> weightRange)
+        {
+            AreaRange = areaRange;
+            WeightRange = weightRange;
+            Reset();
+        }
+
+        public event Action FilterChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public Range<double> AreaRange { get; }
+
+        public double MaxArea
+        {
+            get => _maxArea;
+            set
+            {
+                if (_maxArea != value)
+                {
+                    _maxArea = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public double MaxWeight
+        {
+            get => _maxWeight;
+            set
+            {
+                if (_maxWeight != value)
+                {
+                    _maxWeight = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public double MinArea
+        {
+            get => _minArea;
+            set
+            {
+                if (_minArea != value)
+                {
+                    _minArea = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public double MinWeight
+        {
+            get => _minWeight;
+            set
+            {
+                if (_minWeight != value)
+                {
+                    _minWeight = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public Range<double> WeightRange { get; }
+
+        public bool IsAreaValid(double area)
+        {
+            return area >= MinArea && area <= MaxArea;
+        }
+
+        public bool IsWeightValid(double weight)
+        {
+            return weight >= MinWeight && weight <= MaxWeight;
+        }
+
+        public void Reset()
+        {
+            MinWeight = WeightRange.Min;
+            MaxWeight = WeightRange.Max;
+            MinArea = AreaRange.Min;
+            MaxArea = AreaRange.Max;
+        }
+
+        protected virtual void OnFilterChanged()
+        {
+            FilterChanged?.Invoke();
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            // Send a single event that any of the limits has changed.
+            OnFilterChanged();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

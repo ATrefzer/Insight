@@ -1,0 +1,51 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Controls;
+
+using Prism.Commands;
+
+using Visualization.Controls.Interfaces;
+
+namespace Visualization.Controls
+{
+    public sealed class DataGridViewUserCommands<T> : IDataGridViewUserCommands
+    {
+        private readonly Dictionary<MenuItem, Action<List<T>>> _menuItemToAction = new Dictionary<MenuItem, Action<List<T>>>();
+
+        public bool Empty => !_menuItemToAction.Any();
+
+        public bool Fill(ContextMenu contextMenu, IEnumerable selectedItems)
+        {
+            if (Empty)
+            {
+                return false;
+            }
+
+            var selection = selectedItems.OfType<T>().ToList();
+            foreach (var item in _menuItemToAction)
+            {
+                var menuItem = item.Key;
+                menuItem.IsEnabled = selection.Any();
+                menuItem.Command = new DelegateCommand(() => OnMenuClick(menuItem, selection));
+                contextMenu.Items.Add(item.Key);
+            }
+
+            return true;
+        }
+
+        public void Register(string label, Action<List<T>> action)
+        {
+            var menuItem = new MenuItem();
+            menuItem.Header = label;
+            _menuItemToAction.Add(menuItem, action);
+        }
+
+        private void OnMenuClick(MenuItem item, List<T> selectedItems)
+        {
+            var action = _menuItemToAction[item];
+            action.Invoke(selectedItems);
+        }
+    }
+}

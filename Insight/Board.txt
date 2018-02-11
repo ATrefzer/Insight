@@ -1,0 +1,62 @@
+﻿---------------------------------------
+In Progress
+---------------------------------------
+- Filter for change coupling
+- Log scaling for filter
+    
+---------------------------------------
+Features
+---------------------------------------
+
+---------------------------------------
+Bugs
+---------------------------------------
+
+---------------------------------------
+User interface
+---------------------------------------
+- Search for files and highlight
+
+---------------------------------------
+Git
+---------------------------------------
+- Create provider
+
+---------------------------------------
+Svn
+---------------------------------------
+
+---------------------------------------
+Controls
+---------------------------------------
+
+- Profile both algorithms.
+
+---------------------------------------
+TreeMap
+---------------------------------------
+
+- TryAddToStrip, Move vertical / horizontal strip to new classes
+- Refactoring stripProportion
+- Show label (maybe)
+
+---------------------------------------
+Circle Packing
+---------------------------------------
+
+---------------------------------------
+Chord
+---------------------------------------
+      
+- Sometimes edges disappear when resizing
+- Binding errors
+- Popup with Tooltip (strength of coupling)
+
+---------------------------------------
+Low prio, fun
+---------------------------------------
+
+- Use WritableBitmap
+- Alternative to the CLOC because of GPL. Maybe something like this:
+  https://github.com/jjrdk/ArchiMetrics/blob/master/src/ArchiMetrics.Analysis/Metrics/LinesOfCodeCalculator.cs
+- Find code similarities

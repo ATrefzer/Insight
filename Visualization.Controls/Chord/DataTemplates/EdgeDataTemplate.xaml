@@ -1,0 +1,46 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ChordViewModels="clr-namespace:Visualization.Controls.Chord">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Styles.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <DataTemplate DataType="{x:Type ChordViewModels:Edge}">
+        <Path>
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure StartPoint="{Binding Point1}">
+                        <BezierSegment Point1="{Binding Point1}"
+                                       Point2="{Binding Point2}"
+                                       Point3="{Binding Point3}"/>
+
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+            <Path.Style>
+                <Style TargetType="Path">
+                    <Setter Property="Stroke"
+                            Value="{StaticResource EdgeBrush}"/>
+                    <Setter Property="StrokeThickness"
+                            Value="2"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter Property="StrokeThickness"
+                                    Value="4"/>
+                        </Trigger>
+                        <DataTrigger Binding="{Binding IsSelected}"
+                                     Value="True">
+                            <Setter Property="StrokeThickness"
+                                    Value="4"/>
+                            <Setter Property="Stroke"
+                                    Value="{StaticResource SelectedBrush}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Path.Style>
+        </Path>
+
+    </DataTemplate>
+</ResourceDictionary>

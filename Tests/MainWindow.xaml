@@ -1,0 +1,38 @@
+﻿<Window x:Class="Tests.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        mc:Ignorable="d"
+        Title="MainWindow"
+        Height="350"
+        Width="525"
+        Loaded="MainWindow_OnLoaded">
+    <Grid>
+        <TabControl>
+            <TabItem Header="ChordView">
+                <Controls:ChordView Name="_chord"/>
+            </TabItem>
+            <TabItem Header="Graph">
+                <Grid>
+                    <oxy:PlotView x:Name="Plot1"  Model="{Binding PlotModel}" Margin="10" >
+                    </oxy:PlotView>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Circle Packaging">
+                <Controls:CirclePackagingView Name="_circlePackaging"/>
+            </TabItem>
+            <TabItem Header="TreeMapView">
+                <Controls:TreeMapView Name="_treeMap"/>
+            </TabItem>
+        
+          
+
+
+         
+        </TabControl>
+
+    </Grid>
+</Window>

@@ -1,0 +1,40 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings"
+              CurrentProfile="(Default)"
+              GeneratedClassNamespace="Insight.Properties"
+              GeneratedClassName="Settings">
+    <Profiles/>
+    <Settings>
+        <Setting Name="ProjectBase"
+                 Type="System.String"
+                 Scope="User">
+            <Value Profile="(Default)">.\ProjectBase</Value>
+        </Setting>
+        <Setting Name="ExtensionsToInclude"
+                 Type="System.String"
+                 Scope="User">
+            <Value Profile="(Default)">.cs;.xaml</Value>
+        </Setting>
+        <Setting Name="PathsToExclude"
+                 Type="System.String"
+                 Scope="User">
+            <Value Profile="(Default)">\Test\,UnitTest</Value>
+        </Setting>
+        <Setting Name="Provider"
+                 Type="System.String"
+                 Scope="User">
+            <Value Profile="(Default)">Insight.SvnProvider.SvnProvider,Insight.SvnProvider</Value>
+        </Setting>
+        <Setting Name="Cache"
+                 Type="System.String"
+                 Scope="User">
+            <Value Profile="(Default)">.\Cache</Value>
+        </Setting>
+        <Setting Name="WorkItemRegEx"
+                 Type="System.String"
+                 Scope="User">
+            <Value Profile="(Default)"/>
+        </Setting>
+    </Settings>
+</SettingsFile>

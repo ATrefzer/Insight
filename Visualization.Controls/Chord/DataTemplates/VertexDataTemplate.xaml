@@ -1,0 +1,47 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ChordViewModels="clr-namespace:Visualization.Controls.Chord">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Styles.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <DataTemplate DataType="{x:Type ChordViewModels:Vertex}">
+        <Path>
+            <Path.Data>
+                <EllipseGeometry Center="{Binding Center}"
+                                 RadiusX="{Binding Radius}"
+                                 RadiusY="{Binding Radius}"/>
+            </Path.Data>
+
+            <Path.InputBindings>
+                <MouseBinding MouseAction="LeftClick"
+                              Command="{Binding SelectCommand}"/>
+            </Path.InputBindings>
+
+            <Path.Style>
+                <Style TargetType="Path">
+                    <Setter Property="Stroke"
+                            Value="{StaticResource NonSelectedBrush}"/>
+                    <Setter Property="Fill"
+                            Value="{StaticResource NonSelectedBrush}"/>
+                    <Setter Property="StrokeThickness"
+                            Value="2"/>
+                    <Style.Triggers>
+
+                        <DataTrigger Binding="{Binding IsSelected}"
+                                     Value="True">
+                            <Setter Property="Stroke"
+                                    Value="{StaticResource SelectedBrush}"/>
+                            <Setter Property="Fill"
+                                    Value="{StaticResource SelectedBrush}"/>
+                            <Setter Property="StrokeThickness"
+                                    Value="2"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Path.Style>
+        </Path>
+    </DataTemplate>
+
+</ResourceDictionary>
