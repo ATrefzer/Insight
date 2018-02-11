@@ -38,6 +38,17 @@ The utility helps you to find these hotspots.
 
 Files that change together frequently can be visualized in a chord diagram.
 
+There are many cases when modifying a file leads to modification in another one.  Examples are classes and their unit tests, user interfaces and their view models, etc.
+
+However, making this commit pattern visible can give interesting insights in the code.
+
+When a file often changes together with another one, it can also mean that abstraction is missing - causing duplicated work. Or maybe it is just because of copied and pasted code that needs to be maintained twice now. This is dangerous because it is easy to introduce bugs by missing code to update.
+ 
+This kind of analysis can also make dependencies visible that no static code checker can find. Think of an encryption/decryption pair of functions. If you change one, you need to update the other one, too.
+
+Change coupling analysis can raise interesting questions because it takes a different look at the source code.
+
+
 ![Change Coupling](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Chord.PNG)
 
 # How to build
