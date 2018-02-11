@@ -1,7 +1,7 @@
 # Insight
 Analyzes the commit history of your version control.
 
-This utility implements some of the ideas presented in Adam Tornhill's book "Your Code as a Crime Scene".
+This utility implements some of the ideas presented in Adam Tornhill's great book "Your Code as a Crime Scene".
 
 Currently, it only supports Subversion and C# projects.
 
@@ -12,7 +12,19 @@ Work is in progress ...
 
 ### Show hotspots
 Hotspots can be visualized via tree map or circle packaging.
-A hotspot is a large file that changes frequently.
+
+A hotspot is a large file (lines of code) that changes frequently.
+This is quite common for configuration files, string resources, designer generated files, etc. 
+But the change frequency combined with the large size may also be a hint that the file contains too many responsibilities. Such a hotspot may be a candidate to refactor.
+
+There is a principle in software development called the single responsibility principle (SRP). It says that a class (file) should have only one reason to change. If the file changes often combined with the large size, this may be a hint that the file contains too many responsibilities.
+
+This is a disadvantage for two reasons. First, you need more time to understand this file. Since a software developer usually spends more time reading and understanding code than writing it, this is a waste of time.
+
+Second, if you have to make modifications in a file with interwoven code serving different tasks there is a higher risk that you break an unrelated feature Y when working on feature X.
+
+The utility helps you to find these hotspots.
+
 
 ![Tree Map](https://github.com/ATrefzer/Insight/blob/master/Screenshots/TreeMap.PNG)
 
