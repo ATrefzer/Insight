@@ -1,13 +1,8 @@
-﻿using Insight.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace Insight.Shared.Model
 {
-    public class TrendData
+    public sealed class TrendData
     {
         public DateTime Date { get; set; }
 

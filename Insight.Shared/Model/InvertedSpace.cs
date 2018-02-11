@@ -1,6 +1,6 @@
-﻿namespace Insight.Model
+﻿namespace Insight.Shared.Model
 {
-    public class InvertedSpace
+    public sealed class InvertedSpace
     {
         public int Max { get; set; }
         public double Mean { get; set; }

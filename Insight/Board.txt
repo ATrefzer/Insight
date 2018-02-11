@@ -2,7 +2,7 @@
 In Progress
 ---------------------------------------
 - Filter for change coupling
-- Log scaling for filter
+- Log scaling for filter, or coloring or exclude outliers
     
 ---------------------------------------
 Features
@@ -15,7 +15,6 @@ Bugs
 ---------------------------------------
 User interface
 ---------------------------------------
-- Search for files and highlight
 
 ---------------------------------------
 Git

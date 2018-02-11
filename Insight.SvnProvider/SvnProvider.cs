@@ -130,7 +130,8 @@ namespace Insight.SvnProvider
         {
             if (!File.Exists(_historyBinCacheFile))
             {
-                throw new FileNotFoundException(_svnHistoryExportFile);
+                var msg = $"History cache file '{_historyBinCacheFile}' not found. You have to 'Sync' first.";
+                throw new FileNotFoundException(msg);
             }
 
             var binFile = new BinaryFile<ChangeSetHistory>();

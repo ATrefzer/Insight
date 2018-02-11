@@ -6,7 +6,7 @@ using Visualization.Controls.Utility;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Tools
 {
     public class ToolViewModel : INotifyPropertyChanged
     {

@@ -6,65 +6,23 @@ using System.Windows.Input;
 
 namespace Visualization.Controls.Chord
 {
-    class Vertex : IChordElement, INotifyPropertyChanged
+    internal class Vertex : IChordElement, INotifyPropertyChanged
     {
+        private Point _center;
+
+        private bool _isSelected;
+
         public Vertex(string name)
         {
             Name = name;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool Equals(Vertex other)
-        {
-            return String.Equals(Name, other.Name);
-        }
-
-        bool _isSelected;
-
-        public bool IsSelected
-        {
-            get
-            {
-                return _isSelected;
-            }
-
-            set
-            {
-                _isSelected = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            if (obj.GetType() != this.GetType())
-                return false;
-            return Equals((Vertex) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (Name != null ? Name.GetHashCode() : 0);
-        }
-
-        public string Name { get; set; }
-        Point _center;
+        public double Angle { get; internal set; }
 
         public Point Center
         {
-            get
-            {
-                return _center;
-            }
+            get => _center;
 
             set
             {
@@ -73,14 +31,62 @@ namespace Visualization.Controls.Chord
             }
         }
 
+        public bool IsSelected
+        {
+            get => _isSelected;
+
+            set
+            {
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Name { get; }
+
         public double Radius { get; set; }
-        public double Angle { get; internal set; }
         public ICommand SelectCommand { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return Equals((Vertex) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Name != null ? Name.GetHashCode() : 0;
+        }
+
         public void UpdateLocation(double radiusOfMainCircle)
         {
             var x = radiusOfMainCircle * Math.Cos(Angle);
             var y = radiusOfMainCircle * Math.Sin(Angle);
             Center = new Point(x, y);
+        }
+
+        protected bool Equals(Vertex other)
+        {
+            return string.Equals(Name, other.Name);
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

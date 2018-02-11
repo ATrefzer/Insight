@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 using Insight.Shared.Model;
 using Insight.WpfCore;
@@ -45,6 +43,7 @@ namespace Insight
             dateAxis.StringFormat = "yyyy-MM-dd";
             dateAxis.MajorGridlineStyle = LineStyle.Solid;
             dateAxis.MinorGridlineStyle = LineStyle.Dot;
+
             //dateAxis.Maximum = DateTimeAxis.ToDouble(DateTime.Now.AddDays(1));
             pm.Axes.Add(dateAxis);
 
@@ -72,7 +71,7 @@ namespace Insight
         {
             var pm = new PlotModel();
             pm.Title = "Lines of Code";
-          
+
             var linesOfCode = new LineSeries
                               {
                                       Color = OxyColor.FromRgb(0, 0, 255),
@@ -113,7 +112,6 @@ namespace Insight
         {
             var pm = new PlotModel();
             pm.Title = "Complexity (logical spaces)";
-        
 
             var average = new LineSeries
                           {

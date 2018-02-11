@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-using Insight.Model;
 using Insight.Shared.Model;
 
 namespace Insight.Metrics

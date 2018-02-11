@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 
-using Visualization.Controls;
 using Visualization.Controls.Utility;
 
 namespace Tests

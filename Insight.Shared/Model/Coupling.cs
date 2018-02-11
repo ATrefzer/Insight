@@ -13,8 +13,8 @@ namespace Insight.Shared.Model
             Debug.Assert(Key() == Key(item2, item1));
         }
 
-        public string Item1 { get; set; }
-        public string Item2 { get; set; }
+        public string Item1 { get; }
+        public string Item2 { get; }
 
         public static string Key(string item1, string item2)
         {
