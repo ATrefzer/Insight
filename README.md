@@ -13,7 +13,8 @@ Work is in progress ...
 ### Show hotspots
 Hotspots can be visualized via tree map or circle packaging.
 
-A hotspot is a large file (lines of code) that changes frequently.
+A hotspot is a large file (lines of code) that changes frequently. 
+
 This is quite common for configuration files, string resources, designer generated files, etc. 
 But the change frequency combined with the large size may also be a hint that the file contains too many responsibilities. Such a hotspot may be a candidate to refactor.
 
@@ -24,6 +25,8 @@ This is a disadvantage for two reasons. First, you need more time to understand 
 Second, if you have to make modifications in a file with interwoven code serving different tasks there is a higher risk that you break an unrelated feature Y when working on feature X.
 
 The utility helps you to find these hotspots.
+
+In the visualizations, the area of a rectangle or innermost circle corresponds to the size of a file (lines of code). The color corresponds to the change frequency. 
 
 
 ![Tree Map](https://github.com/ATrefzer/Insight/blob/master/Screenshots/TreeMap.PNG)
