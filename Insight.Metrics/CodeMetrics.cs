@@ -20,6 +20,9 @@ namespace Insight.Metrics
 
     public sealed class CodeMetrics
     {
+        private const string Cloc = "cloc-1.76.exe";
+        private const string ClocSubDir = "ExternalTools";
+
         /// <summary>
         /// Normalized extension -> language (cloc). Not used yet.
         /// </summary>
@@ -126,9 +129,9 @@ namespace Insight.Metrics
             return builder.ToString();
         }
 
-        private static string GetPathToCloc(DirectoryInfo dirOfCloc)
+        private static string GetPathToCloc(DirectoryInfo basePath)
         {
-            return Path.Combine(dirOfCloc.FullName, "ExternalTools\\cloc-1.76.exe");
+            return Path.Combine(basePath.FullName, ClocSubDir, Cloc);
         }
 
         private static char GetPeek(string fileContent, int index)
@@ -136,16 +139,17 @@ namespace Insight.Metrics
             return index == fileContent.Length ? (char) 0 : fileContent[index + 1];
         }
 
-        private static void VerifyClocInstalled(DirectoryInfo dirOfCloc)
+        private static void VerifyClocInstalled(DirectoryInfo basePath)
         {
-            var pathToCloc = GetPathToCloc(dirOfCloc);
+            var pathToCloc = GetPathToCloc(basePath);
             if (!File.Exists(pathToCloc))
             {
                 var url = "https://github.com/AlDanial/cloc/releases/tag/v1.76";
+                var path = Path.Combine(basePath.FullName, ClocSubDir);
                 var builder = new StringBuilder();
                 builder.AppendLine($"Executable not found: '{pathToCloc}'.");
-                builder.AppendLine($"Please go to '{url}' and download the file 'cloc-1.76.exe'.");
-                builder.AppendLine($"Copy this file to '{dirOfCloc.FullName}'.");
+                builder.AppendLine($"Please go to '{url}' and download the file '{Cloc}'.");
+                builder.AppendLine($"Copy this file to '{path}'.");
                 throw new Exception(builder.ToString());
             }
         }
@@ -171,27 +175,27 @@ namespace Insight.Metrics
         }
 
 
-        private string CallClocForDirectory(DirectoryInfo dirOfCloc, DirectoryInfo rootDir, IEnumerable<string> languagesToParse)
+        private string CallClocForDirectory(DirectoryInfo basePath, DirectoryInfo rootDir, IEnumerable<string> languagesToParse)
         {
-            if (dirOfCloc == null)
+            if (basePath == null)
             {
                 throw new InvalidOperationException("Can't find directory of assembly");
             }
 
-            VerifyClocInstalled(dirOfCloc);
+            VerifyClocInstalled(basePath);
             var runner = new ProcessRunner();
             var languages = string.Join(",", languagesToParse);
             var args = $"\"{rootDir.FullName}\" --by-file --csv --quiet --include-lang={languages}";
-            var result = runner.RunProcess(GetPathToCloc(dirOfCloc), args);
+            var result = runner.RunProcess(GetPathToCloc(basePath), args);
             return result.Item2;
         }
 
-        private string CallClocForSingleFile(DirectoryInfo dirOfCloc, FileInfo file)
+        private string CallClocForSingleFile(DirectoryInfo basePath, FileInfo file)
         {
-            VerifyClocInstalled(dirOfCloc);
+            VerifyClocInstalled(basePath);
             var runner = new ProcessRunner();
             var args = $"{file.FullName} --csv --quiet";
-            var result = runner.RunProcess(GetPathToCloc(dirOfCloc), args);
+            var result = runner.RunProcess(GetPathToCloc(basePath), args);
             return result.Item2;
         }
 
