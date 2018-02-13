@@ -50,6 +50,15 @@ namespace Insight.SvnProvider
             ExecuteCommandLine(program, args);
         }
 
+        public bool HasModifications()
+        {
+            // Quiet hides files not under version control
+            var program = "svn";
+            var args = $"status -q";
+            var stdOut = ExecuteCommandLine(program, args);
+            return !string.IsNullOrEmpty(stdOut.Trim());
+        }
+
         internal string Log()
         {
             var program = "svn";

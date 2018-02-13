@@ -493,6 +493,12 @@ namespace Insight.SvnProvider
 
         private void UpdateWorkingCopy()
         {
+            if (_svnCli.HasModifications())
+            {
+                // I don't want to run into merge conflicts.
+                throw new Exception("Abort. The repository has modifications.");
+            }
+
             _svnCli.UpdateWorkingCopy();
         }
     }

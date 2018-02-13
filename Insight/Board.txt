@@ -1,14 +1,12 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-
+- Write all input / output of the command line tools
 - Create GIT provider
-    - no local changes
     - Move tracking cannot be based on revisions
     - Check how status looks like if there are remote changes
 
 - Filter for change coupling
-- Check no local changes! Git and Svn
     
 ---------------------------------------
 Features

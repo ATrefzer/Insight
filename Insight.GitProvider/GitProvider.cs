@@ -57,14 +57,15 @@ namespace Insight.GitProvider
             // So we just can fetch and pull any changes.
             // Take care that no local modifications are present.
 
-            // TODO check for local modifications. Also in Svn
-
-            // TODO Check how the output look like if there are commits on the remote
-
             if (_gitCli.HasLocalChanges())
             {
-                throw new Exception("Cannot synchronize. Please ensure that there are no local changes.");
+                // I don't want to run into merge conflicts.
+                throw new Exception("Abort. There are local changes.");
             }
+
+            _gitCli.PullMasterFromOrigin();
+
+
             throw new Exception("Not implemented - no local changes");
         }
     }
