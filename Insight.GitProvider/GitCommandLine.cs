@@ -26,10 +26,14 @@ namespace Insight.GitProvider
             var program = "git";
             var args = $"pull origin master";
             return ExecuteCommandLine(program, args);
-
-            // TODO
+             
+            // TODO  
         }
 
+        /// <summary>
+        /// Returns true if there are any changes in the working or
+        /// staging area.
+        /// </summary>
         public bool HasLocalChanges()
         {
             var program = "git";
