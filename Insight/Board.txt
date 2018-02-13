@@ -1,17 +1,23 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
+
 - Filter for change coupling
-- Log scaling for filter, or coloring or exclude outliers
+- Create GIT provider
+- Check no local changes! Git and Svn
     
 ---------------------------------------
 Features
 ---------------------------------------
-
+- specify path to svn.exe or git.exe
+- specify the git commands to use for the tool
+- Return when zooming
 ---------------------------------------
 Bugs
 ---------------------------------------
-
+- Check if svn name tracking works properly if 
+  incrementel update is used. If not remove the incremential 
+  feature.
 ---------------------------------------
 User interface
 ---------------------------------------
@@ -19,7 +25,6 @@ User interface
 ---------------------------------------
 Git
 ---------------------------------------
-- Create provider
 
 ---------------------------------------
 Svn
@@ -59,3 +64,4 @@ Low prio, fun
 - Alternative to the CLOC because of GPL. Maybe something like this:
   https://github.com/jjrdk/ArchiMetrics/blob/master/src/ArchiMetrics.Analysis/Metrics/LinesOfCodeCalculator.cs
 - Find code similarities
+ -Log scaling for filter, or coloring or exclude outliers

@@ -202,6 +202,10 @@
       <Project>{a93136c0-d7bf-40b4-becb-90f17cb37484}</Project>
       <Name>Insight.Analyzers</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj">
+      <Project>{d3f60d96-d873-4225-b398-eefd68a3c5ec}</Project>
+      <Name>Insight.GitProvider</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Insight.Metrics\Insight.Metrics.csproj">
       <Project>{7debd566-7c41-4131-9c4c-2f3678d57b4c}</Project>
       <Name>Insight.Metrics</Name>

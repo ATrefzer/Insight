@@ -6,6 +6,8 @@ namespace Insight.Shared
 {
     public interface ISourceControlProvider
     {
+        void Initialize(string projectBase, string cachePath, string workItemRegex);
+
         // TODO initialize! And ctro without arguments.
 
         Dictionary<string, int> CalculateDeveloperWork(Artifact artifact);

@@ -75,7 +75,8 @@ namespace Insight
                 throw new ArgumentException(Provider);
             }
 
-            var provider = Activator.CreateInstance(type, ProjectBase, Cache, WorkItemRegEx) as ISourceControlProvider;
+            var provider = Activator.CreateInstance(type) as ISourceControlProvider;
+            provider.Initialize(ProjectBase, Cache, WorkItemRegEx);
             return provider;
         }
 

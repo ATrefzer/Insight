@@ -64,6 +64,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MovementTrackerTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="RangeTests.cs" />
     <Compile Include="StringIdTests.cs" />
@@ -112,9 +113,25 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Insight.Analyzers\Insight.Analyzers.csproj">
+      <Project>{a93136c0-d7bf-40b4-becb-90f17cb37484}</Project>
+      <Name>Insight.Analyzers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj">
+      <Project>{d3f60d96-d873-4225-b398-eefd68a3c5ec}</Project>
+      <Name>Insight.GitProvider</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Insight.Metrics\Insight.Metrics.csproj">
+      <Project>{7debd566-7c41-4131-9c4c-2f3678d57b4c}</Project>
+      <Name>Insight.Metrics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Insight.Shared\Insight.Shared.csproj">
       <Project>{8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9}</Project>
       <Name>Insight.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Insight.SvnProvider\Insight.SvnProvider.csproj">
+      <Project>{deb12948-53f4-4e5f-87c8-bdc454606047}</Project>
+      <Name>Insight.SvnProvider</Name>
     </ProjectReference>
     <ProjectReference Include="..\Insight\Insight.csproj">
       <Project>{739C3B39-9720-4900-8893-1BB785845E3B}</Project>

@@ -21,22 +21,26 @@ namespace Insight.SvnProvider
     /// </summary>
     public sealed class SvnProvider : ISourceControlProvider
     {
-        private readonly string _cachePath;
-        private readonly string _historyBinCacheFile;
-        private readonly string _startDirectory;
+        private string _cachePath;
+        private string _historyBinCacheFile;
+        private string _startDirectory;
 
-        private readonly SvnCommandLine _svnCli;
+        private SvnCommandLine _svnCli;
 
-        private readonly string _svnHistoryExportFile;
-        private readonly MovementTracking _tracking = new MovementTracking();
-        private readonly string _workItemRegex;
+        private string _svnHistoryExportFile;
+        private MovementTracking _tracking = new MovementTracking();
+        private string _workItemRegex;
 
         /// <summary>
         /// For mapping the server path to local path
         /// </summary>
         private string _prefix;
 
-        public SvnProvider(string projectBase, string cachePath, string workItemRegex)
+        public SvnProvider()
+        {
+
+        }
+        public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
@@ -476,7 +480,7 @@ namespace Insight.SvnProvider
 
         private void UpdateMovedFileIds(ChangeSetHistory history)
         {
-            _tracking.RemoveInvalid();
+            _tracking.RemoveItemsWithMoreThanOneCopies();
             foreach (var cs in history.ChangeSets)
             {
                 foreach (var file in cs.Items)

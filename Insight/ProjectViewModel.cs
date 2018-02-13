@@ -31,9 +31,16 @@ namespace Insight
                                   Name = "Svn"
                           };
 
+                var git = new ProviderDescription
+                {
+                    Class = GitProvider.GitProvider.GetClass(),
+                    Name = "Git"
+                };
+
                 return new List<ProviderDescription>
                        {
                                svn
+                               //,git
                        };
             }
         }

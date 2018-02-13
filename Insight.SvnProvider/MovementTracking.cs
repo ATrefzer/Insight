@@ -10,30 +10,31 @@ namespace Insight.SvnProvider
     /// Tracks files that are renamed or moved.
     /// Files that are copied into multiple files are ignored. The new files get their own id.
     /// </summary>
-    internal sealed class MovementTracking
+    public sealed class MovementTracking
     {
-        // old id -> all infos
-        private Dictionary<Id, Item> _ids = new Dictionary<Id, Item>();
+        // old id -> movement information
+        private Dictionary<Id, MoveInfo> _ids = new Dictionary<Id, MoveInfo>();
 
-        public void Add(int revision, Id newId, int oldRevision, Id oldId)
+        public void Add(int newRevision, Id newId, int oldRevision, Id oldId)
         {
             Debug.Assert(newId != null);
             if (oldId.Equals(newId))
             {
-                // Unglaublich, aber das passiert wirklich -> Endlosrekursion bei GetLatestId
+                // Encountered this rare case. No idea what it is useful for.
+                // Just keep the id as it is.
                 return;
             }
 
             if (_ids.ContainsKey(oldId))
             {
-                // This file is "renamed" or "added" into multiple others. 
+                // The source file was "renamed" or "added" into multiple others. 
                 // Seems to be possible with svn. These are only a few cases.
                 var item = _ids[oldId];
                 item.HasMoreThanOneCopies = true; // Removed later.
                 return;
             }
 
-            _ids.Add(oldId, new Item(newId, oldId, revision, oldRevision));
+            _ids.Add(oldId, new MoveInfo(newRevision, newId, oldRevision, oldId));
         }
 
         public Id GetLatestId(Id oldId, int oldRevision)
@@ -47,11 +48,15 @@ namespace Insight.SvnProvider
             var id = oldId;
             var revision = oldRevision;
 
-            Item tmp;
-            while (_ids.TryGetValue(id, out tmp))
+            while (_ids.TryGetValue(id, out MoveInfo tmp))
             {
+                // There is a newer id for the given file id.
+
                 if (tmp.NewRevision < revision)
                 {
+                    // TODO does not work for git due to hashes.
+                    // Instead use data / time?
+
                     // We may rename a file back to its old name.
                     // So only follow changes that are newer than the given revision.
                     break;
@@ -61,15 +66,10 @@ namespace Insight.SvnProvider
                 revision = tmp.NewRevision;
             }
 
-            //if (id.Equals(oldId) == false)
-            //{
-            //    Debug.WriteLine(oldId + " -> " + id);
-            //}
-
             return id;
         }
 
-        public void RemoveInvalid()
+        public void RemoveItemsWithMoreThanOneCopies()
         {
             // Skip all items where we copy into multiple files.
             _ids = _ids.Where(x => x.Value.HasMoreThanOneCopies == false).ToDictionary(x => x.Key, x => x.Value);
@@ -80,13 +80,16 @@ namespace Insight.SvnProvider
             _ids.Clear();
         }
 
-        private sealed class Item
+        /// <summary>
+        /// Captures move as well as rename detail.
+        /// </summary>
+        private sealed class MoveInfo
         {
             public readonly Id NewId;
             public readonly int NewRevision;
             public bool HasMoreThanOneCopies;
 
-            public Item(Id newId, Id oldId, int newRevision, int oldRevision)
+            public MoveInfo(int newRevision, Id newId, int oldRevision, Id oldId)
             {
                 NewId = newId;
                 OldId = oldId;
@@ -94,14 +97,8 @@ namespace Insight.SvnProvider
                 OldRevision = oldRevision;
             }
 
-            // ReSharper disable MemberCanBePrivate.Local
-            // ReSharper disable NotAccessedField.Local
-            public Id OldId;
-
-            public int OldRevision;
-
-            // ReSharper restore MemberCanBePrivate.Local
-            // ReSharper restore NotAccessedField.Local
+            public Id OldId { get; set; }
+            public int OldRevision { get; set; }
         }
     }
 }
