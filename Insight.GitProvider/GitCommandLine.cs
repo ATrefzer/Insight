@@ -34,6 +34,18 @@ namespace Insight.GitProvider
             return !string.IsNullOrEmpty(result.StdOut.Trim());
         }
 
+        /// <summary>
+        /// Returns true if there are local commits not pushed to the remote.
+        /// </summary>
+        public bool HasLocalCommits()
+        {
+            var hint = "your branch is ahead of";
+            var program = "git";
+            var args = $"status";
+            var result = ExecuteCommandLine(program, args);
+            return !result.StdOut.ToLowerInvariant().Contains(hint);
+        }
+
         private ProcessResult ExecuteCommandLine(string program, string args)
         {
             var result = ProcessRunner.RunProcess(program, args, _workingDirectory);

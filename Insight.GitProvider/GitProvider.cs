@@ -55,18 +55,31 @@ namespace Insight.GitProvider
         {
             // Git has the complete history locally anyway.
             // So we just can fetch and pull any changes.
-            // Take care that no local modifications are present.
 
-            if (_gitCli.HasLocalChanges())
-            {
-                // I don't want to run into merge conflicts.
-                throw new Exception("Abort. There are local changes.");
-            }
+            AbortOnPotentialMergeConflicts();
 
             _gitCli.PullMasterFromOrigin();
 
 
             throw new Exception("Not implemented - no local changes");
+        }
+
+        /// <summary>
+        /// I don't want to run into merge conflicts.
+        /// Abort if there are local changes to the working or staging area.
+        /// Abort if there are local commits not pushed to the remote.
+        /// </summary>
+        private void AbortOnPotentialMergeConflicts()
+        {
+            if (_gitCli.HasLocalChanges())
+            {
+                throw new Exception("Abort. There are local changes.");
+            }
+
+            if (_gitCli.HasLocalCommits())
+            {
+                throw new Exception("Abort. There are local commits.");
+            }
         }
     }
 }
