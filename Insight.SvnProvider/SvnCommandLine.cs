@@ -61,12 +61,12 @@ namespace Insight.SvnProvider
         {
             var result = ProcessRunner.RunProcess(program, args, _workingDirectory);
 
-            if (!string.IsNullOrEmpty(result.Item3))
+            if (!string.IsNullOrEmpty(result.StdErr))
             {
-                throw new ProviderException(result.Item3);
+                throw new ProviderException(result.StdErr);
             }
 
-            return result.Item2;
+            return result.StdOut;
         }
     }
 }

@@ -2,8 +2,12 @@
 In Progress
 ---------------------------------------
 
-- Filter for change coupling
 - Create GIT provider
+    - no local changes
+    - Move tracking cannot be based on revisions
+    - Check how status looks like if there are remote changes
+
+- Filter for change coupling
 - Check no local changes! Git and Svn
     
 ---------------------------------------
@@ -15,9 +19,7 @@ Features
 ---------------------------------------
 Bugs
 ---------------------------------------
-- Check if svn name tracking works properly if 
-  incrementel update is used. If not remove the incremential 
-  feature.
+- AssemblyInfo duplicates are not distinguished in chord view.
 ---------------------------------------
 User interface
 ---------------------------------------

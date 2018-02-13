@@ -58,7 +58,14 @@ namespace Insight.GitProvider
             // Take care that no local modifications are present.
 
             // TODO check for local modifications. Also in Svn
-            return new ChangeSetHistory(null);
+
+            // TODO Check how the output look like if there are commits on the remote
+
+            if (_gitCli.HasLocalChanges())
+            {
+                throw new Exception("Cannot synchronize. Please ensure that there are no local changes.");
+            }
+            throw new Exception("Not implemented - no local changes");
         }
     }
 }

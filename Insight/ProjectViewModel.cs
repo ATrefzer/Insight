@@ -34,13 +34,13 @@ namespace Insight
                 var git = new ProviderDescription
                 {
                     Class = GitProvider.GitProvider.GetClass(),
-                    Name = "Git"
+                    Name = "Git - DO NOT USE"
                 };
 
                 return new List<ProviderDescription>
                        {
                                svn
-                               //,git
+                               ,git
                        };
             }
         }

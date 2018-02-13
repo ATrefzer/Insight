@@ -3,9 +3,16 @@ using System.Diagnostics;
 
 namespace Insight.Shared.System
 {
+    public class ProcessResult
+    {
+        public int ExitCode { get; set; }
+        public string StdOut { get; set; }
+        public string StdErr { get; set; }
+    }
+
     public static class ProcessRunner
     {
-        public static Tuple<int, string, string> RunProcess(string pathToExecutable, string arguments)
+        public static ProcessResult RunProcess(string pathToExecutable, string arguments)
         {
             return RunProcess(pathToExecutable, arguments, null);
         }
@@ -13,7 +20,7 @@ namespace Insight.Shared.System
         /// <summary>
         /// ExitCode, StdOut, StdErr
         /// </summary>
-        public static Tuple<int, string, string> RunProcess(string pathToExecutable, string arguments, string workingDirectory)
+        public static ProcessResult RunProcess(string pathToExecutable, string arguments, string workingDirectory)
         {
             using (var process = CreateProcess(pathToExecutable, workingDirectory))
             {
@@ -28,7 +35,12 @@ namespace Insight.Shared.System
                 var stdErr = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
-                return new Tuple<int, string, string>(process.ExitCode, stdOut, stdErr);
+                return new ProcessResult
+                {
+                    ExitCode = process.ExitCode,
+                    StdOut = stdOut,
+                    StdErr = stdErr
+                };
             }
         }
 
