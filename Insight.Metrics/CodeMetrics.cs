@@ -35,7 +35,7 @@ namespace Insight.Metrics
             _extensionToLanguage.Add(".xml", "XML");
             _extensionToLanguage.Add(".xaml", "XAML");
             _extensionToLanguage.Add(".cpp", "C++");
-            //_extensionToLanguage.Add(".java", "JAVA");
+            _extensionToLanguage.Add(".java", "JAVA");
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ Features
 Bugs
 ---------------------------------------
 - AssemblyInfo duplicates are not distinguished in chord view.
+- Check if renamings in svn case are handled correctly if we read history incrementially.
 ---------------------------------------
 User interface
 ---------------------------------------

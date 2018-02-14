@@ -16,7 +16,7 @@ namespace Insight.Shared
         /// <summary>
         /// Read the history from the source control provider and store it offline in the file system.
         /// </summary>
-        ChangeSetHistory UpdateCache();
+        void UpdateCache();
 
         /// <summary>
         /// Returns path to the cached file

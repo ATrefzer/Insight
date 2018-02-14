@@ -142,7 +142,7 @@ namespace Insight.SvnProvider
             return binFile.Read(_historyBinCacheFile);
         }
 
-        public ChangeSetHistory UpdateCache()
+        public void UpdateCache()
         {
             // Important: svn log returns the revisions in a different order 
             // than the {revision:HEAD} version.
@@ -179,7 +179,6 @@ namespace Insight.SvnProvider
 
             var outFile = new BinaryFile<ChangeSetHistory>();
             outFile.Write(_historyBinCacheFile, history);
-            return history;
         }
 
         private static int GetLastKnownRevision(ChangeSetHistory history)

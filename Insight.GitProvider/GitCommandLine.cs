@@ -3,23 +3,13 @@ using Insight.Shared.System;
 
 namespace Insight.GitProvider
 {
-    class GitCommandLine
-    {      
+    internal sealed class GitCommandLine
+    {
         private readonly string _workingDirectory;
 
         public GitCommandLine(string workingDirectory)
         {
             _workingDirectory = workingDirectory;
-        }
-
-        //git log --pretty=format:'[%h] %aN %ad %s' --date=short --numstat
-
-        public ProcessResult PullMasterFromOrigin()
-        {
-            // git pull origin master
-            var program = "git";
-            var args = $"pull origin master";
-            return ExecuteCommandLine(program, args);
         }
 
         /// <summary>
@@ -46,6 +36,33 @@ namespace Insight.GitProvider
             return !result.StdOut.ToLowerInvariant().Contains(hint);
         }
 
+        public ProcessResult PullMasterFromOrigin()
+        {
+            // git pull origin master
+            var program = "git";
+            var args = $"pull origin master";
+            return ExecuteCommandLine(program, args);
+        }
+
+        internal string Log()
+        {
+            // %H   Hash (abbrebiated is %h)
+            // %n   Newline
+            // %aN  Author name
+            // %ad  Author date (format respects --date= option)
+            // %s   Subject (commit message)
+
+            // --num_stat Shows added and removed lines
+            var program = "git";
+
+            //var args = $"log --pretty=format:'%H%n%aN%n%ad%n%s' --date=iso --numstat";
+            var args = $"log --pretty=format:START_HEADER%n%H%n%aN%n%ad%n%s%nEND_HEADER --date=iso-strict --name-status";
+
+            // Alternativ: iso-strict
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut;
+        }
+
         private ProcessResult ExecuteCommandLine(string program, string args)
         {
             var result = ProcessRunner.RunProcess(program, args, _workingDirectory);
@@ -57,7 +74,5 @@ namespace Insight.GitProvider
 
             return result;
         }
-
-
     }
 }
