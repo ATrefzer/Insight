@@ -4,7 +4,6 @@ In Progress
 
 - Create GIT provider
     - Move tracking cannot be based on revisions.
-    - work fraction
     - Trend
 
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)

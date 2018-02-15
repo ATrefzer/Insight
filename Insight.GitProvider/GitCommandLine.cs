@@ -12,6 +12,14 @@ namespace Insight.GitProvider
             _workingDirectory = workingDirectory;
         }
 
+        public string Annotate(string localPath)
+        {
+            // git pull origin master
+            var program = "git";
+            var args = $"annotate {localPath}";
+            return ExecuteCommandLine(program, args).StdOut;
+        }
+
         /// <summary>
         /// Returns true if there are any changes in the working or
         /// staging area.
@@ -49,14 +57,16 @@ namespace Insight.GitProvider
             // %H   Hash (abbrebiated is %h)
             // %n   Newline
             // %aN  Author name
+            // %cN  Committer name
             // %ad  Author date (format respects --date= option)
+            // %cd  Committer date (format respects --date= option)
             // %s   Subject (commit message)
 
             // --num_stat Shows added and removed lines
             var program = "git";
 
             //var args = $"log --pretty=format:'%H%n%aN%n%ad%n%s' --date=iso --numstat";
-            var args = $"log --pretty=format:START_HEADER%n%h%n%aN%n%ad%n%s%nEND_HEADER --date=iso-strict --name-status";
+            var args = $"log --pretty=format:START_HEADER%n%h%n%cN%n%cd%n%s%nEND_HEADER --date=iso-strict --name-status";
 
             // Alternativ: iso-strict
             var result = ExecuteCommandLine(program, args);

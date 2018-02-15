@@ -1,25 +1,63 @@
-﻿using Insight.Shared;
-using Insight.Shared.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+
+using Insight.Shared;
+using Insight.Shared.Extensions;
+using Insight.Shared.Model;
 
 namespace Insight.GitProvider
 {
     public class GitProvider : ISourceControlProvider
     {
-        private string _startDirectory;
         private string _cachePath;
-        private string _workItemRegex;
+        private GitCommandLine _gitCli;
         private string _gitHistoryExportFile;
         private string _historyBinCacheFile;
-        private GitCommandLine _gitCli;
+
+        private string _lastLine;
+        private string _startDirectory;
+        private string _workItemRegex;
+        private readonly string endHeaderMarker = "END_HEADER";
+
+        private readonly string recordMarker = "START_HEADER";
+
+        public static string GetClass()
+        {
+            var type = typeof(GitProvider);
+            return type.FullName + "," + type.Assembly.GetName().Name;
+        }
+
+        public Dictionary<string, int> CalculateDeveloperWork(Artifact artifact)
+        {
+            var annotate = _gitCli.Annotate(artifact.LocalPath);
+
+            //S = not a whitespace
+            //s = whitespace
+
+            // Parse annotated file
+            var workByDevelopers = new Dictionary<string, int>();
+            var changeSetRegex = new Regex(@"^\S*\t\(\s+(?<developerName>\S+).*", RegexOptions.Compiled | RegexOptions.Multiline);
+
+            // Work by changesets (line by line)
+            var matches = changeSetRegex.Matches(annotate);
+            foreach (Match match in matches)
+            {
+                var developer = match.Groups["developerName"].Value;
+                workByDevelopers.AddToValue(developer, 1);
+            }
+
+            return workByDevelopers;
+        }
+
+        public List<FileRevision> ExportFileHistory(string localFile)
+        {
+            throw new NotImplementedException();
+        }
 
         public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
@@ -31,22 +69,6 @@ namespace Insight.GitProvider
             _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.log");
             _historyBinCacheFile = Path.Combine(cachePath, @"cs_history.bin");
             _gitCli = new GitCommandLine(_startDirectory);
-
-        }
-        public static string GetClass()
-        {
-            var type = typeof(GitProvider);
-            return type.FullName + "," + type.Assembly.GetName().Name;
-        }
-
-        public Dictionary<string, int> CalculateDeveloperWork(Artifact artifact)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<FileRevision> ExportFileHistory(string localFile)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -64,14 +86,49 @@ namespace Insight.GitProvider
             return binFile.Read(_historyBinCacheFile);
         }
 
-        bool GoToNextRecord(StreamReader reader)
+        public void UpdateCache()
         {
-            
+            // Git has the complete history locally anyway.
+            // So we just can fetch and pull any changes.
+
+            // TODO
+            //AbortOnPotentialMergeConflicts();
+            //_gitCli.PullMasterFromOrigin();
+            var log = _gitCli.Log();
+            File.WriteAllText(_gitHistoryExportFile, log);
+
+            var history = ParseLog(_gitHistoryExportFile);
+
+            var binFile = new BinaryFile<ChangeSetHistory>();
+            binFile.Write(_historyBinCacheFile, history);
+        }
+
+        /// <summary>
+        /// I don't want to run into merge conflicts.
+        /// Abort if there are local changes to the working or staging area.
+        /// Abort if there are local commits not pushed to the remote.
+        /// </summary>
+        private void AbortOnPotentialMergeConflicts()
+        {
+            if (_gitCli.HasLocalChanges())
+            {
+                throw new Exception("Abort. There are local changes.");
+            }
+
+            if (_gitCli.HasLocalCommits())
+            {
+                throw new Exception("Abort. There are local commits.");
+            }
+        }
+
+        private bool GoToNextRecord(StreamReader reader)
+        {
             if (_lastLine == recordMarker)
             {
                 // We are already positioned on the next changeset.
                 return true;
             }
+
             string line;
             while ((line = ReadLine(reader)) != null)
             {
@@ -84,21 +141,27 @@ namespace Insight.GitProvider
             return false;
         }
 
-        private string _lastLine;
-        string ReadLine(StreamReader reader)
+        private string MapToLocalFile(string serverPath)
         {
-            // The only place where we read
-            _lastLine = reader.ReadLine()?.Trim();
-            return _lastLine;
+            // In git we have the restriction 
+            // that we cannot choose any sub directory.
+            // (Current knowledge). Select the one with .git for the moment.
+
+            // Example
+            // _startDirectory = d:\\....\Insight
+            // serverPath = Insight/Board.txt
+            // localPath = d:\\....\Insight\Insight/Board.txt
+            var serverNormalized = serverPath.Replace("/", "\\");
+            var localPath = Path.Combine(_startDirectory, serverNormalized);
+            return localPath;
         }
 
-     
+
         /// <summary>
         /// Log file has format specified in GitCommandLine class
         /// </summary>
         private ChangeSetHistory ParseLog(string logFile)
         {
-          
             var changeSets = new List<ChangeSet>();
 
             using (var fs = new FileStream(logFile, FileMode.Open))
@@ -124,12 +187,8 @@ namespace Insight.GitProvider
             return history;
         }
 
-        string recordMarker = "START_HEADER";
-        string endHeaderMarker = "END_HEADER";
         private ChangeSet ParseRecord(StreamReader reader)
         {
-            
-
             // We are located on the first data item of the record
             var shortHash = ReadLine(reader);
             var committer = ReadLine(reader);
@@ -137,10 +196,9 @@ namespace Insight.GitProvider
 
             var commentBuilder = new StringBuilder();
             string commentLine;
-          
+
             while ((commentLine = ReadLine(reader)) != endHeaderMarker)
             {
-    
                 if (!string.IsNullOrEmpty(commentLine))
                 {
                     commentBuilder.AppendLine(commentLine);
@@ -150,14 +208,13 @@ namespace Insight.GitProvider
             var cs = new ChangeSet();
             cs.Id = int.Parse(shortHash, NumberStyles.HexNumber);
             cs.Committer = committer;
-            cs.Comment = commentBuilder.ToString().Trim(new[] { '\r', '\n' }); 
+            cs.Comment = commentBuilder.ToString().Trim('\r', '\n');
             cs.Date = DateTime.Parse(date);
 
             Debug.Assert(commentLine == endHeaderMarker);
 
-          
             // Now parse the files!
-            string changeItem = ReadLine(reader);
+            var changeItem = ReadLine(reader);
             while (changeItem != null && changeItem != recordMarker)
             {
                 if (!string.IsNullOrEmpty(changeItem))
@@ -170,7 +227,7 @@ namespace Insight.GitProvider
                     // R083 Visualization.Controls/Filter/FilterView.xaml   Visualization.Controls/Tools/ToolView.xaml
 
                     var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                    KindOfChange changeKind = ToKindOfChange(parts[0]);
+                    var changeKind = ToKindOfChange(parts[0]);
                     ci.Kind = changeKind;
                     if (changeKind == KindOfChange.Rename)
                     {
@@ -191,27 +248,18 @@ namespace Insight.GitProvider
                     ci.Id = new StringId(ci.ServerPath);
                     cs.Items.Add(ci);
                 }
-                changeItem = ReadLine(reader);
 
+                changeItem = ReadLine(reader);
             }
 
-           
             return cs;
         }
 
-        private string MapToLocalFile(string serverPath)
+        private string ReadLine(StreamReader reader)
         {
-            // In git we have the restriction 
-            // that we cannot choose any sub directory.
-            // (Current knowledge). Select the one with .git for the moment.
-
-            // Example
-            // _startDirectory = d:\\....\Insight
-            // serverPath = Insight/Board.txt
-            // localPath = d:\\....\Insight\Insight/Board.txt
-            var serverNormalized = serverPath.Replace("/", "\\");
-            var localPath = Path.Combine(_startDirectory, serverNormalized);
-            return localPath;
+            // The only place where we read
+            _lastLine = reader.ReadLine()?.Trim();
+            return _lastLine;
         }
 
         private KindOfChange ToKindOfChange(string kind)
@@ -238,41 +286,6 @@ namespace Insight.GitProvider
             else
             {
                 return KindOfChange.None;
-            }
-        }
-
-        public void UpdateCache()
-        {
-            // Git has the complete history locally anyway.
-            // So we just can fetch and pull any changes.
-
-            // TODO
-            //AbortOnPotentialMergeConflicts();
-            //_gitCli.PullMasterFromOrigin();
-            var log = _gitCli.Log();
-            File.WriteAllText(_gitHistoryExportFile, log);
-           
-            var history = ParseLog(_gitHistoryExportFile);
-
-            var binFile = new BinaryFile<ChangeSetHistory>();
-            binFile.Write(_historyBinCacheFile, history);
-        }
-
-        /// <summary>
-        /// I don't want to run into merge conflicts.
-        /// Abort if there are local changes to the working or staging area.
-        /// Abort if there are local commits not pushed to the remote.
-        /// </summary>
-        private void AbortOnPotentialMergeConflicts()
-        {
-            if (_gitCli.HasLocalChanges())
-            {
-                throw new Exception("Abort. There are local changes.");
-            }
-
-            if (_gitCli.HasLocalCommits())
-            {
-                throw new Exception("Abort. There are local commits.");
             }
         }
     }
