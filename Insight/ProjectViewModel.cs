@@ -92,7 +92,7 @@ namespace Insight
             switch (propertyName)
             {
                 case nameof(Cache):
-                    if (!Model.IsCacheValid())
+                    if (!Directory.Exists(Cache))
                     {
                         return new[] { "directory_does_not_exist" };
                     }
