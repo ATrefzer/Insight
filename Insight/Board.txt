@@ -1,19 +1,18 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-- Check if .git directory exists.
-- Write all input / output of the command line tools
-- Create GIT provider
-    - Move tracking cannot be based on revisions
-    - Check how status looks like if there are remote changes
 
-- Filter for change coupling
-    
+- Create GIT provider
+    - Move tracking cannot be based on revisions.
+    - work fraction
+    - Trend
+
+- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+
 ---------------------------------------
 Features
 ---------------------------------------
 - specify path to svn.exe or git.exe
-- specify the git commands to use for the tool
 - Return when zooming
 ---------------------------------------
 Bugs
@@ -62,8 +61,17 @@ Chord
 Low prio, fun
 ---------------------------------------
 
+- Global limits and constants (App config)
+    - change coupling
+    - Min Commits
+    - Max Workitems etc
+  
+- Dynamic tabs!
+- Refactor Svn Parser
 - Use WritableBitmap
 - Alternative to the CLOC because of GPL. Maybe something like this:
   https://github.com/jjrdk/ArchiMetrics/blob/master/src/ArchiMetrics.Analysis/Metrics/LinesOfCodeCalculator.cs
 - Find code similarities
- -Log scaling for filter, or coloring or exclude outliers
+- Log scaling for filter, or coloring or exclude outliers
+- Write all input / output of the command line tools
+
