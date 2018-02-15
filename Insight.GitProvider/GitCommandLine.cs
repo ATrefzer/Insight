@@ -56,7 +56,7 @@ namespace Insight.GitProvider
             var program = "git";
 
             //var args = $"log --pretty=format:'%H%n%aN%n%ad%n%s' --date=iso --numstat";
-            var args = $"log --pretty=format:START_HEADER%n%H%n%aN%n%ad%n%s%nEND_HEADER --date=iso-strict --name-status";
+            var args = $"log --pretty=format:START_HEADER%n%h%n%aN%n%ad%n%s%nEND_HEADER --date=iso-strict --name-status";
 
             // Alternativ: iso-strict
             var result = ExecuteCommandLine(program, args);

@@ -99,6 +99,8 @@ namespace Insight.Shared.Model
                 }
             }
 
+            // TODO No, No, No Does not work with git!
+            // But is used for svn only!
             ChangeSets = ChangeSets.OrderByDescending(cs => cs.Id).ToList();
         }
 

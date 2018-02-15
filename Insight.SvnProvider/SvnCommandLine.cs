@@ -43,6 +43,17 @@ namespace Insight.SvnProvider
             return ExecuteCommandLine(program, args);
         }
 
+        /// <summary>
+        /// Called in base directory to obtain the server path.
+        /// </summary>        
+        public string Info()
+        {
+            var program = "svn";
+            var args = $"info --xml";
+            return ExecuteCommandLine(program, args);
+        }
+
+
         public void UpdateWorkingCopy()
         {
             var program = "svn";

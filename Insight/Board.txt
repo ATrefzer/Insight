@@ -1,6 +1,7 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
+- Check if .git directory exists.
 - Write all input / output of the command line tools
 - Create GIT provider
     - Move tracking cannot be based on revisions

@@ -31,10 +31,7 @@ namespace Insight.SvnProvider
         private MovementTracking _tracking = new MovementTracking();
         private string _workItemRegex;
 
-        /// <summary>
-        /// For mapping the server path to local path
-        /// </summary>
-        private string _prefix;
+     
 
         public SvnProvider()
         {
@@ -54,6 +51,22 @@ namespace Insight.SvnProvider
         {
             var type = typeof(SvnProvider);
             return type.FullName + "," + type.Assembly.GetName().Name;
+        }
+
+        /// <summary>
+        /// Returns the relative server path of the current working directory.
+        /// In svn we can choose any sub directory. "svn info" will return the
+        /// server path that corresponds to this directory.
+        /// </summary>
+        string GetServerPathForBaseDirectory()
+        {
+            var xml = _svnCli.Info();
+            var dom = new XmlDocument();
+            dom.LoadXml(xml);
+            var url = dom.SelectSingleNode("//relative-url");
+            var value = url.InnerText;
+            var path = value.Trim(new []{ '^', ' '});
+            return path;
         }
 
         /// <summary>
@@ -150,6 +163,7 @@ namespace Insight.SvnProvider
             // Create directories
             GetBlameCache();
             GetHistoryCache();
+            _serverRoot = null;
 
             // Incremential update of cached change set history.
             var latestRevision = -1;
@@ -266,29 +280,21 @@ namespace Insight.SvnProvider
             return value;
         }
 
+        string _serverRoot;
         private string MapToLocalFile(string serverPath)
         {
+            // In svn we can select any sub directory of our working copy.
+            // GetServerPathForBaseDirectory returns an updated relative path!
             var serverNormalized = serverPath.Replace("/", "\\");
-            if (_prefix == null)
+            if (_serverRoot == null)
             {
-                // Cut away as much from the base directory such that it fits the beginning of the server path
-                var index = 0;
-                while (index <= _startDirectory.Length)
-                {
-                    var baseRemainder = _startDirectory.Substring(index);
-                    if (serverNormalized.StartsWith(baseRemainder, StringComparison.InvariantCulture))
-                    {
-                        // found 
-                        _prefix = _startDirectory.Substring(0, index);
-                        break;
-                    }
-
-                    index++;
-                }
+                _serverRoot = GetServerPathForBaseDirectory();
             }
 
-            Debug.Assert(_prefix != null);
-            return _prefix + serverNormalized;
+            // TODO separator char
+            var common = serverNormalized.Substring(_serverRoot.Length).Trim(new[] { '\\' });
+            var localPath = Path.Combine(_startDirectory, common);
+            return localPath;
         }
 
         private void ParseLogEntry(XmlReader reader, List<ChangeSet> result)

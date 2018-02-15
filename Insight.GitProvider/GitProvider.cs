@@ -3,6 +3,7 @@ using Insight.Shared.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -130,7 +131,7 @@ namespace Insight.GitProvider
             
 
             // We are located on the first data item of the record
-            var hash = ReadLine(reader);
+            var shortHash = ReadLine(reader);
             var committer = ReadLine(reader);
             var date = ReadLine(reader);
 
@@ -139,6 +140,7 @@ namespace Insight.GitProvider
           
             while ((commentLine = ReadLine(reader)) != endHeaderMarker)
             {
+    
                 if (!string.IsNullOrEmpty(commentLine))
                 {
                     commentBuilder.AppendLine(commentLine);
@@ -146,31 +148,97 @@ namespace Insight.GitProvider
             }
 
             var cs = new ChangeSet();
-            cs.Id = 0;//new StringId(hash); // TODO
+            cs.Id = int.Parse(shortHash, NumberStyles.HexNumber);
             cs.Committer = committer;
-            cs.Comment = commentBuilder.ToString();
+            cs.Comment = commentBuilder.ToString().Trim(new[] { '\r', '\n' }); 
             cs.Date = DateTime.Parse(date);
 
             Debug.Assert(commentLine == endHeaderMarker);
 
           
             // Now parse the files!
-            string changeItem;
-            while ((changeItem = ReadLine(reader)) != recordMarker)
+            string changeItem = ReadLine(reader);
+            while (changeItem != null && changeItem != recordMarker)
             {
                 if (!string.IsNullOrEmpty(changeItem))
                 {
                     var ci = new ChangeItem();
+
+                    // Example
+                    // M Visualization.Controls/Strings.resx
+                    // A Visualization.Controls/Tools/IHighlighting.cs
+                    // R083 Visualization.Controls/Filter/FilterView.xaml   Visualization.Controls/Tools/ToolView.xaml
+
+                    var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                    KindOfChange changeKind = ToKindOfChange(parts[0]);
+                    ci.Kind = changeKind;
+                    if (changeKind == KindOfChange.Rename)
+                    {
+                        Debug.Assert(parts.Length == 3);
+                        var oldName = parts[1];
+                        var newName = parts[2];
+                        ci.ServerPath = newName;
+                    }
+                    else
+                    {
+                        Debug.Assert(parts.Length == 2 || parts.Length == 3);
+                        ci.ServerPath = parts[1];
+                    }
+
+                    ci.LocalPath = MapToLocalFile(ci.ServerPath);
+
+                    // TODO
+                    ci.Id = new StringId(ci.ServerPath);
                     cs.Items.Add(ci);
                 }
-                
+                changeItem = ReadLine(reader);
+
             }
 
-            // Example
-            // M Visualization.Controls/Strings.resx
-            // A Visualization.Controls/Tools/IHighlighting.cs
-            // R083 Visualization.Controls/Filter/FilterView.xaml   Visualization.Controls/Tools/ToolView.xaml
+           
             return cs;
+        }
+
+        private string MapToLocalFile(string serverPath)
+        {
+            // In git we have the restriction 
+            // that we cannot choose any sub directory.
+            // (Current knowledge). Select the one with .git for the moment.
+
+            // Example
+            // _startDirectory = d:\\....\Insight
+            // serverPath = Insight/Board.txt
+            // localPath = d:\\....\Insight\Insight/Board.txt
+            var serverNormalized = serverPath.Replace("/", "\\");
+            var localPath = Path.Combine(_startDirectory, serverNormalized);
+            return localPath;
+        }
+
+        private KindOfChange ToKindOfChange(string kind)
+        {
+            if (kind.StartsWith("R"))
+            {
+                // The next number is the similarity with the original file
+                var similarityWithOriginal = int.Parse(kind.Substring(1));
+                if (similarityWithOriginal < 90)
+                {
+                    return KindOfChange.Add;
+                }
+
+                return KindOfChange.Rename;
+            }
+            else if (kind == "A")
+            {
+                return KindOfChange.Add;
+            }
+            else if (kind == "M")
+            {
+                return KindOfChange.Edit;
+            }
+            else
+            {
+                return KindOfChange.None;
+            }
         }
 
         public void UpdateCache()

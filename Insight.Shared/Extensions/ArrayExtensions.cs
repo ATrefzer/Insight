@@ -11,5 +11,12 @@ namespace Insight.Shared.Extensions
             Array.Copy(oldArray, from, newArray, 0, newArray.Length);
             return newArray;
         }
+
+        public static T[] Subset<T>(this T[] oldArray, int from, int count)
+        {
+            var newArray = new T[count];
+            Array.Copy(oldArray, from, newArray, 0, newArray.Length);
+            return newArray;
+        }
     }
 }
