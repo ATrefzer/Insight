@@ -2,8 +2,8 @@
 In Progress
 ---------------------------------------
 
-- Direkt nach dem Synchen ist die summary für Hotspot manchmal leer.
-- Decoder for comment characters (multi characters?)
+
+
 - Create GIT provider
     - Move tracking cannot be based on revisions.
     - Trend
@@ -73,7 +73,9 @@ Low prio, fun
     - Max Workitems etc
   
 - Dynamic tabs!
+- Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
+- Refactor Project. Create a new one instead of registering for changes.
 - Use WritableBitmap
 - Alternative to the CLOC because of GPL. Maybe something like this:
   https://github.com/jjrdk/ArchiMetrics/blob/master/src/ArchiMetrics.Analysis/Metrics/LinesOfCodeCalculator.cs

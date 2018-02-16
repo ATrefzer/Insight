@@ -18,7 +18,7 @@ using Visualization.Controls.Data;
 
 namespace Insight
 {
-    internal class Analyzer
+    internal sealed class Analyzer
     {
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
@@ -26,9 +26,37 @@ namespace Insight
         public Analyzer(Project project)
         {
             Project = project;
+            Project.ProjectLoaded += (sender, arg) =>
+                                     {
+                                         _history = null;
+                                         _metrics = null;
+                                     };
         }
 
         public Project Project { get; }
+
+        /// <summary>
+        /// Work for a single file. Developer -> lines of work
+        /// </summary>
+        public static MainDeveloper GetMainDeveloper(Dictionary<string, int> workByDevelopers)
+        {
+            // Find main developer
+            string mainDeveloper = null;
+            double linesOfWork = 0;
+
+            double lineCount = workByDevelopers.Values.Sum();
+
+            foreach (var pair in workByDevelopers)
+            {
+                if (pair.Value > linesOfWork)
+                {
+                    mainDeveloper = pair.Key;
+                    linesOfWork = pair.Value;
+                }
+            }
+
+            return new MainDeveloper(mainDeveloper, 100.0 * linesOfWork / lineCount);
+        }
 
         public Task<HierarchicalData> AnalyzeHotspotsAsync()
         {
@@ -59,7 +87,6 @@ namespace Insight
                                     {
                                         return null;
                                     }
-
                                 }
 
                                 // Get summary of all files within the selected direcory
@@ -78,6 +105,7 @@ namespace Insight
 
                                 // Calculate main developer for each file
                                 var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
+
                                 //foreach (var artifact in summary)
                                 //{
                                 //    var svnProvider = Project.CreateProvider();
@@ -88,14 +116,14 @@ namespace Insight
                                 //}
 
                                 Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 8 },
-                                                 (artifact) =>
-                                                          {
-                                                              var svnProvider = Project.CreateProvider();
+                                                 artifact =>
+                                                 {
+                                                     var svnProvider = Project.CreateProvider();
 
-                                                              var work = svnProvider.CalculateDeveloperWork(artifact);
-                                                              var mainDeveloper = GetMainDeveloper(work);
-                                                              mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                                          });
+                                                     var work = svnProvider.CalculateDeveloperWork(artifact);
+                                                     var mainDeveloper = GetMainDeveloper(work);
+                                                     mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                                                 });
 
                                 // Assign a color to each developer
                                 var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
@@ -204,41 +232,18 @@ namespace Insight
                                     gridData.Add(
                                                  new DataGridFriendlyArtifact
                                                  {
-                                                     LocalPath = artifact.LocalPath,
-                                                     Revision = artifact.Revision,
-                                                     Commits = artifact.Commits,
-                                                     Committers = artifact.Committers.Count,
-                                                     LOC = loc,
-                                                     WorkItems = artifact.WorkItems.Count
+                                                         LocalPath = artifact.LocalPath,
+                                                         Revision = artifact.Revision,
+                                                         Commits = artifact.Commits,
+                                                         Committers = artifact.Committers.Count,
+                                                         LOC = loc,
+                                                         WorkItems = artifact.WorkItems.Count
                                                  });
                                 }
 
                                 Csv.Write(Path.Combine(Project.Cache, "Export.csv"), gridData);
                                 return gridData;
                             });
-        }
-
-        /// <summary>
-        /// Work for a single file. Developer -> lines of work
-        /// </summary>
-        public static MainDeveloper GetMainDeveloper(Dictionary<string, int> workByDevelopers)
-        {
-            // Find main developer
-            string mainDeveloper = null;
-            double linesOfWork = 0;
-
-            double lineCount = workByDevelopers.Values.Sum();
-
-            foreach (var pair in workByDevelopers)
-            {
-                if (pair.Value > linesOfWork)
-                {
-                    mainDeveloper = pair.Key;
-                    linesOfWork = pair.Value;
-                }
-            }
-
-            return new MainDeveloper(mainDeveloper, 100.0 * linesOfWork / lineCount);
         }
 
         public async Task UpdateCacheAsyc()

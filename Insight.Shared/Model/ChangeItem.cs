@@ -33,7 +33,7 @@ namespace Insight.Shared.Model
         /// <summary>
         ///     Name on server. Later mapped to a local file.
         /// </summary>
-        public string ServerPath { get; set; }
+        public string ServerPath { get; set; }        
 
         public bool Exists()
         {

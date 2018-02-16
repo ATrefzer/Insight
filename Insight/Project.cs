@@ -22,6 +22,8 @@ namespace Insight
         private string _projectBase;
         public string Cache { get; set; }
 
+        public event EventHandler ProjectLoaded;
+
         public string ExtensionsToInclude
         {
             get => _extensionsToInclude;
@@ -130,6 +132,7 @@ namespace Insight
             WorkItemRegEx = Settings.Default.WorkItemRegEx.Trim();
             TeamClassifier = default(ITeamClassifier);
             UpdateFilter();
+            OnProjectLoaded();
         }
 
         public void LoadFrom(string path)
@@ -137,13 +140,15 @@ namespace Insight
             var file = new XmlFile<Project>();
             var tmp = file.Read(path);
 
-            Cache = tmp.Cache;
             ProjectBase = tmp.ProjectBase;
-            PathsToExclude = tmp.PathsToExclude;
+            Cache = tmp.Cache;
             ExtensionsToInclude = tmp.ExtensionsToInclude;
+            PathsToExclude = tmp.PathsToExclude;
             Provider = tmp.Provider;
             WorkItemRegEx = tmp.WorkItemRegEx;
             TeamClassifier = tmp.TeamClassifier;
+            UpdateFilter();
+            OnProjectLoaded();
         }
 
         public void Save()
@@ -203,6 +208,11 @@ namespace Insight
 
             // All filters must apply
             Filter = new Filter(filters.ToArray());
+        }
+
+        private void OnProjectLoaded()
+        {
+            ProjectLoaded?.Invoke(this, EventArgs.Empty);
         }
     }
 }

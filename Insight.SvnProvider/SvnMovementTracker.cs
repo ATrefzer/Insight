@@ -9,8 +9,9 @@ namespace Insight.SvnProvider
     /// <summary>
     /// Tracks files that are renamed or moved.
     /// Files that are copied into multiple files are ignored. The new files get their own id.
+    /// TODO Try unify with git movement tracker but handle special cases!
     /// </summary>
-    public sealed class MovementTracking
+    public sealed class SvnMovementTracker
     {
         // old id -> movement information
         private Dictionary<Id, MoveInfo> _ids = new Dictionary<Id, MoveInfo>();

@@ -29,7 +29,7 @@ namespace Insight.SvnProvider
         private SvnCommandLine _svnCli;
 
         private string _svnHistoryExportFile;
-        private readonly MovementTracking _tracking = new MovementTracking();
+        private readonly SvnMovementTracker _tracking = new SvnMovementTracker();
         private string _workItemRegex;
 
 
@@ -166,7 +166,7 @@ namespace Insight.SvnProvider
         {
             // Important: The svn log command only returns the history up to the revision
             // that is on the local working copy. So it is important to update first!
-            UpdateWorkingCopy();
+            // UpdateWorkingCopy(); -> No, it is not. Let the user do this.
 
             var log = _svnCli.Log();
 

@@ -38,7 +38,7 @@ namespace Insight
             _treeMap.UserCommands.Register("Trend", ShowTrend_Click);
             _treeMap.UserCommands.Register("Work", ShowWorkOnSingleFile_Click);
 
-            _project = Application.Current.Properties["project"] as Project;
+            _project = Application.Current.Properties["project"] as Project;           
             _analyzer = new Analyzer(_project);
             _dialogs = new Dialogs();
 

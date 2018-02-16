@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MovementTracking.cs" />
+    <Compile Include="SvnMovementTracker.cs" />
     <Compile Include="SvnCommandLine.cs" />
     <Compile Include="SvnProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

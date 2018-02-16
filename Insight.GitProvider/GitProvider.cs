@@ -98,9 +98,10 @@ namespace Insight.GitProvider
             // Git has the complete history locally anyway.
             // So we just can fetch and pull any changes.
 
-            // TODO
+            // TODO Pull or not?
             //AbortOnPotentialMergeConflicts();
             //_gitCli.PullMasterFromOrigin();
+
             var log = _gitCli.Log();
             File.WriteAllText(_gitHistoryExportFile, log);
         }
@@ -121,6 +122,37 @@ namespace Insight.GitProvider
             {
                 throw new Exception("Abort. There are local commits.");
             }
+        }
+
+        private ChangeItem CreateChangeItem(string changeItem, MovementTracker tracker)
+        {
+            var ci = new ChangeItem();
+
+            // Example
+            // M Visualization.Controls/Strings.resx
+            // A Visualization.Controls/Tools/IHighlighting.cs
+            // R083 Visualization.Controls/Filter/FilterView.xaml   Visualization.Controls/Tools/ToolView.xaml
+
+            var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            var changeKind = ToKindOfChange(parts[0]);
+            ci.Kind = changeKind;
+            if (changeKind == KindOfChange.Rename)
+            {
+                Debug.Assert(parts.Length == 3);
+                var oldName = parts[1];
+                var newName = parts[2];
+                ci.ServerPath = Decoder(newName);
+                tracker.SetId(ci, oldName);
+            }
+            else
+            {
+                Debug.Assert(parts.Length == 2 || parts.Length == 3);
+                ci.ServerPath = Decoder(parts[1]);
+                tracker.SetId(ci, null);
+            }
+
+            ci.LocalPath = MapToLocalFile(ci.ServerPath);
+            return ci;
         }
 
         private bool GoToNextRecord(StreamReader reader)
@@ -165,6 +197,7 @@ namespace Insight.GitProvider
         private ChangeSetHistory ParseLog(string logFile)
         {
             var changeSets = new List<ChangeSet>();
+            var tracker = new MovementTracker();
 
             using (var fs = new FileStream(logFile, FileMode.Open))
             {
@@ -178,7 +211,7 @@ namespace Insight.GitProvider
 
                     while (proceed)
                     {
-                        var changeSet = ParseRecord(reader);
+                        var changeSet = ParseRecord(reader, tracker);
                         changeSets.Add(changeSet);
                         proceed = GoToNextRecord(reader);
                     }
@@ -189,7 +222,7 @@ namespace Insight.GitProvider
             return history;
         }
 
-        private ChangeSet ParseRecord(StreamReader reader)
+        private ChangeSet ParseRecord(StreamReader reader, MovementTracker tracker)
         {
             // We are located on the first data item of the record
             var hash = ReadLine(reader);
@@ -215,46 +248,26 @@ namespace Insight.GitProvider
 
             Debug.Assert(commentLine == endHeaderMarker);
 
+            tracker.BeginChangeSet(cs);
+            ReadChangeItems(reader, cs, tracker);
+            tracker.EndChangeSet();
+            return cs;
+        }
+
+        private void ReadChangeItems(StreamReader reader, ChangeSet cs, MovementTracker tracker)
+        {
             // Now parse the files!
             var changeItem = ReadLine(reader);
             while (changeItem != null && changeItem != recordMarker)
             {
                 if (!string.IsNullOrEmpty(changeItem))
                 {
-                    var ci = new ChangeItem();
-
-                    // Example
-                    // M Visualization.Controls/Strings.resx
-                    // A Visualization.Controls/Tools/IHighlighting.cs
-                    // R083 Visualization.Controls/Filter/FilterView.xaml   Visualization.Controls/Tools/ToolView.xaml
-
-                    var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                    var changeKind = ToKindOfChange(parts[0]);
-                    ci.Kind = changeKind;
-                    if (changeKind == KindOfChange.Rename)
-                    {
-                        Debug.Assert(parts.Length == 3);
-                        var oldName = parts[1];
-                        var newName = parts[2];
-                        ci.ServerPath = Decoder(newName);
-                    }
-                    else
-                    {
-                        Debug.Assert(parts.Length == 2 || parts.Length == 3);
-                        ci.ServerPath = Decoder(parts[1]);
-                    }
-
-                    ci.LocalPath = MapToLocalFile(ci.ServerPath);
-
-                    // TODO Rename tracking!
-                    ci.Id = new StringId(ci.ServerPath);
+                    var ci = CreateChangeItem(changeItem, tracker);
                     cs.Items.Add(ci);
                 }
 
                 changeItem = ReadLine(reader);
             }
-
-            return cs;
         }
 
         private string ReadLine(StreamReader reader)
@@ -280,6 +293,10 @@ namespace Insight.GitProvider
             else if (kind == "A")
             {
                 return KindOfChange.Add;
+            }
+            else if (kind == "D")
+            {
+                return KindOfChange.Delete;
             }
             else if (kind == "M")
             {

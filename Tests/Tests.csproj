@@ -64,7 +64,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="MovementTrackerTests.cs" />
+    <Compile Include="SvnMovementTrackerTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="RangeTests.cs" />
     <Compile Include="IdTests.cs" />

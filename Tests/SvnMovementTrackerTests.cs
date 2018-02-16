@@ -23,7 +23,7 @@ namespace Tests
             // ...
             // 000 Added name1
 
-            var tracker = new MovementTracking();
+            var tracker = new SvnMovementTracker();
 
             var id1 = new StringId("name1");
             var id2 = new StringId("name2");
@@ -52,7 +52,7 @@ namespace Tests
         [Test]
         public void NoEntryMapsToLatest()
         {
-            var tracker = new MovementTracking();
+            var tracker = new SvnMovementTracker();
 
             var rev0 = new NumberId(0);
             var id1 = new StringId("name1");
