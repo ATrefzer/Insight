@@ -25,7 +25,7 @@ namespace Insight.Shared.Model
             // Item id -> artifact
             var artifacts = new Dictionary<Id, Artifact>();
 
-            var set = new HashSet<ulong>();
+            var set = new HashSet<Id>();
 
             // Files we already know we skip are not checked again!
             var ignore = new HashSet<Id>();
@@ -87,23 +87,6 @@ namespace Insight.Shared.Model
             return artifacts.Where(pair => !pair.Value.IsDeleted).Select(pair => pair.Value).ToList();
         }
 
-        public void Merge(ChangeSetHistory history)
-        {
-            var ids = ChangeSets.ToLookup(cs => cs.Id);
-
-            foreach (var cs in history.ChangeSets)
-            {
-                if (!ids.Contains(cs.Id))
-                {
-                    ChangeSets.Add(cs);
-                }
-            }
-
-            // TODO No, No, No Does not work with git!
-            // But is used for svn only!
-            ChangeSets = ChangeSets.OrderByDescending(cs => cs.Id).ToList();
-        }
-
         private static void ApplyCommits(Artifact artifact)
         {
             artifact.Commits = artifact.Commits + 1;
@@ -131,7 +114,7 @@ namespace Insight.Shared.Model
             }
         }
 
-        private static Artifact CreateArtifact(ulong changeSetId, ChangeItem item)
+        private static Artifact CreateArtifact(Id changeSetId, ChangeItem item)
         {
             Debug.Assert(item.LocalPath != null);
             var artifact = new Artifact

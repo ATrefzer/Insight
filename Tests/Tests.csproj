@@ -67,7 +67,7 @@
     <Compile Include="MovementTrackerTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="RangeTests.cs" />
-    <Compile Include="StringIdTests.cs" />
+    <Compile Include="IdTests.cs" />
     <Compile Include="WorkItemExtractorTests.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

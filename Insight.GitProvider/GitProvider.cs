@@ -192,7 +192,7 @@ namespace Insight.GitProvider
         private ChangeSet ParseRecord(StreamReader reader)
         {
             // We are located on the first data item of the record
-            var shortHash = ReadLine(reader);
+            var hash = ReadLine(reader);
             var committer = ReadLine(reader);
             var date = ReadLine(reader);
 
@@ -208,7 +208,7 @@ namespace Insight.GitProvider
             }
 
             var cs = new ChangeSet();
-            cs.Id = ulong.Parse(shortHash, NumberStyles.HexNumber);
+            cs.Id = new StringId(hash); //ulong.Parse(shortHash, NumberStyles.HexNumber);
             cs.Committer = committer;
             cs.Comment = commentBuilder.ToString().Trim('\r', '\n');
             cs.Date = DateTime.Parse(date);

@@ -2,12 +2,11 @@
 In Progress
 ---------------------------------------
 
-- Revision Ids als Id Klasse!
+- Direkt nach dem Synchen ist die summary für Hotspot manchmal leer.
 - Decoder for comment characters (multi characters?)
 - Create GIT provider
     - Move tracking cannot be based on revisions.
     - Trend
-    - Annotate must be in double quotes (spaces in file name)
 
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 

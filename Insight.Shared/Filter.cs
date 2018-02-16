@@ -76,7 +76,8 @@ namespace Insight.Shared
 
         public bool IsAccepted(string path)
         {
-            return !_filter.IsAccepted(path);
+            var accept = _filter.IsAccepted(path);
+            return !accept;
         }
     }
 
@@ -94,7 +95,8 @@ namespace Insight.Shared
 
         public bool IsAccepted(string path)
         {
-            return !_disallowedPaths.Any(path.ToLowerInvariant().Contains);
+            var reject = _disallowedPaths.Any(path.ToLowerInvariant().Contains);
+            return !reject;
         }
     }
 
@@ -110,7 +112,8 @@ namespace Insight.Shared
 
         public bool IsAccepted(string path)
         {
-            return path.StartsWith(_rootDir, StringComparison.InvariantCultureIgnoreCase);
+            var accept = path.StartsWith(_rootDir, StringComparison.InvariantCultureIgnoreCase);
+            return accept;
         }
     }
 

@@ -293,7 +293,7 @@ namespace Insight.SvnProvider
                 do
                 {
                     string copyFromPath = null;
-                    var copyFromRev = 0ul;
+                    NumberId copyFromRev = null;
 
                     var item = new ChangeItem();
 
@@ -311,7 +311,8 @@ namespace Insight.SvnProvider
                         copyFromPath = GetStringAttribute(reader, "copyfrom-path");
                         if (copyFromPath != null)
                         {
-                            copyFromRev = GetULongAttribute(reader, "copyfrom-rev");
+                            var id = GetULongAttribute(reader, "copyfrom-rev");
+                            copyFromRev = new NumberId(id);
                         }
                     }
                     else
@@ -331,7 +332,7 @@ namespace Insight.SvnProvider
                     cs.Items.Add(item);
 
                     // All info available
-                    if (copyFromPath != null && copyFromRev != 0ul)
+                    if (copyFromPath != null && copyFromRev != null)
                     {
                         _tracking.Add(revision, new StringId(item.ServerPath), copyFromRev, new StringId(copyFromPath));
                     }
@@ -374,14 +375,23 @@ namespace Insight.SvnProvider
                 }
             }
 
-            var ordered = result.OrderByDescending(cs => cs.Id).ToList();
+            // The ist is ordered because the items in the log were ordered.
+            // First item in the list is the latest one.
+            // TODO should be inherently ordered.
+            var ordered = result.OrderByDescending(cs => ((NumberId)cs.Id).Value).ToList();
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                Debug.Assert(ordered[i].Id == result[i].Id);
+            }
+
+
             var history = new ChangeSetHistory(ordered);
 
             UpdateMovedFileIds(history);
             return history;
         }
 
-        private ulong ReadRevision(XmlReader reader)
+        private NumberId ReadRevision(XmlReader reader)
         {
             var revision = reader.GetAttribute("revision");
             if (revision == null)
@@ -389,7 +399,8 @@ namespace Insight.SvnProvider
                 throw new InvalidDataException();
             }
 
-            return ulong.Parse(revision);
+            var value = ulong.Parse(revision);
+            return new NumberId(value);
         }
 
         private KindOfChange SvnActionToKindOfChange(string action)
@@ -427,7 +438,7 @@ namespace Insight.SvnProvider
                 foreach (var file in cs.Items)
                 {
                     // Use the id of the latest item if we can track move or rename operations
-                    file.Id = _tracking.GetLatestId(file.Id, cs.Id);
+                    file.Id = _tracking.GetLatestId(file.Id, (NumberId)cs.Id);
                 }
             }
         }

@@ -1,4 +1,5 @@
 ﻿using Insight.Shared.Exceptions;
+using Insight.Shared.Model;
 using Insight.Shared.System;
 
 namespace Insight.SvnProvider
@@ -36,10 +37,10 @@ namespace Insight.SvnProvider
             return ExecuteCommandLine(program, args);
         }
 
-        public string Log(ulong revision)
+        public string Log(Id revision)
         {
             var program = "svn";
-            var args = $"log -v --xml -r {revision}:HEAD";
+            var args = $"log -v --xml -r {revision.ToString()}:HEAD";
             return ExecuteCommandLine(program, args);
         }
 

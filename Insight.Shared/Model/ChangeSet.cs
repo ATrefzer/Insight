@@ -6,12 +6,12 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace Insight.Shared.Model
 {
     [Serializable]
-    public class ChangeSet
+    public sealed class ChangeSet
     {
         public string Comment { get; set; }
         public string Committer { get; set; }
         public DateTime Date { get; set; }
-        public ulong Id { get; set; }
+        public Id Id { get; set; }
         public List<ChangeItem> Items { get; } = new List<ChangeItem>();
 
         public List<WorkItem> WorkItems { get; } = new List<WorkItem>();

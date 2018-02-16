@@ -15,7 +15,7 @@ namespace Insight.SvnProvider
         // old id -> movement information
         private Dictionary<Id, MoveInfo> _ids = new Dictionary<Id, MoveInfo>();
 
-        public void Add(ulong newRevision, Id newId, ulong oldRevision, Id oldId)
+        public void Add(NumberId newRevision, Id newId, NumberId oldRevision, Id oldId)
         {
             Debug.Assert(newId != null);
             if (oldId.Equals(newId))
@@ -37,7 +37,7 @@ namespace Insight.SvnProvider
             _ids.Add(oldId, new MoveInfo(newRevision, newId, oldRevision, oldId));
         }
 
-        public Id GetLatestId(Id oldId, ulong oldRevision)
+        public Id GetLatestId(Id oldId, Id oldRevision)
         {
             if (!_ids.ContainsKey(oldId))
             {
@@ -48,11 +48,12 @@ namespace Insight.SvnProvider
             var id = oldId;
             var revision = oldRevision;
 
-            while (_ids.TryGetValue(id, out MoveInfo tmp))
+            while (_ids.TryGetValue(id, out var tmp))
             {
                 // There is a newer id for the given file id.
 
-                if (tmp.NewRevision < revision)
+                var numberId = (NumberId)revision;
+                if (tmp.NewRevision.Value < numberId.Value)
                 {
                     // TODO does not work for git due to hashes.
                     // Instead use data / time?
@@ -85,11 +86,7 @@ namespace Insight.SvnProvider
         /// </summary>
         private sealed class MoveInfo
         {
-            public readonly Id NewId;
-            public readonly ulong NewRevision;
-            public bool HasMoreThanOneCopies;
-
-            public MoveInfo(ulong newRevision, Id newId, ulong oldRevision, Id oldId)
+            public MoveInfo(NumberId newRevision, Id newId, NumberId oldRevision, Id oldId)
             {
                 NewId = newId;
                 OldId = oldId;
@@ -97,8 +94,12 @@ namespace Insight.SvnProvider
                 OldRevision = oldRevision;
             }
 
-            public Id OldId { get; set; }
-            public ulong OldRevision { get; set; }
+            public bool HasMoreThanOneCopies { get; set; }
+            public Id NewId { get; }
+            public NumberId NewRevision { get; }
+
+            public Id OldId { get; }
+            public NumberId OldRevision { get; }
         }
     }
 }
