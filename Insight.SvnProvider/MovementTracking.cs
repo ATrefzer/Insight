@@ -15,7 +15,7 @@ namespace Insight.SvnProvider
         // old id -> movement information
         private Dictionary<Id, MoveInfo> _ids = new Dictionary<Id, MoveInfo>();
 
-        public void Add(int newRevision, Id newId, int oldRevision, Id oldId)
+        public void Add(ulong newRevision, Id newId, ulong oldRevision, Id oldId)
         {
             Debug.Assert(newId != null);
             if (oldId.Equals(newId))
@@ -37,7 +37,7 @@ namespace Insight.SvnProvider
             _ids.Add(oldId, new MoveInfo(newRevision, newId, oldRevision, oldId));
         }
 
-        public Id GetLatestId(Id oldId, int oldRevision)
+        public Id GetLatestId(Id oldId, ulong oldRevision)
         {
             if (!_ids.ContainsKey(oldId))
             {
@@ -86,10 +86,10 @@ namespace Insight.SvnProvider
         private sealed class MoveInfo
         {
             public readonly Id NewId;
-            public readonly int NewRevision;
+            public readonly ulong NewRevision;
             public bool HasMoreThanOneCopies;
 
-            public MoveInfo(int newRevision, Id newId, int oldRevision, Id oldId)
+            public MoveInfo(ulong newRevision, Id newId, ulong oldRevision, Id oldId)
             {
                 NewId = newId;
                 OldId = oldId;
@@ -98,7 +98,7 @@ namespace Insight.SvnProvider
             }
 
             public Id OldId { get; set; }
-            public int OldRevision { get; set; }
+            public ulong OldRevision { get; set; }
         }
     }
 }

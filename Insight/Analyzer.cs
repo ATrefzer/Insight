@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,12 +52,14 @@ namespace Insight
                             {
                                 var scanner = new DirectoryScanner();
                                 var filesToAnalyze = scanner.GetFilesRecursive(directory);
-                                var limit = 50;
-                                if (filesToAnalyze.Count() > limit)
+                                var limit = 20;
+                                if (filesToAnalyze.Count() > limit) // TODO only for svn
                                 {
-                                    // TODO rather throw an exception!
-                                    MessageBox.Show($"The folder contains more than {limit} files. This is not allowed!");
-                                    return null;
+                                    if (MessageBox.Show($"The folder contains more than {limit} files. Really?", "Really?", MessageBoxButton.YesNo) == MessageBoxResult.No)
+                                    {
+                                        return null;
+                                    }
+
                                 }
 
                                 // Get summary of all files within the selected direcory
@@ -74,15 +77,25 @@ namespace Insight
                                 // I don't want to download that many files from the server.
 
                                 // Calculate main developer for each file
-                                var mainDeveloperPerFile = new Dictionary<string, MainDeveloper>();
-                                foreach (var artifact in summary)
-                                {
-                                    var svnProvider = Project.CreateProvider();
+                                var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
+                                //foreach (var artifact in summary)
+                                //{
+                                //    var svnProvider = Project.CreateProvider();
 
-                                    var work = svnProvider.CalculateDeveloperWork(artifact);
-                                    var mainDeveloper = GetMainDeveloper(work);
-                                    mainDeveloperPerFile.Add(artifact.LocalPath, mainDeveloper);
-                                }
+                                //    var work = svnProvider.CalculateDeveloperWork(artifact);
+                                //    var mainDeveloper = GetMainDeveloper(work);
+                                //    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                                //}
+
+                                Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 8 },
+                                                 (artifact) =>
+                                                          {
+                                                              var svnProvider = Project.CreateProvider();
+
+                                                              var work = svnProvider.CalculateDeveloperWork(artifact);
+                                                              var mainDeveloper = GetMainDeveloper(work);
+                                                              mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                                                          });
 
                                 // Assign a color to each developer
                                 var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
@@ -91,7 +104,8 @@ namespace Insight
 
                                 // Build the knowledge data
                                 var builder = new KnowledgeBuilder();
-                                var hierarchicalData = builder.Build(summary, _metrics, mainDeveloperPerFile);
+                                var hierarchicalData = builder.Build(summary, _metrics, mainDeveloperPerFile
+                                                                             .ToDictionary(pair => pair.Key, pair => pair.Value));
                                 return hierarchicalData;
                             });
         }
@@ -190,12 +204,12 @@ namespace Insight
                                     gridData.Add(
                                                  new DataGridFriendlyArtifact
                                                  {
-                                                         LocalPath = artifact.LocalPath,
-                                                         Revision = artifact.Revision,
-                                                         Commits = artifact.Commits,
-                                                         Committers = artifact.Committers.Count,
-                                                         LOC = loc,
-                                                         WorkItems = artifact.WorkItems.Count
+                                                     LocalPath = artifact.LocalPath,
+                                                     Revision = artifact.Revision,
+                                                     Commits = artifact.Commits,
+                                                     Committers = artifact.Committers.Count,
+                                                     LOC = loc,
+                                                     WorkItems = artifact.WorkItems.Count
                                                  });
                                 }
 
@@ -207,7 +221,7 @@ namespace Insight
         /// <summary>
         /// Work for a single file. Developer -> lines of work
         /// </summary>
-        public MainDeveloper GetMainDeveloper(Dictionary<string, int> workByDevelopers)
+        public static MainDeveloper GetMainDeveloper(Dictionary<string, int> workByDevelopers)
         {
             // Find main developer
             string mainDeveloper = null;

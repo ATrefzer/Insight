@@ -36,7 +36,7 @@ namespace Insight.SvnProvider
             return ExecuteCommandLine(program, args);
         }
 
-        public string Log(int revision)
+        public string Log(ulong revision)
         {
             var program = "svn";
             var args = $"log -v --xml -r {revision}:HEAD";

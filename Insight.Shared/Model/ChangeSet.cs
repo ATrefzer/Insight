@@ -11,7 +11,7 @@ namespace Insight.Shared.Model
         public string Comment { get; set; }
         public string Committer { get; set; }
         public DateTime Date { get; set; }
-        public int Id { get; set; }
+        public ulong Id { get; set; }
         public List<ChangeItem> Items { get; } = new List<ChangeItem>();
 
         public List<WorkItem> WorkItems { get; } = new List<WorkItem>();

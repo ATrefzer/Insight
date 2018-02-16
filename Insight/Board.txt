@@ -2,17 +2,25 @@
 In Progress
 ---------------------------------------
 
+- Revision Ids als Id Klasse!
+- Decoder for comment characters (multi characters?)
 - Create GIT provider
     - Move tracking cannot be based on revisions.
     - Trend
+    - Annotate must be in double quotes (spaces in file name)
 
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+
+- Es wird ja keine List der aktuellen Dateien abgeholt, sondern aus der History ermittelt.
+  wie werden da eigentlich die gelöschten behandelt??? 
 
 ---------------------------------------
 Features
 ---------------------------------------
 - specify path to svn.exe or git.exe
 - Return when zooming
+- Developer knowledge for a single developer
+- maybe PieChart
 ---------------------------------------
 Bugs
 ---------------------------------------

@@ -25,7 +25,7 @@ namespace Insight.Shared.Model
             // Item id -> artifact
             var artifacts = new Dictionary<Id, Artifact>();
 
-            var set = new HashSet<int>();
+            var set = new HashSet<ulong>();
 
             // Files we already know we skip are not checked again!
             var ignore = new HashSet<Id>();
@@ -131,7 +131,7 @@ namespace Insight.Shared.Model
             }
         }
 
-        private static Artifact CreateArtifact(int changeSetId, ChangeItem item)
+        private static Artifact CreateArtifact(ulong changeSetId, ChangeItem item)
         {
             Debug.Assert(item.LocalPath != null);
             var artifact = new Artifact

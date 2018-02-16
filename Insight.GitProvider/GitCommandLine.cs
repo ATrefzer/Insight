@@ -16,7 +16,7 @@ namespace Insight.GitProvider
         {
             // git pull origin master
             var program = "git";
-            var args = $"annotate {localPath}";
+            var args = $"annotate \"{localPath}\"";
             return ExecuteCommandLine(program, args).StdOut;
         }
 

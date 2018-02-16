@@ -6,7 +6,7 @@
         public int Committers { get; set; }
         public int LOC { get; set; }
         public string LocalPath { get; set; }
-        public int Revision { get; set; }
+        public ulong Revision { get; set; }
         public int WorkItems { get; set; }
     }
 }

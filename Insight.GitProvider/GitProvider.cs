@@ -12,19 +12,19 @@ using Insight.Shared.Model;
 
 namespace Insight.GitProvider
 {
-    public class GitProvider : ISourceControlProvider
+    public sealed class GitProvider : ISourceControlProvider
     {
+        private static readonly Regex _regex = new Regex(@"\\(?<Value>[a-zA-Z0-9]{3})", RegexOptions.Compiled);
+        private readonly string endHeaderMarker = "END_HEADER";
+
+        private readonly string recordMarker = "START_HEADER";
         private string _cachePath;
         private GitCommandLine _gitCli;
         private string _gitHistoryExportFile;
-        private string _historyBinCacheFile;
 
         private string _lastLine;
         private string _startDirectory;
         private string _workItemRegex;
-        private readonly string endHeaderMarker = "END_HEADER";
-
-        private readonly string recordMarker = "START_HEADER";
 
         public static string GetClass()
         {
@@ -54,6 +54,16 @@ namespace Insight.GitProvider
             return workByDevelopers;
         }
 
+        // TODO that seems unreliable
+        public string Decoder(string value)
+        {
+            var replace = _regex.Replace(
+                                         value,
+                                         m => ((char) int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
+                                        );
+            return replace.Trim('"');
+        }
+
         public List<FileRevision> ExportFileHistory(string localFile)
         {
             throw new NotImplementedException();
@@ -65,9 +75,7 @@ namespace Insight.GitProvider
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
 
-            // TODO really needd?
             _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.log");
-            _historyBinCacheFile = Path.Combine(cachePath, @"cs_history.bin");
             _gitCli = new GitCommandLine(_startDirectory);
         }
 
@@ -76,14 +84,13 @@ namespace Insight.GitProvider
         /// </summary>
         public ChangeSetHistory QueryChangeSetHistory()
         {
-            if (!File.Exists(_historyBinCacheFile))
+            if (!File.Exists(_gitHistoryExportFile))
             {
-                var msg = $"History cache file '{_historyBinCacheFile}' not found. You have to 'Sync' first.";
+                var msg = $"Log export file '{_gitHistoryExportFile}' not found. You have to 'Sync' first.";
                 throw new FileNotFoundException(msg);
             }
 
-            var binFile = new BinaryFile<ChangeSetHistory>();
-            return binFile.Read(_historyBinCacheFile);
+            return ParseLog(_gitHistoryExportFile);
         }
 
         public void UpdateCache()
@@ -96,11 +103,6 @@ namespace Insight.GitProvider
             //_gitCli.PullMasterFromOrigin();
             var log = _gitCli.Log();
             File.WriteAllText(_gitHistoryExportFile, log);
-
-            var history = ParseLog(_gitHistoryExportFile);
-
-            var binFile = new BinaryFile<ChangeSetHistory>();
-            binFile.Write(_historyBinCacheFile, history);
         }
 
         /// <summary>
@@ -206,7 +208,7 @@ namespace Insight.GitProvider
             }
 
             var cs = new ChangeSet();
-            cs.Id = int.Parse(shortHash, NumberStyles.HexNumber);
+            cs.Id = ulong.Parse(shortHash, NumberStyles.HexNumber);
             cs.Committer = committer;
             cs.Comment = commentBuilder.ToString().Trim('\r', '\n');
             cs.Date = DateTime.Parse(date);
@@ -234,17 +236,17 @@ namespace Insight.GitProvider
                         Debug.Assert(parts.Length == 3);
                         var oldName = parts[1];
                         var newName = parts[2];
-                        ci.ServerPath = newName;
+                        ci.ServerPath = Decoder(newName);
                     }
                     else
                     {
                         Debug.Assert(parts.Length == 2 || parts.Length == 3);
-                        ci.ServerPath = parts[1];
+                        ci.ServerPath = Decoder(parts[1]);
                     }
 
                     ci.LocalPath = MapToLocalFile(ci.ServerPath);
 
-                    // TODO
+                    // TODO Rename tracking!
                     ci.Id = new StringId(ci.ServerPath);
                     cs.Items.Add(ci);
                 }

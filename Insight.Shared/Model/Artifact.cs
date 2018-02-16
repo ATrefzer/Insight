@@ -24,7 +24,7 @@ namespace Insight.Shared.Model
 
         public string LocalPath { get; set; }
 
-        public int Revision { get; set; }
+        public ulong Revision { get; set; }
 
         public string ServerPath { get; set; }
 

@@ -22,51 +22,21 @@ namespace Insight.SvnProvider
     public sealed class SvnProvider : ISourceControlProvider
     {
         private string _cachePath;
-        private string _historyBinCacheFile;
+
+        private string _serverRoot;
         private string _startDirectory;
 
         private SvnCommandLine _svnCli;
 
         private string _svnHistoryExportFile;
-        private MovementTracking _tracking = new MovementTracking();
+        private readonly MovementTracking _tracking = new MovementTracking();
         private string _workItemRegex;
 
-     
-
-        public SvnProvider()
-        {
-
-        }
-        public void Initialize(string projectBase, string cachePath, string workItemRegex)
-        {
-            _startDirectory = projectBase;
-            _cachePath = cachePath;
-            _workItemRegex = workItemRegex;
-            _svnHistoryExportFile = Path.Combine(cachePath, @"svn_history.log");
-            _historyBinCacheFile = Path.Combine(cachePath, @"cs_history.bin");
-            _svnCli = new SvnCommandLine(_startDirectory);
-        }
 
         public static string GetClass()
         {
             var type = typeof(SvnProvider);
             return type.FullName + "," + type.Assembly.GetName().Name;
-        }
-
-        /// <summary>
-        /// Returns the relative server path of the current working directory.
-        /// In svn we can choose any sub directory. "svn info" will return the
-        /// server path that corresponds to this directory.
-        /// </summary>
-        string GetServerPathForBaseDirectory()
-        {
-            var xml = _svnCli.Info();
-            var dom = new XmlDocument();
-            dom.LoadXml(xml);
-            var url = dom.SelectSingleNode("//relative-url");
-            var value = url.InnerText;
-            var path = value.Trim(new []{ '^', ' '});
-            return path;
         }
 
         /// <summary>
@@ -140,19 +110,27 @@ namespace Insight.SvnProvider
             return result;
         }
 
+        public void Initialize(string projectBase, string cachePath, string workItemRegex)
+        {
+            _startDirectory = projectBase;
+            _cachePath = cachePath;
+            _workItemRegex = workItemRegex;
+            _svnHistoryExportFile = Path.Combine(cachePath, @"svn_history.log");
+            _svnCli = new SvnCommandLine(_startDirectory);
+        }
+
         /// <summary>
         /// You need to call UpdateCache before.
         /// </summary>
         public ChangeSetHistory QueryChangeSetHistory()
         {
-            if (!File.Exists(_historyBinCacheFile))
+            if (!File.Exists(_svnHistoryExportFile))
             {
-                var msg = $"History cache file '{_historyBinCacheFile}' not found. You have to 'Sync' first.";
+                var msg = $"Log export file '{_svnHistoryExportFile}' not found. You have to 'Sync' first.";
                 throw new FileNotFoundException(msg);
             }
 
-            var binFile = new BinaryFile<ChangeSetHistory>();
-            return binFile.Read(_historyBinCacheFile);
+            return ReadExportFile();
         }
 
         public void UpdateCache()
@@ -165,50 +143,7 @@ namespace Insight.SvnProvider
             GetHistoryCache();
             _serverRoot = null;
 
-            // Incremential update of cached change set history.
-            var latestRevision = -1;
-            ChangeSetHistory history = null;
-
-            // Read cached history from binary file
-            if (File.Exists(_historyBinCacheFile))
-            {
-                var binFile = new BinaryFile<ChangeSetHistory>();
-                history = binFile.Read(_historyBinCacheFile);
-            }
-
-            // Get latest know revision
-            if (history != null)
-            {
-                latestRevision = GetLastKnownRevision(history);
-            }
-
-            if (history == null || latestRevision == -1)
-            {
-                history = ReadFullHistory();
-            }
-            else
-            {
-                ReadHistoryIncrement(history, latestRevision);
-            }
-
-            var outFile = new BinaryFile<ChangeSetHistory>();
-            outFile.Write(_historyBinCacheFile, history);
-        }
-
-        private static int GetLastKnownRevision(ChangeSetHistory history)
-        {
-            var latestRevision = -1;
-            var cs = history.ChangeSets.FirstOrDefault();
-            if (cs != null)
-            {
-                // Last known revision
-                latestRevision = cs.Id;
-            }
-
-            // Plausibility check
-            var maxId = history.ChangeSets.Select(csi => csi.Id).DefaultIfEmpty(-1).Max();
-            Debug.Assert(maxId == latestRevision);
-            return latestRevision;
+            ExportLogToDisk();
         }
 
         private string Blame(string path)
@@ -224,6 +159,19 @@ namespace Insight.SvnProvider
 
             File.WriteAllText(cachedPath, blame);
             return blame;
+        }
+
+
+        private void ExportLogToDisk()
+        {
+            // Important: The svn log command only returns the history up to the revision
+            // that is on the local working copy. So it is important to update first!
+            UpdateWorkingCopy();
+
+            var log = _svnCli.Log();
+
+            // Override existing file
+            File.WriteAllText(_svnHistoryExportFile, log);
         }
 
         private string GetBlameCache()
@@ -249,22 +197,10 @@ namespace Insight.SvnProvider
             return path;
         }
 
-        private int GetIntAttribute(XmlReader reader, string name)
-        {
-            var value = reader.GetAttribute(name);
-            if (value == null)
-            {
-                throw new InvalidDataException(name);
-            }
-
-            return int.Parse(value);
-        }
-
         private string GetPathToExportedFile(FileInfo localFile, int revision)
         {
             var name = new StringBuilder();
 
-           
             name.Append(localFile.FullName.GetHashCode().ToString("X"));
             name.Append("_");
             name.Append(revision.ToString("X"));
@@ -274,13 +210,39 @@ namespace Insight.SvnProvider
             return Path.Combine(GetHistoryCache(), name.ToString());
         }
 
+        /// <summary>
+        /// Returns the relative server path of the current working directory.
+        /// In svn we can choose any sub directory. "svn info" will return the
+        /// server path that corresponds to this directory.
+        /// </summary>
+        private string GetServerPathForBaseDirectory()
+        {
+            var xml = _svnCli.Info();
+            var dom = new XmlDocument();
+            dom.LoadXml(xml);
+            var url = dom.SelectSingleNode("//relative-url");
+            var value = url.InnerText;
+            var path = value.Trim('^', ' ');
+            return path;
+        }
+
         private string GetStringAttribute(XmlReader reader, string name)
         {
             var value = reader.GetAttribute(name);
             return value;
         }
 
-        string _serverRoot;
+        private ulong GetULongAttribute(XmlReader reader, string name)
+        {
+            var value = reader.GetAttribute(name);
+            if (value == null)
+            {
+                throw new InvalidDataException(name);
+            }
+
+            return ulong.Parse(value);
+        }
+
         private string MapToLocalFile(string serverPath)
         {
             // In svn we can select any sub directory of our working copy.
@@ -292,7 +254,7 @@ namespace Insight.SvnProvider
             }
 
             // TODO separator char
-            var common = serverNormalized.Substring(_serverRoot.Length).Trim(new[] { '\\' });
+            var common = serverNormalized.Substring(_serverRoot.Length).Trim('\\');
             var localPath = Path.Combine(_startDirectory, common);
             return localPath;
         }
@@ -331,7 +293,7 @@ namespace Insight.SvnProvider
                 do
                 {
                     string copyFromPath = null;
-                    var copyFromRev = -1;
+                    var copyFromRev = 0ul;
 
                     var item = new ChangeItem();
 
@@ -349,7 +311,7 @@ namespace Insight.SvnProvider
                         copyFromPath = GetStringAttribute(reader, "copyfrom-path");
                         if (copyFromPath != null)
                         {
-                            copyFromRev = GetIntAttribute(reader, "copyfrom-rev");
+                            copyFromRev = GetULongAttribute(reader, "copyfrom-rev");
                         }
                     }
                     else
@@ -369,7 +331,7 @@ namespace Insight.SvnProvider
                     cs.Items.Add(item);
 
                     // All info available
-                    if (copyFromPath != null && copyFromRev != -1)
+                    if (copyFromPath != null && copyFromRev != 0ul)
                     {
                         _tracking.Add(revision, new StringId(item.ServerPath), copyFromRev, new StringId(copyFromPath));
                     }
@@ -414,38 +376,12 @@ namespace Insight.SvnProvider
 
             var ordered = result.OrderByDescending(cs => cs.Id).ToList();
             var history = new ChangeSetHistory(ordered);
-            return history;
-        }
 
-        private ChangeSetHistory ReadFullHistory()
-        {
-            // Important: The svn log command only returns the history up to the revision
-            // that is on the local working copy. So it is important to update first!
-            UpdateWorkingCopy();
-
-            var log = _svnCli.Log();
-
-            File.WriteAllText(_svnHistoryExportFile, log);
-
-            var history = ReadExportFile();
             UpdateMovedFileIds(history);
             return history;
         }
 
-        private void ReadHistoryIncrement(ChangeSetHistory history, int revision)
-        {
-            var log = _svnCli.Log(revision);
-
-            File.WriteAllText(_svnHistoryExportFile, log);
-            var newChangeSets = ReadExportFile();
-            history.Merge(newChangeSets);
-
-            // A few new renamings update all older existing ids.
-            // Always use the latest ids for the whole renaming / moving chain.
-            UpdateMovedFileIds(history);
-        }
-
-        private int ReadRevision(XmlReader reader)
+        private ulong ReadRevision(XmlReader reader)
         {
             var revision = reader.GetAttribute("revision");
             if (revision == null)
@@ -453,7 +389,7 @@ namespace Insight.SvnProvider
                 throw new InvalidDataException();
             }
 
-            return int.Parse(revision);
+            return ulong.Parse(revision);
         }
 
         private KindOfChange SvnActionToKindOfChange(string action)
