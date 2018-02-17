@@ -29,9 +29,9 @@ The utility helps you to find these hotspots.
 In the visualizations, the area of a rectangle or innermost circle corresponds to the size of a file (lines of code). The color corresponds to the change frequency. 
 
 
-![Tree Map](https://github.com/ATrefzer/Insight/blob/master/Screenshots/TreeMap.PNG)
+![Hotspots_TreeMap](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Hotspots_TreeMap.PNG)
 
-![Circle Packaging](https://github.com/ATrefzer/Insight/blob/master/Screenshots/CirclePackaging.PNG)
+![Hotspots_Circles](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Hotspots_Circles.PNG)
 
 ### Show file trends
 
@@ -52,7 +52,16 @@ This kind of analysis can also make dependencies visible that no static code che
 Change coupling analysis can raise interesting questions because it takes a different look at the source code.
 
 
-![Change Coupling](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Chord.PNG)
+![Change Coupling](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Change_Coupling.PNG)
+
+### Show knowledge
+
+Again, a rectangle or inner most circle represents a file in the repository. Additionally, a unique color is assigned to each developer. The file is then drawn in the color of the developer who contributed most to its content.
+
+This visualization allows you to see how the knowledge is distributed over the project.
+
+![Knowledge_TreeMap](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Knowledge_TreeMap.PNG) 
+![Knowledge_Circles](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Knowledge_Circles.PNG)
 
 # How to build
 
