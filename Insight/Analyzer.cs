@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,8 +29,7 @@ namespace Insight
             Project = project;
             Project.ProjectLoaded += (sender, arg) =>
                                      {
-                                         _history = null;
-                                         _metrics = null;
+                                         Clear();
                                      };
         }
 
@@ -300,6 +300,12 @@ namespace Insight
                 var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
                 _metrics = metricProvider.QueryCodeMetrics();
             }
+        }
+
+        internal void Clear()
+        {
+            _history = null;
+            _metrics = null;
         }
     }
 }

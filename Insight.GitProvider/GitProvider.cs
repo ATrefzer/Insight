@@ -95,13 +95,16 @@ namespace Insight.GitProvider
 
         public void UpdateCache()
         {
+            if (!Directory.Exists(Path.Combine(_startDirectory, ".git")))
+            {
+                // We need the root (containing .git) because of the function MapToLocalFile.
+                // We could go upwards and find the git root ourself and use this root for the path mapping.
+                // But for the moment take everything. The user can set filters in the project settings.
+                throw new ArgumentException("The given start directory is not the root of a git repository.");
+            }
+
             // Git has the complete history locally anyway.
-            // So we just can fetch and pull any changes.
-
-            // TODO Pull or not?
-            //AbortOnPotentialMergeConflicts();
-            //_gitCli.PullMasterFromOrigin();
-
+            
             var log = _gitCli.Log();
             File.WriteAllText(_gitHistoryExportFile, log);
         }
@@ -241,7 +244,7 @@ namespace Insight.GitProvider
             }
 
             var cs = new ChangeSet();
-            cs.Id = new StringId(hash); //ulong.Parse(shortHash, NumberStyles.HexNumber);
+            cs.Id = new StringId(hash);
             cs.Committer = committer;
             cs.Comment = commentBuilder.ToString().Trim('\r', '\n');
             cs.Date = DateTime.Parse(date);
