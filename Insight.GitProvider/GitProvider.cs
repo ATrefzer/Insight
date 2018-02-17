@@ -248,7 +248,7 @@ namespace Insight.GitProvider
 
             Debug.Assert(commentLine == endHeaderMarker);
 
-            tracker.BeginChangeSet(cs);
+            tracker.BeginChangeSet();
             ReadChangeItems(reader, cs, tracker);
             tracker.EndChangeSet();
             return cs;
@@ -281,12 +281,7 @@ namespace Insight.GitProvider
         {
             if (kind.StartsWith("R"))
             {
-                // The next number is the similarity with the original file
-                var similarityWithOriginal = int.Parse(kind.Substring(1));
-                if (similarityWithOriginal < 90)
-                {
-                    return KindOfChange.Add;
-                }
+         
 
                 return KindOfChange.Rename;
             }

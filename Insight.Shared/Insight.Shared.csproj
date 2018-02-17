@@ -67,5 +67,8 @@
     <Compile Include="WorkItemExtractor.cs" />
     <Compile Include="XmlFile.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="VersionControl\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

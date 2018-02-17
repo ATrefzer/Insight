@@ -81,8 +81,9 @@ namespace Insight
                                 var scanner = new DirectoryScanner();
                                 var filesToAnalyze = scanner.GetFilesRecursive(directory);
                                 var limit = 20;
-                                if (filesToAnalyze.Count() > limit) // TODO only for svn
+                                if (filesToAnalyze.Count() > limit && Project.Provider.Contains("SvnProvider"))
                                 {
+                                    // With git we have all files locally. But think first before requesting many thousand files from the Svn server.
                                     if (MessageBox.Show($"The folder contains more than {limit} files. Really?", "Really?", MessageBoxButton.YesNo) == MessageBoxResult.No)
                                     {
                                         return null;

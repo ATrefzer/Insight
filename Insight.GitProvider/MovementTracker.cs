@@ -11,7 +11,7 @@ namespace Insight.GitProvider
     /// // TODO copy into multiple files
     /// We process the change sets from latest to oldes.
     /// </summary>
-    internal sealed class MovementTracker
+    public sealed class MovementTracker
     {
         private readonly Dictionary<string, Id> _serverPathToId = new Dictionary<string, Id>();
 
@@ -20,12 +20,12 @@ namespace Insight.GitProvider
         /// </summary>
         private readonly List<Move> _moves = new List<Move>();
 
-        public void BeginChangeSet(ChangeSet cs)
+        public void BeginChangeSet()
         {
             // Nothing to do yet.
         }
 
-        public Id CreateId(string serverPath)
+        private Id CreateId(string serverPath)
         {
             var uuid = Guid.NewGuid();
             var id = new StringId(uuid.ToString());
@@ -38,45 +38,74 @@ namespace Insight.GitProvider
             ApplyMoves();
         }
 
+        Id GetOrCreateId(string serverPath)
+        {
+            Id id;
+            if (!_serverPathToId.ContainsKey(serverPath))
+            {
+                // Not seen this file before. Create a new identifier
+                id = CreateId(serverPath);
+            }
+            else
+            {
+                // Id is already know.
+                id = _serverPathToId[serverPath];
+
+            }
+
+            return id;
+        }
+
+        /// <summary>
+        /// Requires kind and serverpath to calculate the id.
+        /// The previousServerPath is only given on rename operations.
+        /// </summary>
         public void SetId(ChangeItem changeItem, string previousServerPath)
         {
-            if (changeItem.Kind == KindOfChange.Add || changeItem.Kind == KindOfChange.Edit || changeItem.Kind == KindOfChange.Delete)
-            {
-                if (!_serverPathToId.ContainsKey(changeItem.ServerPath))
-                {
-                    // Not seen this file before. Create a new identifier
-                    var id = CreateId(changeItem.ServerPath);
-                    changeItem.Id = id;
-                }
-                else
-                {
-                    // Id is already know.
-                    changeItem.Id = _serverPathToId[changeItem.ServerPath];
-                }
-            }
-            else if(changeItem.Kind == KindOfChange.Rename) // Or Move
-            {
-                // This is the place back in time where we renamed the item to its current name
-                var currentServerPath = changeItem.ServerPath;
-                if (!_serverPathToId.ContainsKey(currentServerPath))
-                {
-                    // Renaming was the last action done in the repository.
-                    var id = CreateId(currentServerPath);
-                    changeItem.Id = id;
-                }
-                else
-                {
-                    var id = _serverPathToId[currentServerPath];
-                    changeItem.Id = id;
+            ValidateArguments(changeItem, previousServerPath);
 
-                    // For all items following (older) reuse the already known id. 
-                    _moves.Add(new Move(previousServerPath, currentServerPath, id));
-                }
+            if (changeItem.Kind == KindOfChange.Add)
+            {
+                changeItem.Id = GetOrCreateId(changeItem.ServerPath);
+
+                // Everything before the add requires gets a new id.
+                _serverPathToId.Remove(changeItem.ServerPath);
             }
-          
+            else if (changeItem.Kind == KindOfChange.Edit)
+            {
+                changeItem.Id = GetOrCreateId(changeItem.ServerPath);
+            }
+            else if (changeItem.Kind == KindOfChange.Delete)
+            {
+                // We need a new id in all cases.
+                // So far we may have worked on a file that shared the same location as this deleted file
+                _serverPathToId.Remove(changeItem.ServerPath);
+                changeItem.Id = GetOrCreateId(changeItem.ServerPath);
+            }
+            else if (changeItem.Kind == KindOfChange.Rename) // Or Move
+            {
+                // This is the commit where we renamed previousServerPath to changeItem.ServerPath (current name)
+                // In all commits following (older) the previousServerPath is mapped to the already used id.
+                // For all items  reuse the already known id. 
+                var id = GetOrCreateId(changeItem.ServerPath);
+                changeItem.Id = id;
+                _moves.Add(new Move(previousServerPath, changeItem.ServerPath, id));
+            }
             else
             {
                 Debug.Assert(false);
+            }
+        }
+
+        private static void ValidateArguments(ChangeItem changeItem, string previousServerPath)
+        {
+            // Previous server path should be exactly present if we rename.
+            if (changeItem.ServerPath == null)
+                throw new ArgumentException(nameof(changeItem.ServerPath));
+            if (!((previousServerPath == null && changeItem.Kind != KindOfChange.Rename) ||
+                (previousServerPath != null && changeItem.Kind == KindOfChange.Rename)))
+            {
+                throw new ArgumentException("KindOfChange inconsistent with presence of previous server path");
             }
         }
 
@@ -84,35 +113,31 @@ namespace Insight.GitProvider
         {
             foreach (var move in _moves)
             {
-                _serverPathToId.Remove(move.NewServerPath);
+                _serverPathToId.Remove(move.ToServerPath);
 
-                if (move.OldServerPath != null)
+                Debug.Assert(move.FromServerPath != null);
+                if (move.FromServerPath != null)
                 {
-                    _serverPathToId.Add(move.OldServerPath, move.Id);
-                }
-                else
-                {
-                    // We added the file here, so there is no previous modification.
-                    // therefore we just remove the id. Maybe another file was stored at
-                    // the location and wants a new id.
+                    _serverPathToId.Add(move.FromServerPath, move.Id);
                 }
             }
 
             _moves.Clear();
         }
 
+
         private sealed class Move
         {
-            public Move(string oldServerPath, string newServerPath, Id id)
+            public Move(string fromServerPath, string toServerPath, Id id)
             {
-                NewServerPath = newServerPath;
-                OldServerPath = oldServerPath;
+                ToServerPath = toServerPath;
+                FromServerPath = fromServerPath;
                 Id = id;
             }
 
             public Id Id { get; }
-            public string NewServerPath { get; }
-            public string OldServerPath { get; }
+            public string ToServerPath { get; }
+            public string FromServerPath { get; }
         }
     }
 }

@@ -5,6 +5,7 @@ In Progress
 
 
 - Create GIT provider
+    - In case of git go upwards to find .git!
     - Unit test for double rename (why does this happen?)
     - MessageBox with hint that no local changes and up to date.
     - Move tracking cannot be based on revisions.
