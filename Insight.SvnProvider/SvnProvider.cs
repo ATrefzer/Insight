@@ -11,6 +11,7 @@ using System.Xml;
 using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
+using Insight.Shared.VersionControl;
 
 namespace Insight.SvnProvider
 {
@@ -29,7 +30,7 @@ namespace Insight.SvnProvider
         private SvnCommandLine _svnCli;
 
         private string _svnHistoryExportFile;
-        private readonly SvnMovementTracker _tracking = new SvnMovementTracker();
+        private MovementTracker _tracking;
         private string _workItemRegex;
 
 
@@ -262,6 +263,7 @@ namespace Insight.SvnProvider
         private void ParseLogEntry(XmlReader reader, List<ChangeSet> result)
         {
             var cs = new ChangeSet();
+            _tracking.BeginChangeSet();
 
             // revision -> Id 
             var revision = ReadRevision(reader);
@@ -327,15 +329,9 @@ namespace Insight.SvnProvider
                     item.ServerPath = path;
                     item.LocalPath = MapToLocalFile(path);
 
-                    item.Id = new StringId(item.ServerPath);
+                    _tracking.SetId(item, copyFromPath);
 
                     cs.Items.Add(item);
-
-                    // All info available
-                    if (copyFromPath != null && copyFromRev != null)
-                    {
-                        _tracking.Add(revision, new StringId(item.ServerPath), copyFromRev, new StringId(copyFromPath));
-                    }
                 } while (reader.ReadToNextSibling("path"));
 
                 if (!reader.ReadToFollowing("msg"))
@@ -347,6 +343,7 @@ namespace Insight.SvnProvider
                 ParseWorkItemsFromComment(cs.WorkItems, cs.Comment);
             }
 
+            _tracking.EndChangeSet();
             result.Add(cs);
         }
 
@@ -361,7 +358,7 @@ namespace Insight.SvnProvider
 
         private ChangeSetHistory ReadExportFile()
         {
-            _tracking.Clear();
+            _tracking = new MovementTracker();
             var result = new List<ChangeSet>();
 
             using (var reader = XmlReader.Create(_svnHistoryExportFile))
@@ -375,20 +372,16 @@ namespace Insight.SvnProvider
                 }
             }
 
-            // The ist is ordered because the items in the log were ordered.
+            // The list is already ordered because the items in the log were ordered.
             // First item in the list is the latest one.
             // TODO should be inherently ordered.
-            var ordered = result.OrderByDescending(cs => ((NumberId)cs.Id).Value).ToList();
-            for (int i = 0; i < ordered.Count; i++)
+            var ordered = result.OrderByDescending(cs => ((NumberId) cs.Id).Value).ToList();
+            for (var i = 0; i < ordered.Count; i++)
             {
                 Debug.Assert(ordered[i].Id == result[i].Id);
             }
 
-
-            var history = new ChangeSetHistory(ordered);
-
-            UpdateMovedFileIds(history);
-            return history;
+            return new ChangeSetHistory(result);
         }
 
         private NumberId ReadRevision(XmlReader reader)
@@ -428,19 +421,6 @@ namespace Insight.SvnProvider
 
             Debug.Assert(false);
             return KindOfChange.None;
-        }
-
-        private void UpdateMovedFileIds(ChangeSetHistory history)
-        {
-            _tracking.RemoveItemsWithMoreThanOneCopies();
-            foreach (var cs in history.ChangeSets)
-            {
-                foreach (var file in cs.Items)
-                {
-                    // Use the id of the latest item if we can track move or rename operations
-                    file.Id = _tracking.GetLatestId(file.Id, (NumberId)cs.Id);
-                }
-            }
         }
 
         private void UpdateWorkingCopy()

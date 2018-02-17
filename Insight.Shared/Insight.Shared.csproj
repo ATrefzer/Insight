@@ -64,11 +64,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions\TimeExtensions.cs" />
     <Compile Include="Model\WorkItem.cs" />
+    <Compile Include="VersionControl\MovementTracker.cs" />
     <Compile Include="WorkItemExtractor.cs" />
     <Compile Include="XmlFile.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="VersionControl\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
