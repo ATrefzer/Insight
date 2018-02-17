@@ -7,8 +7,6 @@ using Insight.Shared.Model;
 namespace Insight.GitProvider
 {
     /// <summary>
-    /// TODO Use this mechanism also for Svn
-    /// // TODO copy into multiple files
     /// We process the change sets from latest to oldes.
     /// </summary>
     public sealed class MovementTracker
