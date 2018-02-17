@@ -146,6 +146,8 @@ namespace Insight
             progress.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             progress.Show();
 
+            Exception exception = null;
+
             try
             {
                 IsEnabled = false;
@@ -156,7 +158,7 @@ namespace Insight
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, Strings.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                exception = ex;
             }
             finally
             {
@@ -164,6 +166,11 @@ namespace Insight
                 progress.CanClose = true;
                 _canClose = true;
                 progress.Close();
+            }
+
+            if (exception != null)
+            {
+                MessageBox.Show(this, exception.Message, Strings.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -175,6 +182,8 @@ namespace Insight
             progress.Show();
 
             var result = default(T);
+            Exception exception = null;
+
             try
             {
                 IsEnabled = false;
@@ -185,7 +194,7 @@ namespace Insight
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, Strings.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                exception = ex;                
             }
             finally
             {
@@ -199,6 +208,11 @@ namespace Insight
                 _canClose = true;
 
                 progress.Close();
+            }
+
+            if (exception != null)
+            {
+                MessageBox.Show(this, exception.Message, Strings.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return result;
