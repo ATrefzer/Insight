@@ -7,7 +7,6 @@ In Progress
 - Create GIT provider
     - Unit test for double rename (why does this happen?)
     - MessageBox with hint that no local changes and up to date.
-    - Warnings with large number of renamings in git command
     - Move tracking cannot be based on revisions.
     - Trend
 
