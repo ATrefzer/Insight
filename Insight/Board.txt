@@ -2,18 +2,12 @@
 In Progress
 ---------------------------------------
 
-- Create GIT provider
-    - In case of git go upwards to find .git!
-    - MessageBox with hint that no local changes and up to date.
+- Create GIT provider 
     - Trend
 
+- rename circle packaging
 - Parallel Processing of knowledge (svn?)
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
-
-- Es wird ja keine List der aktuellen Dateien abgeholt, sondern aus der History ermittelt.
-  wie werden da eigentlich die gelöschten behandelt??? Intersection all file in history that are in metrics
-
-
 - Rename Circle Packaging
 ---------------------------------------
 Features

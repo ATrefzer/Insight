@@ -356,7 +356,23 @@ namespace Insight
 
         private async void Update_Click(object sender, RoutedEventArgs e)
         {
+            // The functions to update or pull are implemented in SvnProvider and GitProvider.
+            // But actually that is not the task of this tool. Give it an updated repository.
+            var msg = "Sync reads the version control's log and calculates code metrics for all supported files."
+             + " This takes time. The data is persistently cached and used when doing the various analyses."
+             + " If you synced before all cached data is deleted and rebuild."
+             + " Best your repository is up to date and has no local changes."
+             + " Do you want to proceed?";
+
+            var result = MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.No)
+            {
+                return;
+            }
+
             await ExecuteAsync(_analyzer.UpdateCacheAsyc);
+
+            _analyzer.Clear();
         }
     }
 }

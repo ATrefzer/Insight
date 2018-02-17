@@ -260,9 +260,6 @@ namespace Insight.Metrics
             }
         }
 
-        /// <summary>
-        ///     Empty HashSet does not filter
-        /// </summary>
         private Dictionary<string, LinesOfCode> ParseClocOutput(string clocOutput)
         {
             var metrics = new Dictionary<string, LinesOfCode>();
