@@ -17,10 +17,15 @@ namespace Insight
         /// </summary>
         public static void Write(string csvFile, List<Coupling> couplings)
         {
-            using (var stream = new StreamWriter(csvFile, false, Encoding.UTF8))
+            StreamWriter stream = null;
+            try
             {
+                stream = new StreamWriter(csvFile, false, Encoding.UTF8);
+
                 using (var csv = new CsvWriter(stream))
                 {
+                    stream = null;
+
                     // Write header
                     stream.WriteLine("item1,item2,couplings,degree");
 
@@ -33,15 +38,25 @@ namespace Insight
                     }
                 }
             }
+            finally
+            {
+                if (stream != null)
+                {
+                    stream.Dispose();
+                }
+            }
         }
-
 
         public static void Write(string csvFile, IEnumerable<DataGridFriendlyArtifact> artifacts)
         {
-            using (var stream = new StreamWriter(csvFile, false, Encoding.UTF8))
+            StreamWriter stream = null;
+
+            try
             {
+                stream = new StreamWriter(csvFile, false, Encoding.UTF8);
                 using (var csv = new CsvWriter(stream))
                 {
+                    stream = null;
                     // Write header
                     stream.WriteLine("local_path,revision,commits,committers,loc");
 
@@ -51,8 +66,14 @@ namespace Insight
                     }
                 }
             }
+            finally
+            {
+                if (stream != null)
+                {
+                    stream.Dispose();
+                }
+            }
         }
-
 
         private static void WriteArtefact(CsvWriter csv, DataGridFriendlyArtifact artifact)
         {

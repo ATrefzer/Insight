@@ -43,7 +43,7 @@ namespace Visualization.Controls
         public HierarchicalDataCommands UserCommands { get; set; }
 
 
-        protected void ChangeSearchHighlightingCommand()
+        protected void ChangeSearchHighlightingCommand(object sender, EventArgs args)
         {
             // Reuse zooming mechanism
             ZoomLevelChanged(_zoomLevel);
@@ -63,7 +63,7 @@ namespace Visualization.Controls
         protected abstract IRenderer CreateRenderer();
 
 
-        protected void FilterLevelChanged()
+        protected void FilterLevelChanged(object sender, EventArgs args)
         {
             _filtered = _root.Clone();
             _filtered.RemoveLeafNodes(leaf => !_toolViewModel.IsAreaValid(leaf.AreaMetric) || !_toolViewModel.IsWeightValid(leaf.WeightMetric));
