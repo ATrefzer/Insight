@@ -8,7 +8,7 @@ using Visualization.Controls.Utility;
 
 namespace Visualization.Controls.Tools
 {
-    public class ToolViewModel : INotifyPropertyChanged
+    public sealed class ToolViewModel : INotifyPropertyChanged
     {
         private double _maxArea;
         private double _maxWeight;
@@ -22,8 +22,8 @@ namespace Visualization.Controls.Tools
             Reset();
         }
 
-        public event Action FilterChanged;
-        public event Action SearchPatternChanged;
+        public event EventHandler FilterChanged;
+        public event EventHandler SearchPatternChanged;
 
         public event PropertyChangedEventHandler PropertyChanged;
      
@@ -121,17 +121,17 @@ namespace Visualization.Controls.Tools
             MaxArea = AreaRange.Max;
         }
 
-        protected virtual void OnFilterChanged()
+        private void OnFilterChanged()
         {
-            FilterChanged?.Invoke();
+            FilterChanged?.Invoke(this, new EventArgs());
         }
 
-        protected virtual void OnSearchPatternChanged()
+        private void OnSearchPatternChanged()
         {
-            SearchPatternChanged?.Invoke();
+            SearchPatternChanged?.Invoke(this, new EventArgs());
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {            
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

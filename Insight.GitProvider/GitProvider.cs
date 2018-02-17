@@ -59,7 +59,7 @@ namespace Insight.GitProvider
         {
             var replace = _regex.Replace(
                                          value,
-                                         m => ((char) int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
+                                         m => ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
                                         );
             return replace.Trim('"');
         }
@@ -104,7 +104,7 @@ namespace Insight.GitProvider
             }
 
             // Git has the complete history locally anyway.
-            
+
             var log = _gitCli.Log();
             File.WriteAllText(_gitHistoryExportFile, log);
         }
@@ -202,10 +202,14 @@ namespace Insight.GitProvider
             var changeSets = new List<ChangeSet>();
             var tracker = new MovementTracker();
 
-            using (var fs = new FileStream(logFile, FileMode.Open))
+            FileStream stream = null;
+            try
             {
-                using (var reader = new StreamReader(fs))
+                stream = new FileStream(logFile, FileMode.Open);
+
+                using (var reader = new StreamReader(stream))
                 {
+                    stream = null;
                     var proceed = GoToNextRecord(reader);
                     if (!proceed)
                     {
@@ -218,6 +222,13 @@ namespace Insight.GitProvider
                         changeSets.Add(changeSet);
                         proceed = GoToNextRecord(reader);
                     }
+                }
+            }
+            finally
+            {
+                if (stream != null)
+                {
+                    stream.Dispose();
                 }
             }
 

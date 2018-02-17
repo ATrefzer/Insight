@@ -99,6 +99,7 @@
     <Compile Include="ImageView.xaml.cs">
       <DependentUpon>ImageView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="TrendViewModel.cs" />
     <Compile Include="DataGridFriendlyArtifact.cs" />
     <Compile Include="Strings.Designer.cs">

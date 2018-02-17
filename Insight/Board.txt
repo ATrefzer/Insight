@@ -68,6 +68,7 @@ Low prio, fun
     - Min Commits
     - Max Workitems etc
   
+- get rid of ConvexHull due to x86
 - Dynamic tabs!
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
