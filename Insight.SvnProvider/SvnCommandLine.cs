@@ -23,7 +23,7 @@ namespace Insight.SvnProvider
             return ExecuteCommandLine(program, args);
         }
 
-        public void ExportFileRevision(string localFile, int revision, string exportFile)
+        public void ExportFileRevision(string localFile, Id revision, string exportFile)
         {
             var program = "svn";
             var args = $"export -r {revision} \"{localFile}\" \"{exportFile}\"";
@@ -37,20 +37,29 @@ namespace Insight.SvnProvider
             return ExecuteCommandLine(program, args);
         }
 
-        public string Log(Id revision)
+        public bool HasModifications()
         {
+            // Quiet hides files not under version control
             var program = "svn";
-            var args = $"log -v --xml -r {revision.ToString()}:HEAD";
-            return ExecuteCommandLine(program, args);
+            var args = $"status -q";
+            var stdOut = ExecuteCommandLine(program, args);
+            return !string.IsNullOrEmpty(stdOut.Trim());
         }
 
         /// <summary>
         /// Called in base directory to obtain the server path.
-        /// </summary>        
+        /// </summary>
         public string Info()
         {
             var program = "svn";
             var args = $"info --xml";
+            return ExecuteCommandLine(program, args);
+        }
+
+        public string Log(Id revision)
+        {
+            var program = "svn";
+            var args = $"log -v --xml -r {revision}:HEAD";
             return ExecuteCommandLine(program, args);
         }
 
@@ -60,15 +69,6 @@ namespace Insight.SvnProvider
             var program = "svn";
             var args = $"update";
             ExecuteCommandLine(program, args);
-        }
-
-        public bool HasModifications()
-        {
-            // Quiet hides files not under version control
-            var program = "svn";
-            var args = $"status -q";
-            var stdOut = ExecuteCommandLine(program, args);
-            return !string.IsNullOrEmpty(stdOut.Trim());
         }
 
         internal string Log()
