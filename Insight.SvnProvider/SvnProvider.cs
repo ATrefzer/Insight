@@ -315,6 +315,7 @@ namespace Insight.SvnProvider
                         {
                             var id = GetULongAttribute(reader, "copyfrom-rev");
                             copyFromRev = new NumberId(id);
+                            item.Kind = KindOfChange.Rename; // Movement tracker shall see this as a rename
                         }
                     }
                     else
