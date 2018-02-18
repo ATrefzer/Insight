@@ -2,6 +2,8 @@
 In Progress
 ---------------------------------------
 
+- workitems parser
+- bug assemblyinfo.cs
 - Create GIT provider 
     - Trend
 

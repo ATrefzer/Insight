@@ -12,6 +12,9 @@ using Insight.Shared.Model;
 
 namespace Insight.GitProvider
 {
+    /// <summary>
+    /// Provides higher level funtions and queries on a git repository.
+    /// </summary>
     public sealed class GitProvider : ISourceControlProvider
     {
         private static readonly Regex _regex = new Regex(@"\\(?<Value>[a-zA-Z0-9]{3})", RegexOptions.Compiled);
@@ -258,6 +261,9 @@ namespace Insight.GitProvider
             cs.Id = new StringId(hash);
             cs.Committer = committer;
             cs.Comment = commentBuilder.ToString().Trim('\r', '\n');
+
+            ParseWorkItemsFromComment(cs.WorkItems, cs.Comment);
+
             cs.Date = DateTime.Parse(date);
 
             Debug.Assert(commentLine == endHeaderMarker);
@@ -267,6 +273,16 @@ namespace Insight.GitProvider
             tracker.EndChangeSet();
             return cs;
         }
+
+        private void ParseWorkItemsFromComment(List<WorkItem> workItems, string comment)
+        {
+            if (!string.IsNullOrEmpty(_workItemRegex))
+            {
+                var extractor = new WorkItemExtractor(_workItemRegex);
+                workItems.AddRange(extractor.Extract(comment));
+            }
+        }
+     
 
         private void ReadChangeItems(StreamReader reader, ChangeSet cs, MovementTracker tracker)
         {

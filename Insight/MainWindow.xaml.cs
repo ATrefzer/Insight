@@ -70,6 +70,9 @@ namespace Insight
             var fileToAnalyze = data.Tag as string;
             var path = await ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFileAsync(fileToAnalyze)).ConfigureAwait(true);
 
+            if (path == null)
+                return;
+
             // Show image
             var viewer = new ImageView();
             viewer.SetImage(path);
