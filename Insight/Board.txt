@@ -2,7 +2,7 @@
 In Progress
 ---------------------------------------
 
-- workitems parser
+- Unit Tests MovementTracker wenn add und remove ein rename darstellen
 - bug assemblyinfo.cs
 - Create GIT provider 
     - Trend
