@@ -315,7 +315,7 @@ namespace Insight.SvnProvider
                         {
                             var id = GetULongAttribute(reader, "copyfrom-rev");
                             copyFromRev = new NumberId(id);
-                            item.Kind = KindOfChange.Rename; // Movement tracker shall see this as a rename
+                            item.Kind = KindOfChange.Rename;
                         }
                     }
                     else
@@ -345,6 +345,9 @@ namespace Insight.SvnProvider
             }
 
             _tracking.ApplyChangeSet();
+
+            // Remove deletes that represent a move together with an add.
+            cs.Items.RemoveAll(item => item.Id == null);
             result.Add(cs);
         }
 
