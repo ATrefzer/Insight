@@ -336,9 +336,16 @@ namespace Insight.SvnProvider
                     item.ServerPath = path;
                     item.LocalPath = MapToLocalFile(path);
 
-                    _tracking.TrackId(item, copyFromPath);
-
-                    cs.Items.Add(item);
+                    if (item.Kind == KindOfChange.Rename && copyFromPath == null)
+                    {
+                        // Wtf. This can happen.
+                    }
+                    else
+                    {
+                        _tracking.TrackId(item, copyFromPath);
+                        cs.Items.Add(item);
+                    }
+                
                 } while (reader.ReadToNextSibling("path"));
 
                 if (!reader.ReadToFollowing("msg"))

@@ -3,6 +3,9 @@ In Progress
 ---------------------------------------
 
 - Unit Tests MovementTracker wenn add und remove ein rename darstellen
+    - copy into many
+    - replace by add and remove. (in beiden richtungen
+    - move one file into many (with delete of the source))
 - bug assemblyinfo.cs
 - Create GIT provider 
     - Trend

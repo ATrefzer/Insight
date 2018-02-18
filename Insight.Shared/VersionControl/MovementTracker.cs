@@ -70,21 +70,30 @@ namespace Insight.Shared.VersionControl
 
         private static void ValidateArguments(ChangeItem changeItem, string previousServerPath)
         {
-            // Previous server path should be exactly present if we rename.
             if (changeItem.ServerPath == null)
             {
                 throw new ArgumentException(nameof(changeItem.ServerPath));
             }
 
-            if (!(previousServerPath == null && changeItem.Kind != KindOfChange.Rename ||
-                  previousServerPath != null && changeItem.Kind == KindOfChange.Rename))
+            if (changeItem.Kind == KindOfChange.Rename && previousServerPath == null)
             {
+
                 throw new ArgumentException("KindOfChange inconsistent with presence of previous server path");
             }
         }
 
         private void ApplyMoves()
         {
+            // TODO post precessing
+            // find moves that are modeled as add and remove
+            // find copies (many) of a file with or without deleting the source.
+
+            // The case where we copy a file multiple times we could follow the history in different files.
+            // Is ignored. I accept that. I use the concept of a unique id.
+
+            // TODO in vorberarbeitung nur eine exaktes move erkennen. Delete löschen, add zu den moves schieben.
+            // Alles andere bleibt dann ein Add. Weiter unten gibt es keine sonderbehandlung.
+
             // In svn a move can consist of add and delete. We only handle deletes if not part of a rename.
             var deletes = _deletes.Where(DeleteOnly).ToList();
 
@@ -105,6 +114,10 @@ namespace Insight.Shared.VersionControl
             {
                 //  3 add cases TODO describe
 
+                // TODO copy (add) files (many) from one soruce and delete the source!. wtf
+
+                // If we have exactly one delete for an add thats a move.
+                // If we have more than adds for one delete thats just copying into multiple files and deleting the source.
                 if (add.FromServerPath != null)
                 {
                     bool isMove = _deletes.Any(deleted => deleted.ServerPath == add.FromServerPath);
@@ -163,7 +176,7 @@ namespace Insight.Shared.VersionControl
         {
             // The delete is alone and does not belong to an add to form a move.
             return !_moves.Any(move => move.FromServerPath == delete.ServerPath) &&
-                   !_adds.Any(add => add.ServerPath == delete.ServerPath);
+                   !_adds.Any(add => add.FromServerPath == delete.ServerPath);
         }
 
         private Id GetOrCreateId(string serverPath)
@@ -195,6 +208,8 @@ namespace Insight.Shared.VersionControl
             public string FromServerPath { get; }
 
             public string ServerPath => Item.ServerPath;
+
+            
         }
 
         private class Delete
