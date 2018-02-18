@@ -54,11 +54,13 @@ namespace Insight
             try
             {
                 stream = new StreamWriter(csvFile, false, Encoding.UTF8);
+
+                // Write header
+                stream.WriteLine("local_path,revision,commits,committers,loc");
+
                 using (var csv = new CsvWriter(stream))
                 {
                     stream = null;
-                    // Write header
-                    stream.WriteLine("local_path,revision,commits,committers,loc");
 
                     foreach (var artifact in artifacts)
                     {
