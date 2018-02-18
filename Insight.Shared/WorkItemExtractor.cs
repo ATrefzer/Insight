@@ -23,7 +23,7 @@ namespace Insight.Shared
                 return workItems;
             }      
 
-            var regex = new Regex(_regEx);
+            var regex = new Regex(_regEx, RegexOptions.Multiline);
             var matches = regex.Matches(text);
             foreach (Match match in matches)
             {
