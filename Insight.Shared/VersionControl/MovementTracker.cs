@@ -1,36 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 using Insight.Shared.Model;
 
 namespace Insight.Shared.VersionControl
 {
     /// <summary>
-    /// We process the change sets from latest to oldest.
-    /// If we see a file the first time (newest) we create an id. 
-    /// When the file is moved the previous location is mapped to the same id.
+    /// We process the change sets from latest to oldes.
     /// </summary>
     public sealed class MovementTracker
     {
-        private readonly Dictionary<string, Id> _serverPathToId = new Dictionary<string, Id>();
+        private readonly List<Delete> _deletes = new List<Delete>();
 
         /// <summary>
         /// We track all move operations within an changeset and apply them when the whole changeset was handled.
         /// </summary>
         private readonly List<Move> _moves = new List<Move>();
 
+        private readonly Dictionary<string, Id> _serverPathToId = new Dictionary<string, Id>();
+
+
         public void BeginChangeSet()
         {
             // Nothing to do yet.
-        }
-
-        private Id CreateId(string serverPath)
-        {
-            var uuid = Guid.NewGuid();
-            var id = new StringId(uuid.ToString());
-            _serverPathToId.Add(serverPath, id);
-            return id;
         }
 
         public void EndChangeSet()
@@ -38,25 +32,8 @@ namespace Insight.Shared.VersionControl
             ApplyMoves();
         }
 
-        Id GetOrCreateId(string serverPath)
-        {
-            Id id;
-            if (!_serverPathToId.ContainsKey(serverPath))
-            {
-                // Not seen this file before. Create a new identifier
-                id = CreateId(serverPath);
-            }
-            else
-            {
-                // Id is already know.
-                id = _serverPathToId[serverPath];
-
-            }
-
-            return id;
-        }
-
         /// <summary>
+        /// TODO
         /// Requires kind and serverpath to calculate the id.
         /// The previousServerPath is only given on rename operations.
         /// </summary>
@@ -77,10 +54,8 @@ namespace Insight.Shared.VersionControl
             }
             else if (changeItem.Kind == KindOfChange.Delete)
             {
-                // We need a new id in all cases.
-                // So far we may have worked on a file that shared the same location as this deleted file
-                _serverPathToId.Remove(changeItem.ServerPath);
-                changeItem.Id = GetOrCreateId(changeItem.ServerPath);
+                // TODO commet svn add ad delete
+                _deletes.Add(new Delete(changeItem));
             }
             else if (changeItem.Kind == KindOfChange.Rename) // Or Move
             {
@@ -101,9 +76,12 @@ namespace Insight.Shared.VersionControl
         {
             // Previous server path should be exactly present if we rename.
             if (changeItem.ServerPath == null)
+            {
                 throw new ArgumentException(nameof(changeItem.ServerPath));
-            if (!((previousServerPath == null && changeItem.Kind != KindOfChange.Rename) ||
-                (previousServerPath != null && changeItem.Kind == KindOfChange.Rename)))
+            }
+
+            if (!(previousServerPath == null && changeItem.Kind != KindOfChange.Rename ||
+                  previousServerPath != null && changeItem.Kind == KindOfChange.Rename))
             {
                 throw new ArgumentException("KindOfChange inconsistent with presence of previous server path");
             }
@@ -111,6 +89,17 @@ namespace Insight.Shared.VersionControl
 
         private void ApplyMoves()
         {
+            // In svn a move can consist of add and delete. We only handle deletes if not part of a rename.
+            var deletes = _deletes.Where(delete => _moves.Any(move => move.FromServerPath != delete.ServerPath));
+
+            foreach (var delete in deletes)
+            {
+                // We need a new id in all cases.
+                // So far we may have worked on a file that shared the same location as this deleted file
+                _serverPathToId.Remove(delete.ServerPath);
+                delete.Item.Id = GetOrCreateId(delete.ServerPath);
+            }
+
             foreach (var move in _moves)
             {
                 _serverPathToId.Remove(move.ToServerPath);
@@ -125,6 +114,43 @@ namespace Insight.Shared.VersionControl
             _moves.Clear();
         }
 
+        private Id CreateId(string serverPath)
+        {
+            var uuid = Guid.NewGuid();
+            var id = new StringId(uuid.ToString());
+            _serverPathToId.Add(serverPath, id);
+            return id;
+        }
+
+        private Id GetOrCreateId(string serverPath)
+        {
+            Id id;
+            if (!_serverPathToId.ContainsKey(serverPath))
+            {
+                // Not seen this file before. Create a new identifier
+                id = CreateId(serverPath);
+            }
+            else
+            {
+                // Id is already know.
+                id = _serverPathToId[serverPath];
+            }
+
+            return id;
+        }
+
+        private class Delete
+        {
+            public Delete(ChangeItem item)
+            {
+                Item = item;
+            }
+
+            public ChangeItem Item { get; }
+
+            public string ServerPath => Item.ServerPath;
+        }
+
 
         private sealed class Move
         {
@@ -135,9 +161,10 @@ namespace Insight.Shared.VersionControl
                 Id = id;
             }
 
+            public string FromServerPath { get; }
+
             public Id Id { get; }
             public string ToServerPath { get; }
-            public string FromServerPath { get; }
         }
     }
 }

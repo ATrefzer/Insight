@@ -42,7 +42,6 @@
   <ItemGroup>
     <Compile Include="GitCommandLine.cs" />
     <Compile Include="GitProvider.cs" />
-    <Compile Include="MovementTracker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

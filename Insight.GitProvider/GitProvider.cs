@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
+using Insight.Shared.VersionControl;
 
 namespace Insight.GitProvider
 {
@@ -69,6 +70,51 @@ namespace Insight.GitProvider
 
         public List<FileRevision> ExportFileHistory(string localFile)
         {
+            var result = new List<FileRevision>();
+
+            var xml = _gitCli.Log(localFile);
+
+            /*
+             * TODO
+             
+          
+
+            var dom = new XmlDocument();
+            dom.LoadXml(xml);
+            var entries = dom.SelectNodes("//logentry");
+
+            if (entries == null)
+            {
+                return result;
+            }
+
+            foreach (XmlNode entry in entries)
+            {
+                if (entry?.Attributes == null)
+                {
+                    continue;
+                }
+
+                var revision = int.Parse(entry.Attributes["revision"].Value);
+                var date = entry.SelectSingleNode("./date")?.InnerText;
+                var dateTime = DateTime.Parse(date);
+
+                // Get historical version from file cache
+
+                var fi = new FileInfo(localFile);
+                var exportFile = GetPathToExportedFile(fi, revision);
+
+                // Download if not already in cache
+                if (!File.Exists(exportFile))
+                {
+                    _svnCli.ExportFileRevision(localFile, revision, exportFile);
+                }
+
+                result.Add(new FileRevision(localFile, revision, dateTime, exportFile));
+            }
+
+            return result;
+            */
             throw new NotImplementedException();
         }
 

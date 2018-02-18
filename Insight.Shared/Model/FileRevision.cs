@@ -5,6 +5,9 @@ namespace Insight.Shared.Model
     [Serializable]
     public sealed class FileRevision
     {
+
+      
+
         public FileRevision(string localFile, int changesetId, DateTime date, string cachePath)
         {
             ChangesetId = changesetId;
