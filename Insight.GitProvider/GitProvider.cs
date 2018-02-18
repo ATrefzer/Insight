@@ -194,13 +194,13 @@ namespace Insight.GitProvider
                 var oldName = parts[1];
                 var newName = parts[2];
                 ci.ServerPath = Decoder(newName);
-                tracker.SetId(ci, oldName);
+                tracker.TrackId(ci, oldName);
             }
             else
             {
                 Debug.Assert(parts.Length == 2 || parts.Length == 3);
                 ci.ServerPath = Decoder(parts[1]);
-                tracker.SetId(ci, null);
+                tracker.TrackId(ci, null);
             }
 
             ci.LocalPath = MapToLocalFile(ci.ServerPath);
@@ -316,7 +316,7 @@ namespace Insight.GitProvider
 
             tracker.BeginChangeSet();
             ReadChangeItems(reader, cs, tracker);
-            tracker.EndChangeSet();
+            tracker.ApplyChangeSet();
             return cs;
         }
 
