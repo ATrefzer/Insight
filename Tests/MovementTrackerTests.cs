@@ -1,7 +1,7 @@
 ﻿using System;
 
-using Insight.GitProvider;
 using Insight.Shared.Model;
+using Insight.Shared.VersionControl;
 
 using NUnit.Framework;
 

@@ -52,23 +52,39 @@ namespace Insight.GitProvider
             return ExecuteCommandLine(program, args);
         }
 
+        /// <summary>
+        /// %H   Hash (abbrebiated is %h)
+        /// %n   Newline
+        /// %aN  Author name
+        /// %cN  Committer name
+        /// %ad  Author date (format respects --date= option)
+        /// %cd  Committer date (format respects --date= option)
+        /// %s   Subject (commit message)
+        /// 
+        /// Log of the whole branch or a single file shall have the same output for easier parsing.
+        /// </summary>
+        private const string LogFormat = "START_HEADER%n%H%n%cN%n%cd%n%s%nEND_HEADER";
         internal string Log()
         {
-            // %H   Hash (abbrebiated is %h)
-            // %n   Newline
-            // %aN  Author name
-            // %cN  Committer name
-            // %ad  Author date (format respects --date= option)
-            // %cd  Committer date (format respects --date= option)
-            // %s   Subject (commit message)
-
             // --num_stat Shows added and removed lines
             var program = "git";
 
             //var args = $"log --pretty=format:'%H%n%aN%n%ad%n%s' --date=iso --numstat";
-            var args = $"-c diff.renameLimit=99999 log --pretty=format:START_HEADER%n%H%n%cN%n%cd%n%s%nEND_HEADER --date=iso-strict --name-status";
+            var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict --name-status";
 
-            // Alternativ: iso-strict
+            // Alternatives: iso-strict, iso
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut;
+        }
+
+        internal string Log(string localPath)
+        {
+            localPath = localPath.Replace("\\", "/");
+            var program = "git";
+
+            // --follow to track
+            var args = $"log --follow --pretty=format:{LogFormat} --date=iso-strict --name-status -- {localPath}";
+
             var result = ExecuteCommandLine(program, args);
             return result.StdOut;
         }
