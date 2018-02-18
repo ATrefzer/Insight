@@ -22,12 +22,12 @@ namespace Insight
             {
                 stream = new StreamWriter(csvFile, false, Encoding.UTF8);
 
+                // Write header
+                stream.WriteLine("item1,item2,couplings,degree");
+
                 using (var csv = new CsvWriter(stream))
                 {
                     stream = null;
-
-                    // Write header
-                    stream.WriteLine("item1,item2,couplings,degree");
 
                     foreach (var coupling in couplings)
                     {

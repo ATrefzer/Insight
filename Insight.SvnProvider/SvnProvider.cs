@@ -224,6 +224,8 @@ namespace Insight.SvnProvider
             var url = dom.SelectSingleNode("//relative-url");
             var value = url.InnerText;
             var path = value.Trim('^', ' ');
+
+            path = Uri.UnescapeDataString(path);
             return path;
         }
 
