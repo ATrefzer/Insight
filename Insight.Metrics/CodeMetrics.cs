@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Insight.Shared.Model;
+using Insight.Shared.System;
 
 namespace Insight.Metrics
 {
@@ -35,7 +36,8 @@ namespace Insight.Metrics
             _extensionToLanguage.Add(".xml", "XML");
             _extensionToLanguage.Add(".xaml", "XAML");
             _extensionToLanguage.Add(".cpp", "C++");
-            _extensionToLanguage.Add(".java", "JAVA");
+            _extensionToLanguage.Add(".java", "Java");
+            _extensionToLanguage.Add(".css", "CSS");
         }
 
         /// <summary>
@@ -183,20 +185,20 @@ namespace Insight.Metrics
             }
 
             VerifyClocInstalled(basePath);
-            var runner = new ProcessRunner();
             var languages = string.Join(",", languagesToParse);
             var args = $"\"{rootDir.FullName}\" --by-file --csv --quiet --include-lang={languages}";
-            var result = runner.RunProcess(GetPathToCloc(basePath), args);
-            return result.Item2;
+            var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args);
+            return result.StdOut;
         }
 
         private string CallClocForSingleFile(DirectoryInfo basePath, FileInfo file)
         {
             VerifyClocInstalled(basePath);
-            var runner = new ProcessRunner();
+
             var args = $"{file.FullName} --csv --quiet";
-            var result = runner.RunProcess(GetPathToCloc(basePath), args);
-            return result.Item2;
+
+            var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args);
+            return result.StdOut;
         }
 
         private LinesOfCode CreateMetric(string[] parts)
