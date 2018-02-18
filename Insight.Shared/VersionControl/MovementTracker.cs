@@ -42,13 +42,13 @@ namespace Insight.Shared.VersionControl
         /// Requires kind and serverpath to calculate the id.
         /// The previousServerPath is only given on rename operations.
         /// </summary>
-        public void TrackId(ChangeItem changeItem, string previousServerPath)
+        public void TrackId(ChangeItem changeItem, string previousServerPath) // TODO move to changeitem
         {
             ValidateArguments(changeItem, previousServerPath);
 
             if (changeItem.Kind == KindOfChange.Add)
             {
-                _adds.Add(new Add(changeItem));
+                _adds.Add(new Add(changeItem, previousServerPath));
             }
             else if (changeItem.Kind == KindOfChange.Edit)
             {
@@ -103,6 +103,23 @@ namespace Insight.Shared.VersionControl
 
             foreach (var add in _adds)
             {
+                //  3 add cases TODO describe
+
+                if (add.FromServerPath != null)
+                {
+                    bool isMove = _deletes.Any(deleted => deleted.ServerPath == add.FromServerPath);
+                    if (isMove)
+                    {
+                        _moves.Add(new Move(add.Item, add.FromServerPath, add.ServerPath));
+                        continue;
+                    }
+                    else
+                    {
+                        // Here the file was just copied. We treat it as a norma add. So this file gets a new id.
+                    }
+                }
+
+
                 add.Item.Id = GetOrCreateId(add.ServerPath);
 
                 // Everything before the add requires gets a new id.
@@ -168,12 +185,14 @@ namespace Insight.Shared.VersionControl
 
         private class Add
         {
-            public Add(ChangeItem item)
+            public Add(ChangeItem item, string fromServerPath)
             {
                 Item = item;
+                FromServerPath = fromServerPath;
             }
 
             public ChangeItem Item { get; }
+            public string FromServerPath { get; }
 
             public string ServerPath => Item.ServerPath;
         }

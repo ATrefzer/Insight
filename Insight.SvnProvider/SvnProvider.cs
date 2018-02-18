@@ -90,7 +90,12 @@ namespace Insight.SvnProvider
                     continue;
                 }
 
-                var revision = int.Parse(entry.Attributes["revision"].Value);
+
+
+                var value = ulong.Parse(entry.Attributes["revision"].Value);
+                var revision =  new NumberId(value);
+
+
                 var date = entry.SelectSingleNode("./date")?.InnerText;
                 var dateTime = DateTime.Parse(date);
 
@@ -198,13 +203,13 @@ namespace Insight.SvnProvider
             return path;
         }
 
-        private string GetPathToExportedFile(FileInfo localFile, int revision)
+        private string GetPathToExportedFile(FileInfo localFile, Id revision)
         {
             var name = new StringBuilder();
 
             name.Append(localFile.FullName.GetHashCode().ToString("X"));
             name.Append("_");
-            name.Append(revision.ToString("X"));
+            name.Append(revision);
             name.Append("_");
             name.Append(localFile.Name);
 
@@ -316,8 +321,7 @@ namespace Insight.SvnProvider
                         if (copyFromPath != null)
                         {
                             var id = GetULongAttribute(reader, "copyfrom-rev");
-                            copyFromRev = new NumberId(id);
-                            item.Kind = KindOfChange.Rename;
+                            copyFromRev = new NumberId(id);                           
                         }
                     }
                     else

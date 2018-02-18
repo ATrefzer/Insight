@@ -8,7 +8,7 @@ namespace Insight.Shared.Model
 
       
 
-        public FileRevision(string localFile, int changesetId, DateTime date, string cachePath)
+        public FileRevision(string localFile, Id changesetId, DateTime date, string cachePath)
         {
             ChangesetId = changesetId;
             Date = date;
@@ -21,7 +21,7 @@ namespace Insight.Shared.Model
         /// </summary>
         public string CachePath { get; set; }
 
-        public int ChangesetId { get; }
+        public Id ChangesetId { get; }
         public DateTime Date { get; }
         public string LocalFile { get; }
     }
