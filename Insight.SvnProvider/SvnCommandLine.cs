@@ -19,21 +19,21 @@ namespace Insight.SvnProvider
         public string BlameFile(string localFile)
         {
             var program = "svn";
-            var args = $"blame {localFile}";
+            var args = $"blame \"{localFile}\"";
             return ExecuteCommandLine(program, args);
         }
 
         public void ExportFileRevision(string localFile, int revision, string exportFile)
         {
             var program = "svn";
-            var args = $"export -r {revision} {localFile} {exportFile}";
+            var args = $"export -r {revision} \"{localFile}\" \"{exportFile}\"";
             ExecuteCommandLine(program, args);
         }
 
         public string GetRevisionsForLocalFile(string localFile)
         {
             var program = "svn";
-            var args = $"log {localFile} --xml";
+            var args = $"log \"{localFile}\" --xml";
             return ExecuteCommandLine(program, args);
         }
 
