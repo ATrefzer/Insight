@@ -35,6 +35,26 @@ namespace Tests
         }
 
 
+        // TODO
+        //[Test]
+        //public void Rename_AddAndDelete()
+        //{
+        //    var cs2 = EmulateCommit_Rename("location_yesterday", "location_now");
+
+        //    var id = cs2.Id.ToString();
+
+        //    var cs1 = EmulateCommit_Rename("location_now", "location_yesterday");
+
+        //    Assert.AreEqual(id, cs1.Id.ToString());
+
+        //    var cs0 = EmulateCommit_Rename("location_yesterday", "location_now");
+
+        //    Assert.AreEqual(id, cs0.Id.ToString());
+        //}
+
+
+
+
         [Test]
         public void CyclicRenaming()
         {
@@ -72,7 +92,7 @@ namespace Tests
                              Kind = KindOfChange.Edit
                      };
 
-            Assert.Throws<ArgumentException>(() => tracker.SetId(ci, "unexpected"));
+            Assert.Throws<ArgumentException>(() => tracker.TrackId(ci, "unexpected"));
         }
 
         public void InvalidArguments_RenameHasNoPreviousServerPath()
@@ -84,7 +104,7 @@ namespace Tests
                              Kind = KindOfChange.Rename
                      };
 
-            Assert.Throws<ArgumentException>(() => tracker.SetId(ci, null));
+            Assert.Throws<ArgumentException>(() => tracker.TrackId(ci, null));
         }
 
 
@@ -108,7 +128,9 @@ namespace Tests
                              Kind = kind
                      };
 
-            tracker.SetId(ci, previousServerPath);
+            tracker.BeginChangeSet();
+            tracker.TrackId(ci, previousServerPath);
+            tracker.ApplyChangeSet();
 
             var id = ci.Id.ToString();
             Assert.IsFalse(string.IsNullOrEmpty(id));
@@ -187,8 +209,8 @@ namespace Tests
             cs.Items.Add(ci);
 
             _tracker.BeginChangeSet();
-            _tracker.SetId(ci, previousServerPath);
-            _tracker.EndChangeSet();
+            _tracker.TrackId(ci, previousServerPath);
+            _tracker.ApplyChangeSet();
             return ci;
         }
 

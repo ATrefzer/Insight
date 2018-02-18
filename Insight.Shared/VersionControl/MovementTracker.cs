@@ -12,7 +12,10 @@ namespace Insight.Shared.VersionControl
     /// </summary>
     public sealed class MovementTracker
     {
+        private readonly List<Add> _adds = new List<Add>();
         private readonly List<Delete> _deletes = new List<Delete>();
+
+        private readonly List<Edit> _edits = new List<Edit>();
 
         /// <summary>
         /// We track all move operations within an changeset and apply them when the whole changeset was handled.
@@ -21,50 +24,43 @@ namespace Insight.Shared.VersionControl
 
         private readonly Dictionary<string, Id> _serverPathToId = new Dictionary<string, Id>();
 
-
         public void BeginChangeSet()
         {
-            // Nothing to do yet.
-        }
-
-        public void EndChangeSet()
-        {
-            ApplyMoves();
+            ClearChangeSetOperations();
         }
 
         /// <summary>
-        /// TODO
+        /// Applies the ids to all items in the changeset.
+        /// </summary>
+        public void ApplyChangeSet()
+        {
+            ApplyMoves();
+            ClearChangeSetOperations();
+        }
+
+        /// <summary>
         /// Requires kind and serverpath to calculate the id.
         /// The previousServerPath is only given on rename operations.
         /// </summary>
-        public void SetId(ChangeItem changeItem, string previousServerPath)
+        public void TrackId(ChangeItem changeItem, string previousServerPath)
         {
             ValidateArguments(changeItem, previousServerPath);
 
             if (changeItem.Kind == KindOfChange.Add)
             {
-                changeItem.Id = GetOrCreateId(changeItem.ServerPath);
-
-                // Everything before the add requires gets a new id.
-                _serverPathToId.Remove(changeItem.ServerPath);
+                _adds.Add(new Add(changeItem));
             }
             else if (changeItem.Kind == KindOfChange.Edit)
             {
-                changeItem.Id = GetOrCreateId(changeItem.ServerPath);
+                _edits.Add(new Edit(changeItem));
             }
             else if (changeItem.Kind == KindOfChange.Delete)
             {
-                // TODO commet svn add ad delete
                 _deletes.Add(new Delete(changeItem));
             }
             else if (changeItem.Kind == KindOfChange.Rename) // Or Move
             {
-                // This is the commit where we renamed previousServerPath to changeItem.ServerPath (current name)
-                // In all commits following (older) the previousServerPath is mapped to the already used id.
-                // For all items  reuse the already known id. 
-                var id = GetOrCreateId(changeItem.ServerPath);
-                changeItem.Id = id;
-                _moves.Add(new Move(previousServerPath, changeItem.ServerPath, id));
+                _moves.Add(new Move(changeItem, previousServerPath, changeItem.ServerPath));
             }
             else
             {
@@ -90,7 +86,7 @@ namespace Insight.Shared.VersionControl
         private void ApplyMoves()
         {
             // In svn a move can consist of add and delete. We only handle deletes if not part of a rename.
-            var deletes = _deletes.Where(delete => _moves.Any(move => move.FromServerPath != delete.ServerPath));
+            var deletes = _deletes.Where(DeleteOnly).ToList();
 
             foreach (var delete in deletes)
             {
@@ -100,18 +96,42 @@ namespace Insight.Shared.VersionControl
                 delete.Item.Id = GetOrCreateId(delete.ServerPath);
             }
 
+            foreach (var edit in _edits)
+            {
+                edit.Item.Id = GetOrCreateId(edit.ServerPath);
+            }
+
+            foreach (var add in _adds)
+            {
+                add.Item.Id = GetOrCreateId(add.ServerPath);
+
+                // Everything before the add requires gets a new id.
+                _serverPathToId.Remove(add.ServerPath);
+            }
+
             foreach (var move in _moves)
             {
+                // This is the commit where we renamed previousServerPath to changeItem.ServerPath (current name)
+                // In all commits following (older) the previousServerPath is mapped to the already used id.
+                // For all items  reuse the already known id. 
+                var id = GetOrCreateId(move.ToServerPath);
+                move.Item.Id = id;
+
                 _serverPathToId.Remove(move.ToServerPath);
 
                 Debug.Assert(move.FromServerPath != null);
-                if (move.FromServerPath != null)
-                {
-                    _serverPathToId.Add(move.FromServerPath, move.Id);
-                }
+                _serverPathToId.Add(move.FromServerPath, id);
             }
 
             _moves.Clear();
+        }
+
+        private void ClearChangeSetOperations()
+        {
+            _adds.Clear();
+            _moves.Clear();
+            _deletes.Clear();
+            _edits.Clear();
         }
 
         private Id CreateId(string serverPath)
@@ -120,6 +140,13 @@ namespace Insight.Shared.VersionControl
             var id = new StringId(uuid.ToString());
             _serverPathToId.Add(serverPath, id);
             return id;
+        }
+
+        private bool DeleteOnly(Delete delete)
+        {
+            // The delete is alone and does not belong to an add to form a move.
+            return !_moves.Any(move => move.FromServerPath == delete.ServerPath) &&
+                   !_adds.Any(add => add.ServerPath == delete.ServerPath);
         }
 
         private Id GetOrCreateId(string serverPath)
@@ -139,6 +166,18 @@ namespace Insight.Shared.VersionControl
             return id;
         }
 
+        private class Add
+        {
+            public Add(ChangeItem item)
+            {
+                Item = item;
+            }
+
+            public ChangeItem Item { get; }
+
+            public string ServerPath => Item.ServerPath;
+        }
+
         private class Delete
         {
             public Delete(ChangeItem item)
@@ -152,18 +191,31 @@ namespace Insight.Shared.VersionControl
         }
 
 
+        private class Edit
+        {
+            public Edit(ChangeItem item)
+            {
+                Item = item;
+            }
+
+            public ChangeItem Item { get; }
+
+            public string ServerPath => Item.ServerPath;
+        }
+
         private sealed class Move
         {
-            public Move(string fromServerPath, string toServerPath, Id id)
+            public Move(ChangeItem item, string fromServerPath, string toServerPath)
             {
+                Item = item;
                 ToServerPath = toServerPath;
                 FromServerPath = fromServerPath;
-                Id = id;
             }
 
             public string FromServerPath { get; }
+            public ChangeItem Item { get; }
 
-            public Id Id { get; }
+
             public string ToServerPath { get; }
         }
     }

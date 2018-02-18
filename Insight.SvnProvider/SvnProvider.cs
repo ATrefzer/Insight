@@ -330,7 +330,7 @@ namespace Insight.SvnProvider
                     item.ServerPath = path;
                     item.LocalPath = MapToLocalFile(path);
 
-                    _tracking.SetId(item, copyFromPath);
+                    _tracking.TrackId(item, copyFromPath);
 
                     cs.Items.Add(item);
                 } while (reader.ReadToNextSibling("path"));
@@ -344,7 +344,7 @@ namespace Insight.SvnProvider
                 ParseWorkItemsFromComment(cs.WorkItems, cs.Comment);
             }
 
-            _tracking.EndChangeSet();
+            _tracking.ApplyChangeSet();
             result.Add(cs);
         }
 
