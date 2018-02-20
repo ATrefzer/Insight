@@ -80,51 +80,20 @@ namespace Insight.GitProvider
             {
                 var changeItem = cs.Items.First();
 
-                var revision = new FileRevision(changeItem.LocalPath, cs.Id, cs.Date, null);
-            }
-
-            /*
-             * TODO
-             
-          
-
-            var dom = new XmlDocument();
-            dom.LoadXml(xml);
-            var entries = dom.SelectNodes("//logentry");
-
-            if (entries == null)
-            {
-                return result;
-            }
-
-            foreach (XmlNode entry in entries)
-            {
-                if (entry?.Attributes == null)
-                {
-                    continue;
-                }
-
-                var revision = int.Parse(entry.Attributes["revision"].Value);
-                var date = entry.SelectSingleNode("./date")?.InnerText;
-                var dateTime = DateTime.Parse(date);
-
-                // Get historical version from file cache
-
                 var fi = new FileInfo(localFile);
-                var exportFile = GetPathToExportedFile(fi, revision);
+                var exportFile = GetPathToExportedFile(fi, cs.Id);
 
                 // Download if not already in cache
                 if (!File.Exists(exportFile))
                 {
-                    _svnCli.ExportFileRevision(localFile, revision, exportFile);
+                    _gitCli.ExportFileRevision(changeItem.ServerPath, cs.Id, exportFile);
                 }
 
-                result.Add(new FileRevision(localFile, revision, dateTime, exportFile));
+                var revision = new FileRevision(changeItem.LocalPath, cs.Id, cs.Date, exportFile);
+                result.Add(revision);
             }
 
             return result;
-            */
-            throw new NotImplementedException();
         }
 
         public void Initialize(string projectBase, string cachePath, string workItemRegex)
@@ -215,6 +184,31 @@ namespace Insight.GitProvider
 
             ci.LocalPath = MapToLocalFile(ci.ServerPath);
             return ci;
+        }
+
+
+        private string GetHistoryCache()
+        {
+            var path = Path.Combine(_cachePath, "History");
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            return path;
+        }
+
+        private string GetPathToExportedFile(FileInfo localFile, Id revision)
+        {
+            var name = new StringBuilder();
+
+            name.Append(localFile.FullName.GetHashCode().ToString("X"));
+            name.Append("_");
+            name.Append(revision);
+            name.Append("_");
+            name.Append(localFile.Name);
+
+            return Path.Combine(GetHistoryCache(), name.ToString());
         }
 
         private bool GoToNextRecord(StreamReader reader)

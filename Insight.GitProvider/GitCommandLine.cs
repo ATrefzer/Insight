@@ -1,10 +1,25 @@
-﻿using Insight.Shared.Exceptions;
+﻿using System.IO;
+
+using Insight.Shared.Exceptions;
+using Insight.Shared.Model;
 using Insight.Shared.System;
 
 namespace Insight.GitProvider
 {
     internal sealed class GitCommandLine
     {
+        /// <summary>
+        /// %H   Hash (abbrebiated is %h)
+        /// %n   Newline
+        /// %aN  Author name
+        /// %cN  Committer name
+        /// %ad  Author date (format respects --date= option)
+        /// %cd  Committer date (format respects --date= option)
+        /// %s   Subject (commit message)
+        /// Log of the whole branch or a single file shall have the same output for easier parsing.
+        /// </summary>
+        private const string LogFormat = "START_HEADER%n%H%n%cN%n%cd%n%s%nEND_HEADER";
+
         private readonly string _workingDirectory;
 
         public GitCommandLine(string workingDirectory)
@@ -18,6 +33,16 @@ namespace Insight.GitProvider
             var program = "git";
             var args = $"annotate \"{localPath}\"";
             return ExecuteCommandLine(program, args).StdOut;
+        }
+
+        public void ExportFileRevision(string serverPath, Id revision, string exportFile)
+        {
+            var program = "git";
+
+            var args = $"show {revision}:\"{serverPath}\"";
+
+            var result = ExecuteCommandLine(program, args);
+            File.WriteAllText(exportFile, result.StdOut);
         }
 
         /// <summary>
@@ -52,18 +77,6 @@ namespace Insight.GitProvider
             return ExecuteCommandLine(program, args);
         }
 
-        /// <summary>
-        /// %H   Hash (abbrebiated is %h)
-        /// %n   Newline
-        /// %aN  Author name
-        /// %cN  Committer name
-        /// %ad  Author date (format respects --date= option)
-        /// %cd  Committer date (format respects --date= option)
-        /// %s   Subject (commit message)
-        /// 
-        /// Log of the whole branch or a single file shall have the same output for easier parsing.
-        /// </summary>
-        private const string LogFormat = "START_HEADER%n%H%n%cN%n%cd%n%s%nEND_HEADER";
         internal string Log()
         {
             // --num_stat Shows added and removed lines

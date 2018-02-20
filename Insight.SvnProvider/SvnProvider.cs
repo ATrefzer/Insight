@@ -90,12 +90,8 @@ namespace Insight.SvnProvider
                     continue;
                 }
 
-
-
                 var value = ulong.Parse(entry.Attributes["revision"].Value);
                 var revision =  new NumberId(value);
-
-
                 var date = entry.SelectSingleNode("./date")?.InnerText;
                 var dateTime = DateTime.Parse(date);
 
@@ -261,7 +257,6 @@ namespace Insight.SvnProvider
                 _serverRoot = GetServerPathForBaseDirectory();
             }
 
-            // TODO separator char
             var common = serverNormalized.Substring(_serverRoot.Length).Trim('\\');
             var localPath = Path.Combine(_startDirectory, common);
             return localPath;
@@ -388,15 +383,8 @@ namespace Insight.SvnProvider
                 }
             }
 
-            // The list is already ordered because the items in the log were ordered.
-            // First item in the list is the latest one.
-            // TODO should be inherently ordered.
-            var ordered = result.OrderByDescending(cs => ((NumberId) cs.Id).Value).ToList();
-            for (var i = 0; i < ordered.Count; i++)
-            {
-                Debug.Assert(ordered[i].Id == result[i].Id);
-            }
-
+            // First item is latest commit because we got the by ordering
+            Debug.Assert(result.First().Date >= result.Last().Date);
             return new ChangeSetHistory(result);
         }
 
