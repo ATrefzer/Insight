@@ -204,13 +204,14 @@ namespace Insight.GitProvider
                 var oldName = parts[1];
                 var newName = parts[2];
                 ci.ServerPath = Decoder(newName);
-                tracker.TrackId(ci, oldName);
+                ci.FromServerPath = oldName;
+                tracker.TrackId(ci);
             }
             else
             {
                 Debug.Assert(parts.Length == 2 || parts.Length == 3);
                 ci.ServerPath = Decoder(parts[1]);
-                tracker.TrackId(ci, null);
+                tracker.TrackId(ci);
             }
 
             ci.LocalPath = MapToLocalFile(ci.ServerPath);
@@ -324,9 +325,9 @@ namespace Insight.GitProvider
 
             Debug.Assert(commentLine == endHeaderMarker);
 
-            tracker.BeginChangeSet();
-            ReadChangeItems(reader, cs, tracker);
-            tracker.ApplyChangeSet();
+            tracker.BeginChangeSet(cs);
+            ReadChangeItems(reader, tracker);
+            tracker.ApplyChangeSet(cs.Items);
             return cs;
         }
 
@@ -340,7 +341,7 @@ namespace Insight.GitProvider
         }
      
 
-        private void ReadChangeItems(StreamReader reader, ChangeSet cs, MovementTracker tracker)
+        private void ReadChangeItems(StreamReader reader, MovementTracker tracker)
         {
             // Now parse the files!
             var changeItem = ReadLine(reader);
@@ -348,8 +349,7 @@ namespace Insight.GitProvider
             {
                 if (!string.IsNullOrEmpty(changeItem))
                 {
-                    var ci = CreateChangeItem(changeItem, tracker);
-                    cs.Items.Add(ci);
+                    CreateChangeItem(changeItem, tracker);
                 }
 
                 changeItem = ReadLine(reader);
