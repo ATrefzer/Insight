@@ -195,7 +195,7 @@ namespace Insight.Metrics
         {
             VerifyClocInstalled(basePath);
 
-            var args = $"{file.FullName} --csv --quiet";
+            var args = $"\"{file.FullName}\" --csv --quiet";
 
             var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args);
             return result.StdOut;
