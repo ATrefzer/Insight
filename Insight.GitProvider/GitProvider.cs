@@ -64,7 +64,7 @@ namespace Insight.GitProvider
         {
             var replace = _regex.Replace(
                                          value,
-                                         m => ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
+                                         m => ((char) int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
                                         );
             return replace.Trim('"');
         }
@@ -75,15 +75,14 @@ namespace Insight.GitProvider
 
             var xml = _gitCli.Log(localFile);
 
-
-            var historyOfSingleFile = ParseLog(xml);
+            var historyOfSingleFile = ParseLogString(xml);
             foreach (var cs in historyOfSingleFile.ChangeSets)
             {
                 var changeItem = cs.Items.First();
 
                 var revision = new FileRevision(changeItem.LocalPath, cs.Id, cs.Date, null);
-
             }
+
             /*
              * TODO
              
@@ -149,7 +148,7 @@ namespace Insight.GitProvider
                 throw new FileNotFoundException(msg);
             }
 
-            return ParseLog(_gitHistoryExportFile);
+            return ParseLogFile(_gitHistoryExportFile);
         }
 
         public void UpdateCache()
@@ -253,47 +252,46 @@ namespace Insight.GitProvider
             return localPath;
         }
 
-
         /// <summary>
         /// Log file has format specified in GitCommandLine class
         /// </summary>
-        private ChangeSetHistory ParseLog(string logFile)
+        private ChangeSetHistory ParseLog(Stream log)
         {
             var changeSets = new List<ChangeSet>();
             var tracker = new MovementTracker();
 
-            FileStream stream = null;
-            try
+            using (var reader = new StreamReader(log))
             {
-                stream = new FileStream(logFile, FileMode.Open);
-
-                using (var reader = new StreamReader(stream))
+                var proceed = GoToNextRecord(reader);
+                if (!proceed)
                 {
-                    stream = null;
-                    var proceed = GoToNextRecord(reader);
-                    if (!proceed)
-                    {
-                        throw new FormatException("The file does not contain any change sets.");
-                    }
-
-                    while (proceed)
-                    {
-                        var changeSet = ParseRecord(reader, tracker);
-                        changeSets.Add(changeSet);
-                        proceed = GoToNextRecord(reader);
-                    }
+                    throw new FormatException("The file does not contain any change sets.");
                 }
-            }
-            finally
-            {
-                if (stream != null)
+
+                while (proceed)
                 {
-                    stream.Dispose();
+                    var changeSet = ParseRecord(reader, tracker);
+                    changeSets.Add(changeSet);
+                    proceed = GoToNextRecord(reader);
                 }
             }
 
             var history = new ChangeSetHistory(changeSets);
             return history;
+        }
+
+        private ChangeSetHistory ParseLogFile(string logFile)
+        {
+            using (var stream = new FileStream(logFile, FileMode.Open))
+            {
+                return ParseLog(stream);
+            }
+        }
+
+        private ChangeSetHistory ParseLogString(string logString)
+        {
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(logString));
+            return ParseLog(stream);
         }
 
         private ChangeSet ParseRecord(StreamReader reader, MovementTracker tracker)
@@ -339,7 +337,7 @@ namespace Insight.GitProvider
                 workItems.AddRange(extractor.Extract(comment));
             }
         }
-     
+
 
         private void ReadChangeItems(StreamReader reader, MovementTracker tracker)
         {
