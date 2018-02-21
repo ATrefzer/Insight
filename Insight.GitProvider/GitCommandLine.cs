@@ -96,7 +96,7 @@ namespace Insight.GitProvider
             var program = "git";
 
             // --follow to track
-            var args = $"log --follow --pretty=format:{LogFormat} --date=iso-strict --name-status -- {localPath}";
+            var args = $"log --follow --pretty=format:{LogFormat} --date=iso-strict --name-status -- \"{localPath}\"";
 
             var result = ExecuteCommandLine(program, args);
             return result.StdOut;
