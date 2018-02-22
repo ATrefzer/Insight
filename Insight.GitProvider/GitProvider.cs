@@ -46,7 +46,7 @@ namespace Insight.GitProvider
 
             // Parse annotated file
             var workByDevelopers = new Dictionary<string, int>();
-            var changeSetRegex = new Regex(@"^\S*\t\(\s+(?<developerName>\S+).*", RegexOptions.Compiled | RegexOptions.Multiline);
+            var changeSetRegex = new Regex(@"^\S*\t\(\s*(?<developerName>\S+).*", RegexOptions.Compiled | RegexOptions.Multiline);
 
             // Work by changesets (line by line)
             var matches = changeSetRegex.Matches(annotate);
