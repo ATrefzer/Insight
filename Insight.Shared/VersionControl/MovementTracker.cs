@@ -110,8 +110,18 @@ namespace Insight.Shared.VersionControl
 
                     _serverPathToId.Remove(item.ServerPath);
 
-                    Debug.Assert(item.FromServerPath != null);
-                    _serverPathToId.Add(item.FromServerPath, id);
+                    if (_serverPathToId.ContainsKey(item.FromServerPath) == false)
+                    {
+                        // Assume rename because we did not use the file in future (yet).
+                        Debug.Assert(item.FromServerPath != null);
+                        _serverPathToId.Add(item.FromServerPath, id);
+                    }
+                    else
+                    {
+                        // If the file was modified in future the rename was an copy instead!
+                        item.Kind = KindOfChange.Add;
+                        _warnings.Add($"Convert rename to add because source is modified later: '{item.ServerPath}' (from '{item.FromServerPath}')");
+                    }
                 }
             }
         }
