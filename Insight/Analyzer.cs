@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,10 +26,7 @@ namespace Insight
         public Analyzer(Project project)
         {
             Project = project;
-            Project.ProjectLoaded += (sender, arg) =>
-                                     {
-                                         Clear();
-                                     };
+            Project.ProjectLoaded += (sender, arg) => { Clear(); };
         }
 
         public Project Project { get; }
@@ -104,7 +100,7 @@ namespace Insight
                                 // Calculate main developer for each file
                                 var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
 
-                                // Single core processing
+                                // //Single core processing
                                 //foreach (var artifact in summary)
                                 //{
                                 //    var svnProvider = Project.CreateProvider();
@@ -117,9 +113,9 @@ namespace Insight
                                 Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
                                                  artifact =>
                                                  {
-                                                     var svnProvider = Project.CreateProvider();
+                                                     var provider = Project.CreateProvider();
 
-                                                     var work = svnProvider.CalculateDeveloperWork(artifact);
+                                                     var work = provider.CalculateDeveloperWork(artifact);
                                                      var mainDeveloper = GetMainDeveloper(work);
                                                      mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
                                                  });
@@ -260,6 +256,12 @@ namespace Insight
                            });
         }
 
+        internal void Clear()
+        {
+            _history = null;
+            _metrics = null;
+        }
+
         private static string ClassifyDirectory(string localPath)
         {
             // Classify different source code folders
@@ -300,12 +302,6 @@ namespace Insight
                 var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
                 _metrics = metricProvider.QueryCodeMetrics();
             }
-        }
-
-        internal void Clear()
-        {
-            _history = null;
-            _metrics = null;
         }
     }
 }
