@@ -34,7 +34,7 @@ namespace Insight
                 var git = new ProviderDescription
                 {
                     Class = GitProvider.GitProvider.GetClass(),
-                    Name = "Git - DO NOT USE"
+                    Name = "Git - (Caution! Assumes a linear history.)"
                 };
 
                 return new List<ProviderDescription>
