@@ -53,7 +53,7 @@ namespace Insight.GitProvider
             foreach (Match match in matches)
             {
                 var developer = match.Groups["developerName"].Value;
-                developer = developer.Trim(new char[] { '\t' });
+                developer = developer.Trim('\t');
                 workByDevelopers.AddToValue(developer, 1);
             }
 
