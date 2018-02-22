@@ -35,9 +35,12 @@ namespace Insight.Metrics
             _extensionToLanguage.Add(".cs", "C#");
             _extensionToLanguage.Add(".xml", "XML");
             _extensionToLanguage.Add(".xaml", "XAML");
-            _extensionToLanguage.Add(".cpp", "C++");
+            
             _extensionToLanguage.Add(".java", "Java");
             _extensionToLanguage.Add(".css", "CSS");
+            _extensionToLanguage.Add(".cpp", "C++");
+            _extensionToLanguage.Add(".h", "C/C++ Header");
+            _extensionToLanguage.Add(".c", "C");
         }
 
         /// <summary>
@@ -186,8 +189,8 @@ namespace Insight.Metrics
 
             VerifyClocInstalled(basePath);
             var languages = string.Join(",", languagesToParse);
-            var args = $"\"{rootDir.FullName}\" --by-file --csv --quiet --include-lang={languages}";
-            var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args);
+            var args = $"\"{rootDir.FullName}\" --by-file --csv --quiet --include-lang=\"{languages}\"";
+            var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args, rootDir.FullName);
             return result.StdOut;
         }
 
