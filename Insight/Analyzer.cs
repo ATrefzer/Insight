@@ -104,25 +104,25 @@ namespace Insight
                                 // Calculate main developer for each file
                                 var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
 
-                                // TODO Try with Svn
-                                foreach (var artifact in summary)
-                                {
-                                    var svnProvider = Project.CreateProvider();
+                                // Single core processing
+                                //foreach (var artifact in summary)
+                                //{
+                                //    var svnProvider = Project.CreateProvider();
 
-                                    var work = svnProvider.CalculateDeveloperWork(artifact);
-                                    var mainDeveloper = GetMainDeveloper(work);
-                                    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                }
+                                //    var work = svnProvider.CalculateDeveloperWork(artifact);
+                                //    var mainDeveloper = GetMainDeveloper(work);
+                                //    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                                //}
 
-                                //Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                                //                 artifact =>
-                                //                 {
-                                //                     var svnProvider = Project.CreateProvider();
+                                Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                                                 artifact =>
+                                                 {
+                                                     var svnProvider = Project.CreateProvider();
 
-                                //                     var work = svnProvider.CalculateDeveloperWork(artifact);
-                                //                     var mainDeveloper = GetMainDeveloper(work);
-                                //                     mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                //                 });
+                                                     var work = svnProvider.CalculateDeveloperWork(artifact);
+                                                     var mainDeveloper = GetMainDeveloper(work);
+                                                     mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                                                 });
 
                                 // Assign a color to each developer
                                 var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
