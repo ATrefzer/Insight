@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 using Insight.Shared.Exceptions;
 using Insight.Shared.Model;
@@ -112,6 +113,17 @@ namespace Insight.GitProvider
             }
 
             return result;
+        }
+
+        public string GetAllTrackedFiles()
+        {
+            var program = "git";
+
+            // Optional HEAD
+            var args = $"ls-tree -r master --name-only";
+
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut;
         }
     }
 }

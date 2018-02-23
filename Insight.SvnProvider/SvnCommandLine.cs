@@ -30,6 +30,13 @@ namespace Insight.SvnProvider
             ExecuteCommandLine(program, args);
         }
 
+        public string GetAllTrackedFiles()
+        {
+            var program = "svn";
+            var args = $"list --recursive -r HEAD";
+            return ExecuteCommandLine(program, args);
+        }
+
         public string GetRevisionsForLocalFile(string localFile)
         {
             var program = "svn";

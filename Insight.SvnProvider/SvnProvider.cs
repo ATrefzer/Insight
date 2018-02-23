@@ -40,6 +40,14 @@ namespace Insight.SvnProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
+        // TODO returns path based on the working directory.
+        public HashSet<string> GetAllTrackedFiles()
+        {
+            var serverPaths = _svnCli.GetAllTrackedFiles();
+            var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            return new HashSet<string>(all);
+        }
+
         /// <summary>
         /// Note: Use local path to avoid the problem that power tools are called from a non mapped directory.
         /// Developer -> lines of code
@@ -134,6 +142,8 @@ namespace Insight.SvnProvider
 
             return ReadExportFile();
         }
+
+        public List<WarningMessage> Warnings { get; private set; }
 
         public void UpdateCache()
         {
@@ -385,6 +395,8 @@ namespace Insight.SvnProvider
 
             // First item is latest commit because we got the by ordering
             Debug.Assert(result.First().Date >= result.Last().Date);
+
+            Warnings = _tracking.Warnings;
             return new ChangeSetHistory(result);
         }
 

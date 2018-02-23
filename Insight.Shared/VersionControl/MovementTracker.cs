@@ -21,10 +21,9 @@ namespace Insight.Shared.VersionControl
         private readonly List<ChangeItem> _changeItems = new List<ChangeItem>();
         private readonly Dictionary<string, Id> _serverPathToId = new Dictionary<string, Id>();
 
-        private readonly List<string> _warnings = new List<string>();
         private ChangeSet _cs;
 
-        public bool HasWarnings => _warnings.Any();
+        public List<WarningMessage> Warnings = new List<WarningMessage>();
 
         /// <summary>
         /// Applies the ids to all items in the changeset.
@@ -34,14 +33,11 @@ namespace Insight.Shared.VersionControl
             ApplyIds();
             items.AddRange(_changeItems);
             _changeItems.Clear();
-
-            DumpWarnings();
         }
 
         public void BeginChangeSet(ChangeSet cs)
         {
             _cs = cs;
-            _warnings.Clear();
             _changeItems.Clear();
         }
 
@@ -120,7 +116,9 @@ namespace Insight.Shared.VersionControl
                     {
                         // If the file was modified in future the rename was an copy instead!
                         item.Kind = KindOfChange.Add;
-                        _warnings.Add($"Convert rename to add because source is modified later: '{item.ServerPath}' (from '{item.FromServerPath}')");
+
+                        var msg = $"Convert rename to add because source is modified later: '{item.ServerPath}' (from '{item.FromServerPath}')";
+                        Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
                     }
                 }
             }
@@ -150,7 +148,8 @@ namespace Insight.Shared.VersionControl
                     deletesToRemove.AddRange(deletes);
                     convertToRename.AddRange(copies);
 
-                    _warnings.Add($"Convert add/delete pair to rename: '{item.ServerPath}' (from '{item.FromServerPath}')");
+                    var msg = $"Convert add/delete pair to rename: '{item.ServerPath}' (from '{item.FromServerPath}')";
+                    Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
                 }
             }
 
@@ -176,7 +175,8 @@ namespace Insight.Shared.VersionControl
                     foreach (var tmp in combined)
                     {
                         tmp.Kind = KindOfChange.Add;
-                        _warnings.Add($"Convert multiple copied file to add: '{tmp.ServerPath}' (from '{tmp.FromServerPath}')");
+                        var msg = $"Convert multiple copied file to add: '{tmp.ServerPath}' (from '{tmp.FromServerPath}')";
+                        Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
                     }
                 }
             }
@@ -198,7 +198,8 @@ namespace Insight.Shared.VersionControl
             foreach (var item in convertToAdds)
             {
                 item.Kind = KindOfChange.Add;
-                _warnings.Add($"Convert rename to add because file was modified: '{item.ServerPath}' (from '{item.FromServerPath}')");
+                var msg = $"Convert rename to add because file was modified: '{item.ServerPath}' (from '{item.FromServerPath}')";
+                Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
             }
         }
 
@@ -208,20 +209,7 @@ namespace Insight.Shared.VersionControl
             var id = new StringId(uuid.ToString());
             _serverPathToId.Add(serverPath, id);
             return id;
-        }
-
-        private void DumpWarnings()
-        {
-            if (_warnings.Any())
-            {
-                Trace.WriteLine("Warnings for " + _cs.Id);
-
-                foreach (var warning in _warnings)
-                {
-                    Trace.WriteLine(warning);
-                }
-            }
-        }
+        }      
 
         private Id GetOrCreateId(string serverPath)
         {

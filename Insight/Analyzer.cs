@@ -11,6 +11,7 @@ using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.System;
+using Insight.Shared.VersionControl;
 
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
@@ -22,6 +23,8 @@ namespace Insight
     {
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
+
+        public List<WarningMessage> Warnings { get; private set; }
 
         public Analyzer(Project project)
         {
@@ -287,10 +290,14 @@ namespace Insight
 
         private void LoadHistory()
         {
-            if (_history == null)
+            // if (_history == null) Allow see warnings every time
             {
-                var svnProvider = Project.CreateProvider();
-                _history = svnProvider.QueryChangeSetHistory();
+                var provider = Project.CreateProvider();
+                _history = provider.QueryChangeSetHistory();
+                Warnings = provider.Warnings;
+
+                // Remove all items that are deleted now.
+                _history.CleanupHistory();
             }
         }
 

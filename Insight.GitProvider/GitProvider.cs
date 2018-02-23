@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -107,6 +106,8 @@ namespace Insight.GitProvider
             _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.log");
             _gitCli = new GitCommandLine(_startDirectory);
         }
+
+        public List<WarningMessage> Warnings { get; private set; }
 
         /// <summary>
         /// You need to call UpdateCache before.
@@ -272,49 +273,26 @@ namespace Insight.GitProvider
                 }
             }
 
+            Warnings = tracker.Warnings;
             var history = new ChangeSetHistory(changeSets);
             return history;
         }
 
-        private void CleanupHistory(ChangeSetHistory history)
+        public HashSet<string> GetAllTrackedFiles()
         {
-            var deletedIds = history.ChangeSets
-                                    .SelectMany(set => set.Items)
-                                    .Where(item => item.IsDelete())
-                                    .Select(item => item.Id);
-
-            var deletedIdsHash = new HashSet<Id>(deletedIds);
-
-            foreach (var set in history.ChangeSets)
-            {
-                set.Items.RemoveAll(item => deletedIdsHash.Contains(item.Id));
-            }
-
-            // Delete empty commits
-            var changeSetsCopy = history.ChangeSets.ToList();
-            foreach (var changeSet in changeSetsCopy)
-            {
-                if (!changeSet.Items.Any())
-                {
-                    history.ChangeSets.Remove(changeSet);
-                }
-            }
+            var serverPaths = _gitCli.GetAllTrackedFiles();
+            var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            return new HashSet<string>(all);
         }
-
 
         private ChangeSetHistory ParseLogFile(string logFile)
         {
             using (var stream = new FileStream(logFile, FileMode.Open))
             {
-                var history = ParseLog(stream);
-
-                CleanupHistory(history);
-
+                var history = ParseLog(stream);           
                 return history;
             }
         }
-
-
 
         private ChangeSetHistory ParseLogString(string logString)
         {
