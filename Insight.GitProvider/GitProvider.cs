@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -46,7 +47,7 @@ namespace Insight.GitProvider
 
             // Parse annotated file
             var workByDevelopers = new Dictionary<string, int>();
-            var changeSetRegex = new Regex(@"^\S*\t\(\s*(?<developerName>[a-zA-Z0-9 ]+).*", RegexOptions.Compiled | RegexOptions.Multiline);
+            var changeSetRegex = new Regex(@"^\S+\t\(\s*(?<developerName>[^\t]+).*", RegexOptions.Multiline | RegexOptions.Compiled);
 
             // Work by changesets (line by line)
             var matches = changeSetRegex.Matches(annotate);
@@ -65,7 +66,7 @@ namespace Insight.GitProvider
         {
             var replace = _regex.Replace(
                                          value,
-                                         m => ((char) int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
+                                         m => ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
                                         );
             return replace.Trim('"');
         }
@@ -275,13 +276,45 @@ namespace Insight.GitProvider
             return history;
         }
 
+        private void CleanupHistory(ChangeSetHistory history)
+        {
+            var deletedIds = history.ChangeSets
+                                    .SelectMany(set => set.Items)
+                                    .Where(item => item.IsDelete())
+                                    .Select(item => item.Id);
+
+            var deletedIdsHash = new HashSet<Id>(deletedIds);
+
+            foreach (var set in history.ChangeSets)
+            {
+                set.Items.RemoveAll(item => deletedIdsHash.Contains(item.Id));
+            }
+
+            // Delete empty commits
+            var changeSetsCopy = history.ChangeSets.ToList();
+            foreach (var changeSet in changeSetsCopy)
+            {
+                if (!changeSet.Items.Any())
+                {
+                    history.ChangeSets.Remove(changeSet);
+                }
+            }
+        }
+
+
         private ChangeSetHistory ParseLogFile(string logFile)
         {
             using (var stream = new FileStream(logFile, FileMode.Open))
             {
-                return ParseLog(stream);
+                var history = ParseLog(stream);
+
+                CleanupHistory(history);
+
+                return history;
             }
         }
+
+
 
         private ChangeSetHistory ParseLogString(string logString)
         {

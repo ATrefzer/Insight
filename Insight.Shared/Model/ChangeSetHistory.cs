@@ -20,7 +20,7 @@ namespace Insight.Shared.Model
         /// <summary>
         ///     Returns a flat summary of all artifacts found in the commit history.
         /// </summary>
-        public List<Artifact> GetArtifactSummary(IFilter filter, HashSet<string> localFiles)
+        public List<Artifact> GetArtifactSummary(IFilter filter, HashSet<string> metricFiles)
         {
             // Item id -> artifact
             var artifacts = new Dictionary<Id, Artifact>();
@@ -60,7 +60,7 @@ namespace Insight.Shared.Model
                     {
                         // The changeset where we see the item the first time is the latest revision!
 
-                        if (!Exists(item, localFiles))
+                        if (!Exists(item, metricFiles))
                         {
                             // The history tracks files that may not exist any more.
                             // We are only interested in the current state.
