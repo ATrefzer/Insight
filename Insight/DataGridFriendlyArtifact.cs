@@ -11,4 +11,6 @@ namespace Insight
         public Id Revision { get; set; }
         public int WorkItems { get; set; }
     }
+
+   
 }

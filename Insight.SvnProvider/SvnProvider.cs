@@ -40,6 +40,14 @@ namespace Insight.SvnProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
+        // TODO returns path based on the working directory.
+        public HashSet<string> GetAllTrackedFiles()
+        {
+            var serverPaths = _svnCli.GetAllTrackedFiles();
+            var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            return new HashSet<string>(all);
+        }
+
         /// <summary>
         /// Note: Use local path to avoid the problem that power tools are called from a non mapped directory.
         /// Developer -> lines of code
@@ -90,12 +98,8 @@ namespace Insight.SvnProvider
                     continue;
                 }
 
-
-
                 var value = ulong.Parse(entry.Attributes["revision"].Value);
                 var revision =  new NumberId(value);
-
-
                 var date = entry.SelectSingleNode("./date")?.InnerText;
                 var dateTime = DateTime.Parse(date);
 
@@ -138,6 +142,8 @@ namespace Insight.SvnProvider
 
             return ReadExportFile();
         }
+
+        public List<WarningMessage> Warnings { get; private set; }
 
         public void UpdateCache()
         {
@@ -261,7 +267,6 @@ namespace Insight.SvnProvider
                 _serverRoot = GetServerPathForBaseDirectory();
             }
 
-            // TODO separator char
             var common = serverNormalized.Substring(_serverRoot.Length).Trim('\\');
             var localPath = Path.Combine(_startDirectory, common);
             return localPath;
@@ -270,11 +275,12 @@ namespace Insight.SvnProvider
         private void ParseLogEntry(XmlReader reader, List<ChangeSet> result)
         {
             var cs = new ChangeSet();
-            _tracking.BeginChangeSet();
+           
 
             // revision -> Id 
             var revision = ReadRevision(reader);
             cs.Id = revision;
+            _tracking.BeginChangeSet(cs);
 
             // author -> Committer
             if (!reader.ReadToDescendant("author"))
@@ -301,8 +307,7 @@ namespace Insight.SvnProvider
             {
                 do
                 {
-                    string copyFromPath = null;
-                    NumberId copyFromRev = null;
+                   
 
                     var item = new ChangeItem();
 
@@ -317,11 +322,12 @@ namespace Insight.SvnProvider
                     if (item.IsRename() || item.IsAdd())
                     {
                         // Both actions can mean a renaming or movement.
-                        copyFromPath = GetStringAttribute(reader, "copyfrom-path");
+                        var copyFromPath = GetStringAttribute(reader, "copyfrom-path");
                         if (copyFromPath != null)
                         {
                             var id = GetULongAttribute(reader, "copyfrom-rev");
-                            copyFromRev = new NumberId(id);                           
+                            var copyFromRev = new NumberId(id);
+                            item.FromServerPath = copyFromPath;
                         }
                     }
                     else
@@ -336,14 +342,13 @@ namespace Insight.SvnProvider
                     item.ServerPath = path;
                     item.LocalPath = MapToLocalFile(path);
 
-                    if (item.Kind == KindOfChange.Rename && copyFromPath == null)
+                    if (item.Kind == KindOfChange.Rename && item.FromServerPath == null)
                     {
-                        // Wtf. This can happen.
+                        // Wtf. This can happen. Just ignore it.
                     }
                     else
                     {
-                        _tracking.TrackId(item, copyFromPath);
-                        cs.Items.Add(item);
+                        _tracking.TrackId(item);                     
                     }
                 
                 } while (reader.ReadToNextSibling("path"));
@@ -357,10 +362,9 @@ namespace Insight.SvnProvider
                 ParseWorkItemsFromComment(cs.WorkItems, cs.Comment);
             }
 
-            _tracking.ApplyChangeSet();
+            // Applies all change set items and sets their id
+           _tracking.ApplyChangeSet(cs.Items);
 
-            // Remove deletes that represent a move together with an add.
-            cs.Items.RemoveAll(item => item.Id == null);
             result.Add(cs);
         }
 
@@ -389,15 +393,10 @@ namespace Insight.SvnProvider
                 }
             }
 
-            // The list is already ordered because the items in the log were ordered.
-            // First item in the list is the latest one.
-            // TODO should be inherently ordered.
-            var ordered = result.OrderByDescending(cs => ((NumberId) cs.Id).Value).ToList();
-            for (var i = 0; i < ordered.Count; i++)
-            {
-                Debug.Assert(ordered[i].Id == result[i].Id);
-            }
+            // First item is latest commit because we got the by ordering
+            Debug.Assert(result.First().Date >= result.Last().Date);
 
+            Warnings = _tracking.Warnings;
             return new ChangeSetHistory(result);
         }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +11,7 @@ using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.System;
+using Insight.Shared.VersionControl;
 
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
@@ -24,13 +24,12 @@ namespace Insight
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
 
+        public List<WarningMessage> Warnings { get; private set; }
+
         public Analyzer(Project project)
         {
             Project = project;
-            Project.ProjectLoaded += (sender, arg) =>
-                                     {
-                                         Clear();
-                                     };
+            Project.ProjectLoaded += (sender, arg) => { Clear(); };
         }
 
         public Project Project { get; }
@@ -104,25 +103,25 @@ namespace Insight
                                 // Calculate main developer for each file
                                 var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
 
-                                // TODO Try with Svn
-                                foreach (var artifact in summary)
-                                {
-                                    var svnProvider = Project.CreateProvider();
+                                // //Single core processing
+                                //foreach (var artifact in summary)
+                                //{
+                                //    var svnProvider = Project.CreateProvider();
 
-                                    var work = svnProvider.CalculateDeveloperWork(artifact);
-                                    var mainDeveloper = GetMainDeveloper(work);
-                                    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                }
+                                //    var work = svnProvider.CalculateDeveloperWork(artifact);
+                                //    var mainDeveloper = GetMainDeveloper(work);
+                                //    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                                //}
 
-                                //Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                                //                 artifact =>
-                                //                 {
-                                //                     var svnProvider = Project.CreateProvider();
+                                Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                                                 artifact =>
+                                                 {
+                                                     var provider = Project.CreateProvider();
 
-                                //                     var work = svnProvider.CalculateDeveloperWork(artifact);
-                                //                     var mainDeveloper = GetMainDeveloper(work);
-                                //                     mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                //                 });
+                                                     var work = provider.CalculateDeveloperWork(artifact);
+                                                     var mainDeveloper = GetMainDeveloper(work);
+                                                     mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                                                 });
 
                                 // Assign a color to each developer
                                 var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
@@ -145,12 +144,12 @@ namespace Insight
 
                                 // Pair wise couplings
                                 var tmp = new ChangeCouplingAnalyzer();
-                                var couplings = tmp.CalculateTemporalCouplings(_history, Project.Filter);
+                                var couplings = tmp.CalculateChangeCouplings(_history, Project.Filter);
                                 var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
                                 Csv.Write(Path.Combine(Project.Cache, "couplings.csv"), sortedCouplings);
 
                                 // Same with classified folders
-                                var classifiedCouplings = tmp.CalculateTemporalCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
+                                var classifiedCouplings = tmp.CalculateChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
                                 Csv.Write(Path.Combine(Project.Cache, "classified_couplings.csv"), classifiedCouplings);
 
                                 return sortedCouplings;
@@ -260,6 +259,12 @@ namespace Insight
                            });
         }
 
+        internal void Clear()
+        {
+            _history = null;
+            _metrics = null;
+        }
+
         private static string ClassifyDirectory(string localPath)
         {
             // Classify different source code folders
@@ -285,10 +290,14 @@ namespace Insight
 
         private void LoadHistory()
         {
-            if (_history == null)
+            // if (_history == null) Allow see warnings every time
             {
-                var svnProvider = Project.CreateProvider();
-                _history = svnProvider.QueryChangeSetHistory();
+                var provider = Project.CreateProvider();
+                _history = provider.QueryChangeSetHistory();
+                Warnings = provider.Warnings;
+
+                // Remove all items that are deleted now.
+                _history.CleanupHistory();
             }
         }
 
@@ -300,12 +309,6 @@ namespace Insight
                 var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
                 _metrics = metricProvider.QueryCodeMetrics();
             }
-        }
-
-        internal void Clear()
-        {
-            _history = null;
-            _metrics = null;
         }
     }
 }

@@ -3,12 +3,9 @@ In Progress
 ---------------------------------------
 
 - Unit Tests MovementTracker wenn add und remove ein rename darstellen
-    - copy into many
-    - replace by add and remove. (in beiden richtungen
-    - move one file into many (with delete of the source))
+    - Testfälle für die drei Korrekturfunktionen
 - bug assemblyinfo.cs
-- Create GIT provider 
-    - Trend
+
 
 - rename circle packaging
 - Parallel Processing of knowledge (svn?)

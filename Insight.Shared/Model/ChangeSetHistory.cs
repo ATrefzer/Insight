@@ -15,12 +15,17 @@ namespace Insight.Shared.Model
             ChangeSets = changeSets;
         }
 
-        public List<ChangeSet> ChangeSets { get; private set; }
+        public List<ChangeSet> ChangeSets { get; }
+
+        public void CleanupHistory()
+        {
+            CleanupHistory(this);
+        }
 
         /// <summary>
         ///     Returns a flat summary of all artifacts found in the commit history.
         /// </summary>
-        public List<Artifact> GetArtifactSummary(IFilter filter, HashSet<string> localFiles)
+        public List<Artifact> GetArtifactSummary(IFilter filter, HashSet<string> metricFiles)
         {
             // Item id -> artifact
             var artifacts = new Dictionary<Id, Artifact>();
@@ -60,11 +65,11 @@ namespace Insight.Shared.Model
                     {
                         // The changeset where we see the item the first time is the latest revision!
 
-                        if (!Exists(item, localFiles))
+                        if (!Exists(item, metricFiles))
                         {
-                            // The history tracks files that may not exist any more.
-                            // We are only interested in the current state.
-                            // These files should not appear in the summary.
+                            // Because I delete now no longer tracked files from the history we should never end up here!
+                            // However in git it is possible because we may see a commit with a modify after a delete.
+
                             ignore.Add(id);
                             continue;
                         }
@@ -132,6 +137,34 @@ namespace Insight.Shared.Model
                            };
 
             return artifact;
+        }
+
+        /// <summary>
+        /// Removes all files that were deleted and are no longer available
+        /// </summary>
+        private void CleanupHistory(ChangeSetHistory history)
+        {
+            var deletedIds = history.ChangeSets
+                                    .SelectMany(set => set.Items)
+                                    .Where(item => item.IsDelete())
+                                    .Select(item => item.Id);
+
+            var deletedIdsHash = new HashSet<Id>(deletedIds);
+
+            foreach (var set in history.ChangeSets)
+            {
+                set.Items.RemoveAll(item => deletedIdsHash.Contains(item.Id));
+            }
+
+            // Delete empty commits
+            var changeSetsCopy = history.ChangeSets.ToList();
+            foreach (var changeSet in changeSetsCopy)
+            {
+                if (!changeSet.Items.Any())
+                {
+                    history.ChangeSets.Remove(changeSet);
+                }
+            }
         }
 
         private bool Exists(ChangeItem item, HashSet<string> localFiles)

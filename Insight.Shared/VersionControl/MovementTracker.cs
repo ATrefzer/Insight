@@ -8,160 +8,199 @@ using Insight.Shared.Model;
 namespace Insight.Shared.VersionControl
 {
     /// <summary>
-    /// We process the change sets from latest to oldes.
+    /// We process the change sets from latest to oldest.
+    /// Assigns each file a unique id that survives all renames.
+    /// Note:
+    /// Several cases with svn are converted.
+    /// If we find a source file added / renamed / copied into many others this is considered as add operation.
+    /// The tracking stops there because the idea of a unique file id does not apply to the concept of renaming a file into
+    /// many.
     /// </summary>
     public sealed class MovementTracker
     {
-        private readonly List<Add> _adds = new List<Add>();
-        private readonly List<Delete> _deletes = new List<Delete>();
-
-        private readonly List<Edit> _edits = new List<Edit>();
-
-        /// <summary>
-        /// We track all move operations within an changeset and apply them when the whole changeset was handled.
-        /// </summary>
-        private readonly List<Move> _moves = new List<Move>();
-
+        private readonly List<ChangeItem> _changeItems = new List<ChangeItem>();
         private readonly Dictionary<string, Id> _serverPathToId = new Dictionary<string, Id>();
 
-        public void BeginChangeSet()
-        {
-            ClearChangeSetOperations();
-        }
+        private ChangeSet _cs;
+
+        public List<WarningMessage> Warnings = new List<WarningMessage>();
 
         /// <summary>
         /// Applies the ids to all items in the changeset.
         /// </summary>
-        public void ApplyChangeSet()
+        public void ApplyChangeSet(List<ChangeItem> items)
         {
-            ApplyMoves();
-            ClearChangeSetOperations();
+            ApplyIds();
+            items.AddRange(_changeItems);
+            _changeItems.Clear();
+        }
+
+        public void BeginChangeSet(ChangeSet cs)
+        {
+            _cs = cs;
+            _changeItems.Clear();
         }
 
         /// <summary>
         /// Requires kind and serverpath to calculate the id.
         /// The previousServerPath is only given on rename operations.
         /// </summary>
-        public void TrackId(ChangeItem changeItem, string previousServerPath) // TODO move to changeitem
+        public void TrackId(ChangeItem changeItem) // TODO move to changeitem
         {
-            ValidateArguments(changeItem, previousServerPath);
+            ValidateArguments(changeItem);
 
-            if (changeItem.Kind == KindOfChange.Add)
-            {
-                _adds.Add(new Add(changeItem, previousServerPath));
-            }
-            else if (changeItem.Kind == KindOfChange.Edit)
-            {
-                _edits.Add(new Edit(changeItem));
-            }
-            else if (changeItem.Kind == KindOfChange.Delete)
-            {
-                _deletes.Add(new Delete(changeItem));
-            }
-            else if (changeItem.Kind == KindOfChange.Rename) // Or Move
-            {
-                _moves.Add(new Move(changeItem, previousServerPath, changeItem.ServerPath));
-            }
-            else
-            {
-                Debug.Assert(false);
-            }
+            // Record all changes and evaluate later when the whole change set is known.
+            _changeItems.Add(changeItem);
         }
 
-        private static void ValidateArguments(ChangeItem changeItem, string previousServerPath)
+        private static void ValidateArguments(ChangeItem changeItem)
         {
             if (changeItem.ServerPath == null)
             {
                 throw new ArgumentException(nameof(changeItem.ServerPath));
             }
 
-            if (changeItem.Kind == KindOfChange.Rename && previousServerPath == null)
+            if (changeItem.Kind == KindOfChange.Rename && changeItem.FromServerPath == null)
             {
-
                 throw new ArgumentException("KindOfChange inconsistent with presence of previous server path");
             }
         }
 
-        private void ApplyMoves()
+        private void ApplyIds()
         {
-            // TODO post precessing
-            // find moves that are modeled as add and remove
-            // find copies (many) of a file with or without deleting the source.
+            // Handling needed for svn
+            ConvertRenameToAddIfSourceIsModified();
+            ConvertMultipleCopiesIntoAdd();
+            ConvertAddDeleteToRename();
 
-            // The case where we copy a file multiple times we could follow the history in different files.
-            // Is ignored. I accept that. I use the concept of a unique id.
+            // All other Add operations with an FromServerPath set are handled as regular add. We stop tracking here.
+            // A single add is a copy from somwhere else. We keep the source, so the added file gets a new id.
 
-            // TODO in vorberarbeitung nur eine exaktes move erkennen. Delete löschen, add zu den moves schieben.
-            // Alles andere bleibt dann ein Add. Weiter unten gibt es keine sonderbehandlung.
-
-            // In svn a move can consist of add and delete. We only handle deletes if not part of a rename.
-            var deletes = _deletes.Where(DeleteOnly).ToList();
-
-            foreach (var delete in deletes)
+            foreach (var item in _changeItems)
             {
-                // We need a new id in all cases.
-                // So far we may have worked on a file that shared the same location as this deleted file
-                _serverPathToId.Remove(delete.ServerPath);
-                delete.Item.Id = GetOrCreateId(delete.ServerPath);
-            }
-
-            foreach (var edit in _edits)
-            {
-                edit.Item.Id = GetOrCreateId(edit.ServerPath);
-            }
-
-            foreach (var add in _adds)
-            {
-                //  3 add cases TODO describe
-
-                // TODO copy (add) files (many) from one soruce and delete the source!. wtf
-
-                // If we have exactly one delete for an add thats a move.
-                // If we have more than adds for one delete thats just copying into multiple files and deleting the source.
-                if (add.FromServerPath != null)
+                if (item.IsDelete())
                 {
-                    bool isMove = _deletes.Any(deleted => deleted.ServerPath == add.FromServerPath);
-                    if (isMove)
+                    // We need a new id in all cases.
+                    // So far we may have worked on a file that shared the same location as this deleted file
+                    _serverPathToId.Remove(item.ServerPath);
+                    item.Id = GetOrCreateId(item.ServerPath);
+                }
+                else if (item.IsEdit())
+                {
+                    item.Id = GetOrCreateId(item.ServerPath);
+                }
+                else if (item.IsAdd())
+                {
+                    item.Id = GetOrCreateId(item.ServerPath);
+
+                    // Everything before the add requires gets a new id.
+                    _serverPathToId.Remove(item.ServerPath);
+                }
+                else if (item.IsRename())
+                {
+                    // This is the commit where we renamed previousServerPath to changeItem.ServerPath (current name)
+                    // In all commits following (older) the previousServerPath is mapped to the already used id.
+                    // For all items  reuse the already known id. 
+                    var id = GetOrCreateId(item.ServerPath);
+                    item.Id = id;
+
+                    _serverPathToId.Remove(item.ServerPath);
+
+                    if (_serverPathToId.ContainsKey(item.FromServerPath) == false)
                     {
-                        _moves.Add(new Move(add.Item, add.FromServerPath, add.ServerPath));
-                        continue;
+                        // Assume rename because we did not use the file in future (yet).
+                        Debug.Assert(item.FromServerPath != null);
+                        _serverPathToId.Add(item.FromServerPath, id);
                     }
                     else
                     {
-                        // Here the file was just copied. We treat it as a norma add. So this file gets a new id.
+                        // If the file was modified in future the rename was an copy instead!
+                        item.Kind = KindOfChange.Add;
+
+                        var msg = $"Convert rename to add because source is modified later: '{item.ServerPath}' (from '{item.FromServerPath}')";
+                        Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
                     }
                 }
-
-
-                add.Item.Id = GetOrCreateId(add.ServerPath);
-
-                // Everything before the add requires gets a new id.
-                _serverPathToId.Remove(add.ServerPath);
             }
-
-            foreach (var move in _moves)
-            {
-                // This is the commit where we renamed previousServerPath to changeItem.ServerPath (current name)
-                // In all commits following (older) the previousServerPath is mapped to the already used id.
-                // For all items  reuse the already known id. 
-                var id = GetOrCreateId(move.ToServerPath);
-                move.Item.Id = id;
-
-                _serverPathToId.Remove(move.ToServerPath);
-
-                Debug.Assert(move.FromServerPath != null);
-                _serverPathToId.Add(move.FromServerPath, id);
-            }
-
-            _moves.Clear();
         }
 
-        private void ClearChangeSetOperations()
+        /// <summary>
+        /// Svn can model rename or move with add and delete operations. If we find one add / delete pair this is tracked as move.
+        /// The delete operation in this case does not get an id. It is removed and the add is changed to an rename operation.
+        /// </summary>
+        private void ConvertAddDeleteToRename()
         {
-            _adds.Clear();
-            _moves.Clear();
-            _deletes.Clear();
-            _edits.Clear();
+            // Hidden moves consisting of an unique add and delete pair. I convert this to a single rename operation.
+            var addWithServerFromPath = _changeItems.Where(a => a.IsAdd() && a.FromServerPath != null).ToList();
+
+            var allDeletes = _changeItems.Where(d => d.IsDelete()).ToList();
+
+            var convertToRename = new List<ChangeItem>();
+            var deletesToRemove = new List<ChangeItem>();
+            foreach (var item in addWithServerFromPath)
+            {
+                // Is there exactly one delete for the from path and no second copy?
+                var copies = addWithServerFromPath.Where(a => a.FromServerPath == item.ServerPath).ToList();
+                var deletes = allDeletes.Where(d => d.ServerPath == item.FromServerPath).ToList();
+                if (copies.Count == 1 && deletes.Count > 0)
+                {
+                    // We can convert this to a move. The source was copied into one file and then deleted.
+                    deletesToRemove.AddRange(deletes);
+                    convertToRename.AddRange(copies);
+
+                    var msg = $"Convert add/delete pair to rename: '{item.ServerPath}' (from '{item.FromServerPath}')";
+                    Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
+                }
+            }
+
+            foreach (var item in convertToRename)
+            {
+                item.Kind = KindOfChange.Rename;
+            }
+
+            foreach (var remove in deletesToRemove)
+            {
+                _changeItems.Remove(remove);
+            }
+        }
+
+        private void ConvertMultipleCopiesIntoAdd()
+        {
+            var copies = _changeItems.Where(r => r.IsRename() || r.IsAdd() && r.FromServerPath != null).ToList();
+            foreach (var copy in copies)
+            {
+                var combined = copies.Where(c => c.FromServerPath == copy.FromServerPath).ToList();
+                if (combined.Count > 1)
+                {
+                    foreach (var tmp in combined)
+                    {
+                        tmp.Kind = KindOfChange.Add;
+                        var msg = $"Convert multiple copied file to add: '{tmp.ServerPath}' (from '{tmp.FromServerPath}')";
+                        Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// If we have a renamed file that was modifed in the same commit.
+        /// The rename is actually a copy in this case.
+        /// </summary>
+        private void ConvertRenameToAddIfSourceIsModified()
+        {
+            var renames = _changeItems.Where(item => item.IsRename()).ToList();
+            var edits = _changeItems.Where(item => item.IsEdit()).ToList();
+
+            // The renamed file is modified in the same changeset. Consider this as an add operation because I've seen cases where
+            // the source file was modified in upcoming commits.
+            var convertToAdds = renames.Where(r => edits.Any(e => r.FromServerPath == e.ServerPath));
+
+            foreach (var item in convertToAdds)
+            {
+                item.Kind = KindOfChange.Add;
+                var msg = $"Convert rename to add because file was modified: '{item.ServerPath}' (from '{item.FromServerPath}')";
+                Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
+            }
         }
 
         private Id CreateId(string serverPath)
@@ -170,14 +209,7 @@ namespace Insight.Shared.VersionControl
             var id = new StringId(uuid.ToString());
             _serverPathToId.Add(serverPath, id);
             return id;
-        }
-
-        private bool DeleteOnly(Delete delete)
-        {
-            // The delete is alone and does not belong to an add to form a move.
-            return !_moves.Any(move => move.FromServerPath == delete.ServerPath) &&
-                   !_adds.Any(add => add.FromServerPath == delete.ServerPath);
-        }
+        }      
 
         private Id GetOrCreateId(string serverPath)
         {
@@ -194,63 +226,6 @@ namespace Insight.Shared.VersionControl
             }
 
             return id;
-        }
-
-        private class Add
-        {
-            public Add(ChangeItem item, string fromServerPath)
-            {
-                Item = item;
-                FromServerPath = fromServerPath;
-            }
-
-            public ChangeItem Item { get; }
-            public string FromServerPath { get; }
-
-            public string ServerPath => Item.ServerPath;
-
-            
-        }
-
-        private class Delete
-        {
-            public Delete(ChangeItem item)
-            {
-                Item = item;
-            }
-
-            public ChangeItem Item { get; }
-
-            public string ServerPath => Item.ServerPath;
-        }
-
-
-        private class Edit
-        {
-            public Edit(ChangeItem item)
-            {
-                Item = item;
-            }
-
-            public ChangeItem Item { get; }
-
-            public string ServerPath => Item.ServerPath;
-        }
-
-        private sealed class Move
-        {
-            public Move(ChangeItem item, string fromServerPath, string toServerPath)
-            {
-                Item = item;
-                ToServerPath = toServerPath;
-                FromServerPath = fromServerPath;
-            }
-
-            public string FromServerPath { get; }
-            public ChangeItem Item { get; }
-
-
-            public string ToServerPath { get; }
         }
     }
 }

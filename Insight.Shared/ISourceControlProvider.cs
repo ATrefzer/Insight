@@ -1,26 +1,32 @@
 ﻿using System.Collections.Generic;
 
 using Insight.Shared.Model;
+using Insight.Shared.VersionControl;
 
 namespace Insight.Shared
 {
     public interface ISourceControlProvider
     {
-        void Initialize(string projectBase, string cachePath, string workItemRegex);
-
-        // TODO initialize! And ctro without arguments.
-
         Dictionary<string, int> CalculateDeveloperWork(Artifact artifact);
-        ChangeSetHistory QueryChangeSetHistory();
-
-        /// <summary>
-        /// Read the history from the source control provider and store it offline in the file system.
-        /// </summary>
-        void UpdateCache();
 
         /// <summary>
         /// Returns path to the cached file
         /// </summary>
         List<FileRevision> ExportFileHistory(string localFile);
+
+        /// <summary>
+        /// Returns a hash set of all server paths currently tracked by the svn.
+        /// </summary>
+        HashSet<string> GetAllTrackedFiles();
+
+        void Initialize(string projectBase, string cachePath, string workItemRegex);
+        ChangeSetHistory QueryChangeSetHistory();
+
+        List<WarningMessage> Warnings { get; }
+
+        /// <summary>
+        /// Read the history from the source control provider and store it offline in the file system.
+        /// </summary>
+        void UpdateCache();
     }
 }
