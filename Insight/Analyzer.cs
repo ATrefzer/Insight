@@ -141,12 +141,12 @@ namespace Insight
 
                                 // Pair wise couplings
                                 var tmp = new ChangeCouplingAnalyzer();
-                                var couplings = tmp.CalculateTemporalCouplings(_history, Project.Filter);
+                                var couplings = tmp.CalculateChangeCouplings(_history, Project.Filter);
                                 var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
                                 Csv.Write(Path.Combine(Project.Cache, "couplings.csv"), sortedCouplings);
 
                                 // Same with classified folders
-                                var classifiedCouplings = tmp.CalculateTemporalCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
+                                var classifiedCouplings = tmp.CalculateChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
                                 Csv.Write(Path.Combine(Project.Cache, "classified_couplings.csv"), classifiedCouplings);
 
                                 return sortedCouplings;

@@ -27,8 +27,7 @@ namespace Insight.Analyzers
 
         private readonly Dictionary<string, Coupling> _couplings = new Dictionary<string, Coupling>();
 
-
-        public List<Coupling> CalculateTemporalCouplings(ChangeSetHistory history, IFilter filter)
+        public List<Coupling> CalculateChangeCouplings(ChangeSetHistory history, IFilter filter)
         {
             _couplings.Clear();
             _count.Clear();
@@ -43,6 +42,7 @@ namespace Insight.Analyzers
                 // Only accepted files
                 var reducedItems =
                         cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.LocalPath).ToList();
+
 
                 IncrementCommitCount(reducedItems);
 
@@ -69,7 +69,7 @@ namespace Insight.Analyzers
         /// <summary>
         ///     If the classifier returns string.EMPTY the according file is not used.
         /// </summary>
-        public List<Coupling> CalculateTemporalCouplings(ChangeSetHistory history, Func<string, string> classifier)
+        public List<Coupling> CalculateChangeCouplings(ChangeSetHistory history, Func<string, string> classifier)
         {
             _couplings.Clear();
             _count.Clear();
