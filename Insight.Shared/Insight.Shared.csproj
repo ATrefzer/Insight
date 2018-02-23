@@ -65,6 +65,7 @@
     <Compile Include="Extensions\TimeExtensions.cs" />
     <Compile Include="Model\WorkItem.cs" />
     <Compile Include="VersionControl\MovementTracker.cs" />
+    <Compile Include="VersionControl\WarningMessage.cs" />
     <Compile Include="WorkItemExtractor.cs" />
     <Compile Include="XmlFile.cs" />
   </ItemGroup>

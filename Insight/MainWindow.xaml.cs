@@ -121,6 +121,7 @@ namespace Insight
         {
             // Analyze hotspots from summary and code metrics
             var data = await ExecuteAsync(_analyzer.AnalyzeHotspotsAsync);
+            ShowRawData(_analyzer.Warnings, false);
             ShowData(data);
         }
 
@@ -256,9 +257,16 @@ namespace Insight
         private async void ExportCsv_Click(object sender, RoutedEventArgs e)
         {
             var summary = await ExecuteAsync(_analyzer.ExportSummary);
+            ShowRawData(summary, true);
+        }
+
+        private void ShowRawData(object summary, bool toForeground)
+        {
             _data.UserCommands = null;
             _data.DataContext = summary;
-            _tabControl.SelectedIndex = 3;
+
+            if (toForeground)
+                _tabControl.SelectedIndex = 3;
         }
 
         private string GetVertexName(string path)
