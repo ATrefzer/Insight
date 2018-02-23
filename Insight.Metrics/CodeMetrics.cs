@@ -32,7 +32,9 @@ namespace Insight.Metrics
         public CodeMetrics()
         {
             // These file we do support for metric calculation.
-            _extensionToLanguage.Add(".cs", "C#");
+
+            // Cloc sometimes confuses cs files with smalltalk files. As a workaround I include smalltalk.
+            _extensionToLanguage.Add(".cs", "C#,Smalltalk");
             _extensionToLanguage.Add(".xml", "XML");
             _extensionToLanguage.Add(".xaml", "XAML");
             
@@ -189,7 +191,9 @@ namespace Insight.Metrics
 
             VerifyClocInstalled(basePath);
             var languages = string.Join(",", languagesToParse);
-            var args = $"\"{rootDir.FullName}\" --by-file --csv --quiet --include-lang=\"{languages}\"";
+
+            // --skip-uniqueness If cloc finds duplicate files it skips the duplicates. We have to disable this behavior.
+            var args = $"\"{rootDir.FullName}\" --by-file --csv --quiet --skip-uniqueness --include-lang=\"{languages}\"";
             var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args, rootDir.FullName);
             return result.StdOut;
         }
