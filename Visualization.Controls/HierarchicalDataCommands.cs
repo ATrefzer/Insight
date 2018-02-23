@@ -17,6 +17,10 @@ namespace Visualization.Controls
             foreach (var pair in _menuItemToAction)
             {
                 var menuItem = pair.Key;
+
+                // Detach context menu items from previous shown context menu (if any)
+                var parent = menuItem.Parent as ContextMenu;
+                parent?.Items.Clear();
                 menuItem.IsEnabled = data != null && data.IsLeafNode;             
                 menuItem.Command = new DelegateCommand(() => OnMenuClick(menuItem, data));
                 menu.Items.Add(menuItem);

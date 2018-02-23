@@ -14,6 +14,9 @@ namespace Visualization.Controls
 {
     public abstract class HierarchicalDataViewBase : UserControl
     {
+        public static readonly DependencyProperty UserCommandsProperty = DependencyProperty.Register(
+                                                                                                     "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase), new PropertyMetadata(null));
+
         protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
 
         /// <summary>
@@ -40,8 +43,11 @@ namespace Visualization.Controls
         /// <summary>
         /// Commands that apply to leaf nodes of a hierarchical data.
         /// </summary>
-        public HierarchicalDataCommands UserCommands { get; set; }
-
+        public HierarchicalDataCommands UserCommands
+        {
+            get => (HierarchicalDataCommands) GetValue(UserCommandsProperty);
+            set => SetValue(UserCommandsProperty, value);
+        }
 
         protected void ChangeSearchHighlightingCommand(object sender, EventArgs args)
         {

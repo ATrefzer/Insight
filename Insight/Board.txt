@@ -2,13 +2,22 @@
 In Progress
 ---------------------------------------
 
+- state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
+- in GetSLummary werden viele Dateien nicht gefunden!!!!! Trotz vereinfachter History? Untersuchen
+- Speichern auch für csv!!!
+ - Fensterhandling -> Titel anfragen, schließen.
+ - Viewmodel für main window
+
+- Better range selection! based on segments
+- bug Farbe im Work unterscheidet sich von knowledge!
+- Log für einzige Datei anzeigen im Raw Data view
+-
+
 - Unit Tests MovementTracker wenn add und remove ein rename darstellen
     - Testfälle für die drei Korrekturfunktionen
 - bug assemblyinfo.cs
 
-
 - rename circle packaging
-- Parallel Processing of knowledge (svn?)
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 - Rename Circle Packaging
 ---------------------------------------
@@ -71,7 +80,6 @@ Low prio, fun
     - Max Workitems etc
   
 - get rid of ConvexHull due to x86
-- Dynamic tabs!
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
 - Refactor Project. Create a new one instead of registering for changes.
