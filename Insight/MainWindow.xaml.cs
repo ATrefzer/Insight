@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
+using Insight.Shared.VersionControl;
 
 using Visualization.Controls;
 using Visualization.Controls.Data;
@@ -25,25 +26,21 @@ namespace Insight
         private readonly Dialogs _dialogs;
         private readonly Project _project;
         private bool _canClose = true;
+        private readonly MainViewModel _mainViewModel;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            _circlePackaging.UserCommands = new HierarchicalDataCommands();
-            _circlePackaging.UserCommands.Register("Trend", ShowTrend_Click);
-            _circlePackaging.UserCommands.Register("Work", ShowWorkOnSingleFile_Click);
-
-            _treeMap.UserCommands = new HierarchicalDataCommands();
-            _treeMap.UserCommands.Register("Trend", ShowTrend_Click);
-            _treeMap.UserCommands.Register("Work", ShowWorkOnSingleFile_Click);
-
-            _project = Application.Current.Properties["project"] as Project;           
+            _project = Application.Current.Properties["project"] as Project;
             _analyzer = new Analyzer(_project);
             _dialogs = new Dialogs();
 
-            var viewModel = new MainViewModel(_project);
-            DataContext = viewModel;
+            _mainViewModel = new MainViewModel(_project);
+            DataContext = _mainViewModel;
+
+            // TODO Cleanup loaded
+            _project.ProjectLoaded += (sender, args) => _mainViewModel.Tabs.Clear();
         }
 
 
@@ -71,7 +68,9 @@ namespace Insight
             var path = await ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFileAsync(fileToAnalyze)).ConfigureAwait(true);
 
             if (path == null)
+            {
                 return;
+            }
 
             // Show image
             var viewer = new ImageView();
@@ -94,35 +93,16 @@ namespace Insight
         private async void AnalyzeChangeCouplings_Click(object sender, RoutedEventArgs e)
         {
             var couplings = await ExecuteAsync(_analyzer.AnalyzeTemporalCouplingsAsync);
-
-            // Context menu to show couplings in chord diagram
-            var commands = new DataGridViewUserCommands<Coupling>();
-            commands.Register(Strings.Visualize, args =>
-            {
-                if (args.Any())
-                {
-                    var edges = args.Select(coupling => new EdgeData(GetVertexName(coupling.Item1),
-                                                                          GetVertexName(coupling.Item2),
-                                                                          coupling.Degree));
-                    _chord.DataContext = edges.ToList();
-                    _tabControl.SelectedIndex = 4;
-                }
-            });
-
-            _data.UserCommands = commands;
-          
-
-
-            _data.DataContext = couplings;
-            _tabControl.SelectedIndex = 3;
+            ShowChangeCoupling(couplings);
         }
 
         private async void AnalyzeHotspots_Click(object sender, RoutedEventArgs e)
         {
             // Analyze hotspots from summary and code metrics
             var data = await ExecuteAsync(_analyzer.AnalyzeHotspotsAsync);
-            ShowRawData(_analyzer.Warnings, false);
-            ShowData(data);
+
+            ShowHierarchicalData(data, "Hotspots");
+            ShowWarnings(_analyzer.Warnings);
         }
 
         private async void AnalyzeKnowledge_Click(object sender, RoutedEventArgs e)
@@ -140,7 +120,7 @@ namespace Insight
             }
 
             var data = await ExecuteAsync(() => _analyzer.AnalyzeKnowledgeAsync(directory));
-            ShowData(data);
+            ShowHierarchicalData(data, "Knowledge");
         }
 
         private async Task ExecuteAsync(Func<Task> func)
@@ -198,7 +178,7 @@ namespace Insight
             }
             catch (Exception ex)
             {
-                exception = ex;                
+                exception = ex;
             }
             finally
             {
@@ -257,16 +237,7 @@ namespace Insight
         private async void ExportCsv_Click(object sender, RoutedEventArgs e)
         {
             var summary = await ExecuteAsync(_analyzer.ExportSummary);
-            ShowRawData(summary, true);
-        }
-
-        private void ShowRawData(object summary, bool toForeground)
-        {
-            _data.UserCommands = null;
-            _data.DataContext = summary;
-
-            if (toForeground)
-                _tabControl.SelectedIndex = 3;
+            ShowSummary(summary);
         }
 
         private string GetVertexName(string path)
@@ -308,12 +279,15 @@ namespace Insight
                 if (distinctKeys.Any())
                 {
                     var mapper = new NameToColorMapper(distinctKeys);
+
+                    // TODO global is not so smart.
                     ColorScheme.SetColorMapping(mapper);
                 }
 
-                ShowData(data);
+                ShowHierarchicalData(data, "Loaded");
             }
         }
+
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
@@ -329,7 +303,16 @@ namespace Insight
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            if (!(_treeMap.DataContext is HierarchicalData data))
+            // TODO Save other stuff
+            if (_mainViewModel.Tabs.Any() == false || _mainViewModel.SelectedIndex < 0)
+            {
+                return;
+            }
+
+            var descr = _mainViewModel.Tabs.ElementAt(_mainViewModel.SelectedIndex);
+            var data = descr.Data as HierarchicalData;
+
+            if (data == null)
             {
                 return;
             }
@@ -353,16 +336,107 @@ namespace Insight
             (DataContext as MainViewModel)?.Refresh();
         }
 
-        private void ShowData(HierarchicalData data)
+        private void ShowChangeCoupling(List<Coupling> data)
+        {
+            // Context menu to show couplings in chord diagram
+            var commands = new DataGridViewUserCommands<Coupling>();
+            commands.Register(Strings.Visualize, args =>
+                                                 {
+                                                     if (args.Any())
+                                                     {
+                                                         var edges = args.Select(coupling => new EdgeData(GetVertexName(coupling.Item1),
+                                                                                                          GetVertexName(coupling.Item2),
+                                                                                                          coupling.Degree));
+
+                                                         ShowChangeCouplingChord(edges.ToList());
+                                                     }
+                                                 });
+
+            var descr = new RawDataDescription();
+            descr.Commands = commands;
+            descr.Data = data;
+            descr.Title = "Change Couplings";
+            _mainViewModel.Show(descr, true);
+        }
+
+
+        private void ShowChangeCouplingChord(List<EdgeData> data)
+        {
+            // Selection from the data grid
+            var descr = new ChordDescription();
+            descr.Data = data;
+            descr.Title = "Change Couplings (Chord)";
+            _mainViewModel.Show(descr, true);
+        }
+
+
+        private void ShowHierarchicalData(HierarchicalData data, string title)
         {
             if (data == null)
             {
                 return;
             }
-            _treeMap.DataContext = data;
-            _circlePackaging.DataContext = data.Clone();
-            _tabControl.SelectedIndex = 0;
+
+            if (title == null)
+            {
+                title = "Hotspots";
+            }
+
+            var cp = new CirclePackingDescription();
+            var commands = new HierarchicalDataCommands();
+            commands.Register("Trend", ShowTrend_Click);
+            commands.Register("Work", ShowWorkOnSingleFile_Click);
+            cp.Data = data.Clone();
+            cp.Title = title + " (Circle)";
+            cp.Commands = commands;
+            _mainViewModel.Show(cp, true);
+
+            var tm = new TreeMapDescription();
+            commands = new HierarchicalDataCommands();
+            commands.Register("Trend", ShowTrend_Click);
+            commands.Register("Work", ShowWorkOnSingleFile_Click);
+            tm.Data = data.Clone();
+            tm.Title = title + " (Treemap)";
+            tm.Commands = commands;
+            _mainViewModel.Show(tm, false);
         }
+
+
+      
+
+        private void ShowImage(BitmapImage bitmapImage)
+        {
+            var descr = new ImageDescription();
+            descr.Data = bitmapImage;
+            descr.Title = "Image Viewer";
+            _mainViewModel.Show(descr, true);
+        }
+
+        private void ShowSummary(List<DataGridFriendlyArtifact> data)
+        {
+            var descr = new RawDataDescription();
+            descr.Commands = null;
+            descr.Data = data;
+            descr.Title = "Summary";
+            _mainViewModel.Show(descr, true);
+        }
+
+
+        private void ShowWarnings(List<WarningMessage> data)
+        {
+            if (!data.Any())
+            {
+                // TODO clear
+                return;
+            }
+
+            var descr = new RawDataDescription();
+            descr.Commands = null;
+            descr.Data = data;
+            descr.Title = "Warnings";
+            _mainViewModel.Show(descr, true);
+        }
+
 
         private async void ShowWorkOnSingleFile_Click(object sender, RoutedEventArgs e)
         {
@@ -374,20 +448,19 @@ namespace Insight
 
             var path = await ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFileAsync(fileName));
 
-            // Show image
-            _img.Source = new BitmapImage(new Uri(path));
-            _tabControl.SelectedIndex = 2;
+            ShowImage(new BitmapImage(new Uri(path)));
         }
+
 
         private async void Update_Click(object sender, RoutedEventArgs e)
         {
             // The functions to update or pull are implemented in SvnProvider and GitProvider.
             // But actually that is not the task of this tool. Give it an updated repository.
             var msg = "Sync reads the version control's log and calculates code metrics for all supported files."
-             + " This takes time. The data is persistently cached and used when doing the various analyses."
-             + " If you synced before all cached data is deleted and rebuild."
-             + " Best your repository is up to date and has no local changes."
-             + " Do you want to proceed?";
+                      + " This takes time. The data is persistently cached and used when doing the various analyses."
+                      + " If you synced before all cached data is deleted and rebuild."
+                      + " Best your repository is up to date and has no local changes."
+                      + " Do you want to proceed?";
 
             var result = MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo);
             if (result == MessageBoxResult.No)

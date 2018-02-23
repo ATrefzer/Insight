@@ -79,6 +79,57 @@
             </RibbonTab>
         </Ribbon>
 
+        <TabControl Name="_tabControl"
+                    ItemsSource="{Binding Tabs, Mode=TwoWay}"
+                    SelectedIndex="{Binding SelectedIndex}">
+
+            <TabControl.Resources>
+                <DataTemplate DataType="{x:Type local:TreeMapDescription}">
+                    <controls:TreeMapView DataContext="{Binding Data}"
+                                          UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                             Path=DataContext.Commands}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:CirclePackingDescription}">
+                    <!-- DataContext of parent (ContentPresenter) is ViewDescription. This is where CirclePackagingView DataContext binds to
+                    As soon as we set the DataContext of the CirclePackagingView control UserCommands will use CirclePackagingView.DataContext. -->
+                    <controls:CirclePackagingView DataContext="{Binding Data}"
+                                                  UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                             Path=DataContext.Commands}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:RawDataDescription}">
+                    <controls:DataGridView DataContext="{Binding Data}" UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                             Path=DataContext.Commands}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:ChordDescription}">
+                    <controls:ChordView DataContext="{Binding Data}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:ImageDescription}">
+                    <Image Source="{Binding Data}"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Top"
+                           Stretch="None"/>
+                </DataTemplate>
+
+            </TabControl.Resources>
+
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <HeaderedContentControl Header="{Binding Title}"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <ContentControl Content="{Binding}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+
+        </TabControl>
+        <!--
         <TabControl Name="_tabControl">
             <TabItem Header="Circle Packaging View">
                 <controls:CirclePackagingView Name="_circlePackaging"/>
@@ -99,6 +150,7 @@
                 <controls:ChordView Name="_chord"/>
             </TabItem>
         </TabControl>
+        -->
 
     </DockPanel>
 </RibbonWindow>
