@@ -34,18 +34,20 @@ namespace Visualization.Controls.Chord
         private Visibility _visibility = Visibility.Visible;
 
 
-        public Label(string text, double angleInRad, Size size)
+        public Label(string vertexId, string text, double angleInRad, Size size)
         {
             Angle = angleInRad;
 
             // wpf counts clockwise
             AngleInDegrees = -(Angle * 180.0 / Math.PI);
 
+            VertexId = vertexId;
             _text = text;
             _labelWidth = size.Width;
             _labelHeight = size.Height;
         }
 
+        public string VertexId { get; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -113,7 +115,8 @@ namespace Visualization.Controls.Chord
         public double YScale { get; set; }
         public DelegateCommand MouseEnterCommand { get; internal set; }
         public DelegateCommand MouseLeaveCommand { get; internal set; }
-       
+     
+
 
         public static Vector PerpendicularClockwise(Vector vector2)
         {

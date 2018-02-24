@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Visualization.Controls")]
-[assembly: AssemblyCopyright("Copyright © Andreas Trefzer 2017")]
+[assembly: AssemblyCopyright("Copyright © Andreas Trefzer 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

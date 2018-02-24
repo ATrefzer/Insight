@@ -113,13 +113,13 @@ namespace Insight
 
         private void ShowTab(TabContentViewModel info, bool toForeground)
         {
-            var descr = _mainViewModel.Tabs.FirstOrDefault(d => d.Title == info.Title);
+            var oldInfo = _mainViewModel.Tabs.FirstOrDefault(d => d.Title == info.Title);
             int index;
-            if (descr != null)
+            if (oldInfo != null)
             {
-                index = _mainViewModel.Tabs.IndexOf(descr);
+                index = _mainViewModel.Tabs.IndexOf(oldInfo);
                 _mainViewModel.Tabs.RemoveAt(index);
-                _mainViewModel.Tabs.Insert(index, descr);
+                _mainViewModel.Tabs.Insert(index, info);
             }
             else
             {

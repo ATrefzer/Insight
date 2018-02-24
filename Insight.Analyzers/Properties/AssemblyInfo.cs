@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Insight.Analyzers")]
-[assembly: AssemblyCopyright("Copyright © Andreas Trefzer 2016")]
+[assembly: AssemblyCopyright("Copyright © Andreas Trefzer 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

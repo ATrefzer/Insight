@@ -8,13 +8,15 @@ namespace Visualization.Controls.Chord
 {
     internal class Vertex : IChordElement, INotifyPropertyChanged
     {
+        public string _nodeId;
         private Point _center;
 
         private bool _isSelected;
 
-        public Vertex(string name)
+        public Vertex(string nodeId, string name)
         {
             Name = name;
+            NodeId = nodeId;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -43,6 +45,16 @@ namespace Visualization.Controls.Chord
         }
 
         public string Name { get; }
+
+        public string NodeId
+        {
+            get => _nodeId;
+            set
+            {
+                _nodeId = value;
+                OnPropertyChanged();
+            }
+        }
 
         public double Radius { get; set; }
         public ICommand SelectCommand { get; set; }

@@ -97,10 +97,7 @@ namespace Insight
         {
             if (args.Any())
             {
-                // TODO
-                var edges = args.Select(coupling => new EdgeData(GetVertexName(coupling.Item1),
-                                                                 GetVertexName(coupling.Item2),
-                                                                 coupling.Degree));
+                var edges = args.Select(coupling => CreateEdgeData(coupling));
 
                 _tabBuilder.ShowChangeCoupling(edges.ToList());
             }
@@ -152,6 +149,15 @@ namespace Insight
         {
             var couplings = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeTemporalCoupling);
             _tabBuilder.ShowChangeCoupling(couplings);
+        }
+
+        private EdgeData CreateEdgeData(Coupling coupling)
+        {
+            return new EdgeData(coupling.Item1, coupling.Item2, coupling.Degree)
+                   {
+                           Node1DisplayName = GetVertexName(coupling.Item1),
+                           Node2DisplayName = GetVertexName(coupling.Item2)
+                   };
         }
 
         private string GetVertexName(string path)
