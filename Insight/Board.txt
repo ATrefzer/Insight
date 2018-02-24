@@ -2,6 +2,7 @@
 In Progress
 ---------------------------------------
 
+-Extract all the show methods into tabs view model
 - Refactor Project. Create a new one instead of registering for changes.
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 - in GetSLummary werden viele Dateien nicht gefunden!!!!! Trotz vereinfachter History? Untersuchen

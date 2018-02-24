@@ -72,6 +72,12 @@ namespace Insight
             return dlg.FileName;
         }
 
+        public bool AskYesNoQuestion(string msg, string caption)
+        {
+            var result = MessageBox.Show(msg, caption, MessageBoxButton.YesNo);
+            return result == MessageBoxResult.Yes;
+        }
+
         public void ShowError(string message)
         {
             MessageBox.Show(message, Strings.Error, MessageBoxButton.OK, MessageBoxImage.Error);

@@ -133,6 +133,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The directory is not contained in the project base. This is not allowed!.
+        /// </summary>
+        public static string ErrorDirectoryNotInProjectBase {
+            get {
+                return ResourceManager.GetString("ErrorDirectoryNotInProjectBase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export.
         /// </summary>
         public static string Export {

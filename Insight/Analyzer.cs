@@ -57,10 +57,8 @@ namespace Insight
             return new MainDeveloper(mainDeveloper, 100.0 * linesOfWork / lineCount);
         }
 
-        public Task<HierarchicalData> AnalyzeHotspotsAsync()
+        public HierarchicalData AnalyzeHotspots()
         {
-            return Task.Run(() =>
-                            {
                                 LoadHistory();
                                 LoadMetrics();
 
@@ -70,76 +68,71 @@ namespace Insight
                                 var builder = new HotspotBuilder();
                                 var hierarchicalData = builder.Build(summary, _metrics);
                                 return hierarchicalData;
-                            });
+                            
         }
 
-        public Task<HierarchicalData> AnalyzeKnowledgeAsync(string directory)
+        public HierarchicalData AnalyzeKnowledge(string directory)
         {
-            return Task.Run(() =>
-                            {
-                                var scanner = new DirectoryScanner();
-                                var filesToAnalyze = scanner.GetFilesRecursive(directory);
+            var scanner = new DirectoryScanner();
+            var filesToAnalyze = scanner.GetFilesRecursive(directory);
 
-                                // With git we have all files locally. But think first before requesting many thousand files from the Svn server.
-                                if (MessageBox.Show($"The folder contains {filesToAnalyze.Count} files to analyze. Really?", "Really?", MessageBoxButton.YesNo) == MessageBoxResult.No)
-                                {
-                                    return null;
-                                }
+            // With git we have all files locally. But think first before requesting many thousand files from the Svn server.
+            if (MessageBox.Show($"The folder contains {filesToAnalyze.Count} files to analyze. Really?", "Really?", MessageBoxButton.YesNo) == MessageBoxResult.No)
+            {
+                return null;
+            }
 
-                                // Get summary of all files within the selected direcory
-                                LoadHistory();
-                                LoadMetrics();
+            // Get summary of all files within the selected direcory
+            LoadHistory();
+            LoadMetrics();
 
-                                // TODO check if metrics exist and history exist => Sync first!
+            // TODO check if metrics exist and history exist => Sync first!
 
-                                // Extend the default filter to only accept files from the given directory.
-                                // This is faster than summary.Where() because we skip a lot of File.Exist() calls.
-                                var newFilter = new Filter(Project.Filter, new FileFilter(filesToAnalyze));
-                                var summary = _history.GetArtifactSummary(newFilter, new HashSet<string>(_metrics.Keys));
+            // Extend the default filter to only accept files from the given directory.
+            // This is faster than summary.Where() because we skip a lot of File.Exist() calls.
+            var newFilter = new Filter(Project.Filter, new FileFilter(filesToAnalyze));
+            var summary = _history.GetArtifactSummary(newFilter, new HashSet<string>(_metrics.Keys));
 
-                                // We have a summary of just a sub directory with a limited amount of files.
-                                // I don't want to download that many files from the server.
+            // We have a summary of just a sub directory with a limited amount of files.
+            // I don't want to download that many files from the server.
 
-                                // Calculate main developer for each file
-                                var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
+            // Calculate main developer for each file
+            var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
 
-                                // //Single core processing
-                                //foreach (var artifact in summary)
-                                //{
-                                //    var svnProvider = Project.CreateProvider();
+            // //Single core processing
+            //foreach (var artifact in summary)
+            //{
+            //    var svnProvider = Project.CreateProvider();
 
-                                //    var work = svnProvider.CalculateDeveloperWork(artifact);
-                                //    var mainDeveloper = GetMainDeveloper(work);
-                                //    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                //}
+            //    var work = svnProvider.CalculateDeveloperWork(artifact);
+            //    var mainDeveloper = GetMainDeveloper(work);
+            //    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+            //}
 
-                                Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                                                 artifact =>
-                                                 {
-                                                     var provider = Project.CreateProvider();
+            Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                             artifact =>
+                             {
+                                 var provider = Project.CreateProvider();
 
-                                                     var work = provider.CalculateDeveloperWork(artifact);
-                                                     var mainDeveloper = GetMainDeveloper(work);
-                                                     mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                                 });
+                                 var work = provider.CalculateDeveloperWork(artifact);
+                                 var mainDeveloper = GetMainDeveloper(work);
+                                 mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
+                             });
 
-                                // Assign a color to each developer
-                                var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
-                                var mapper = new NameToColorMapper(developers.ToArray());
-                                ColorScheme.SetColorMapping(mapper);
+            // Assign a color to each developer
+            var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
+            var mapper = new NameToColorMapper(developers.ToArray());
+            ColorScheme.SetColorMapping(mapper);
 
-                                // Build the knowledge data
-                                var builder = new KnowledgeBuilder();
-                                var hierarchicalData = builder.Build(summary, _metrics, mainDeveloperPerFile
-                                                                             .ToDictionary(pair => pair.Key, pair => pair.Value));
-                                return hierarchicalData;
-                            });
+            // Build the knowledge data
+            var builder = new KnowledgeBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics, mainDeveloperPerFile
+                                                         .ToDictionary(pair => pair.Key, pair => pair.Value));
+            return hierarchicalData;
         }
 
-        public Task<List<Coupling>> AnalyzeTemporalCouplingsAsync()
+        public List<Coupling> AnalyzeTemporalCoupling()
         {
-            return Task.Run(() =>
-                            {
                                 LoadHistory();
 
                                 // Pair wise couplings
@@ -153,27 +146,50 @@ namespace Insight
                                 Csv.Write(Path.Combine(Project.Cache, "classified_couplings.csv"), classifiedCouplings);
 
                                 return sortedCouplings;
-                            });
+                          
         }
 
-        public Task<string> AnalyzeWorkOnSingleFileAsync(string fileName)
+
+      
+        public List<TrendData> AnalyzeTrend(string localFile)
         {
-            return Task.Run(() =>
-                            {
+                                var trend = new List<TrendData>();
+                             
+            
                                 var svnProvider = Project.CreateProvider();
-                                var workByDeveloper = svnProvider.CalculateDeveloperWork(new Artifact { LocalPath = fileName });
 
-                                var bitmap = new FractionBitmap();
+                                // Svn log on this file to get all revisions
+                                var fileHistory = svnProvider.ExportFileHistory(localFile);
 
-                                var fi = new FileInfo(fileName);
-                                var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
+                                // For each file we need to calculate the metrics
+                                var provider = new CodeMetrics();
 
-                                // Let determine colors automatically 
-                                var colorMapping = new NameToColorMapper(workByDeveloper.Keys.ToArray());
-                                bitmap.Create(path, workByDeveloper, colorMapping, true);
+                                foreach (var file in fileHistory)
+                                {
+                                    var fileInfo = new FileInfo(file.CachePath);
+                                    var loc = provider.CalculateLinesOfCode(fileInfo);
+                                    var invertedSpace = provider.CalculateInvertedSpaceMetric(fileInfo);
+                                    trend.Add(new TrendData { Date = file.Date, Loc = loc, InvertedSpace = invertedSpace });
+                                }
 
-                                return path;
-                            });
+                                return trend;
+        }
+
+        public string AnalyzeWorkOnSingleFile(string fileName)
+        {
+            var provider = Project.CreateProvider();
+            var workByDeveloper = provider.CalculateDeveloperWork(new Artifact { LocalPath = fileName });
+
+            var bitmap = new FractionBitmap();
+
+            var fi = new FileInfo(fileName);
+            var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
+
+            // Let determine colors automatically 
+            var colorMapping = new NameToColorMapper(workByDeveloper.Keys.ToArray());
+            bitmap.Create(path, workByDeveloper, colorMapping, true);
+
+            return path;
         }
 
         public Task ExportComments()
@@ -213,35 +229,33 @@ namespace Insight
                             });
         }
 
-        public Task<List<DataGridFriendlyArtifact>> ExportSummary()
+        public List<DataGridFriendlyArtifact> ExportSummary()
         {
-            return Task.Run(() =>
-                            {
-                                LoadHistory();
-                                LoadMetrics();
+            LoadHistory();
+            LoadMetrics();
 
-                                var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
 
-                                var gridData = new List<DataGridFriendlyArtifact>();
-                                foreach (var artifact in summary)
-                                {
-                                    var metricKey = artifact.LocalPath.ToLowerInvariant();
-                                    var loc = _metrics.ContainsKey(metricKey) ? _metrics[metricKey].Code : 0;
-                                    gridData.Add(
-                                                 new DataGridFriendlyArtifact
-                                                 {
-                                                         LocalPath = artifact.LocalPath,
-                                                         Revision = artifact.Revision,
-                                                         Commits = artifact.Commits,
-                                                         Committers = artifact.Committers.Count,
-                                                         LOC = loc,
-                                                         WorkItems = artifact.WorkItems.Count
-                                                 });
-                                }
+            var gridData = new List<DataGridFriendlyArtifact>();
+            foreach (var artifact in summary)
+            {
+                var metricKey = artifact.LocalPath.ToLowerInvariant();
+                var loc = _metrics.ContainsKey(metricKey) ? _metrics[metricKey].Code : 0;
+                gridData.Add(
+                             new DataGridFriendlyArtifact
+                             {
+                                     LocalPath = artifact.LocalPath,
+                                     Revision = artifact.Revision,
+                                     Commits = artifact.Commits,
+                                     Committers = artifact.Committers.Count,
+                                     LOC = loc,
+                                     WorkItems = artifact.WorkItems.Count
+                             });
+            }
 
-                                Csv.Write(Path.Combine(Project.Cache, "Export.csv"), gridData);
-                                return gridData;
-                            });
+            // TODO save!
+            //Csv.Write(Path.Combine(Project.Cache, "Export.csv"), gridData);
+            return gridData;
         }
 
         public void UpdateCache()
@@ -287,7 +301,7 @@ namespace Insight
 
         private void LoadHistory()
         {
-            if (_history == null) 
+            if (_history == null)
             {
                 var provider = Project.CreateProvider();
                 _history = provider.QueryChangeSetHistory();
