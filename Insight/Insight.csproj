@@ -100,6 +100,7 @@
     <Compile Include="BackgroundExecution.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="ProgressService.cs" />
+    <Compile Include="TabBuilder.cs" />
     <Compile Include="ViewController.cs" />
     <Compile Include="ViewModels\ChordViewModel.cs" />
     <Compile Include="ViewModels\CirclePackingViewModel.cs" />

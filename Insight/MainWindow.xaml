@@ -34,15 +34,15 @@
                         <RibbonButton Label="{x:Static local:Strings.Save}"
                                       SmallImageSource="Resources/export_16.png"
                                       Margin="5,0,0,0"
-                                      Click="Save_Click"/>
+                                      Command="{Binding SaveDataCommand}"/>
                         <RibbonButton Label="{x:Static local:Strings.Load}"
                                       SmallImageSource="Resources/import_16.png"
                                       Margin="5,0,0,0"
-                                      Click="Load_Click"/>
+                                      Command="{Binding LoadDataCommand}"/>
                         <RibbonButton Label="{x:Static local:Strings.About}"
                                       SmallImageSource="Lightswitch.ico"
                                       Margin="5,0,0,0"
-                                      Click="About_Click"/>
+                                      Command="{Binding AboutCommand}"/>
                     </StackPanel>
                 </RibbonGroup>
 
@@ -60,22 +60,22 @@
                              IsEnabled="{Binding IsProjectValid}">
                     <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
                                   Label="{x:Static local:Strings.Knowledge}"
-                                  Click="AnalyzeKnowledge_Click"/>
+                                  Command="{Binding KnowledgeCommand}"/>
                     <RibbonButton LargeImageSource="Resources/fire_64.png"
                                   Label="{x:Static local:Strings.Hotspots}"
-                                  Click="AnalyzeHotspots_Click"/>
+                                  Command="{Binding HotspotsCommand}" />
                     <RibbonButton LargeImageSource="Resources/birds-in-love_64.png"
                                   Label="{x:Static local:Strings.Coupling}"
-                                  Click="AnalyzeChangeCouplings_Click"/>
+                                  Command="{Binding ChangeCouplingCommand}"/>
                     <RibbonButton LargeImageSource="Resources/pie-graph-split_64.png"
                                   Label="{x:Static local:Strings.Work}"
-                                  Click="ShowWorkOnSingleFile_Click"/>
+                                  Command="{Binding WorkOnSingleFileCommand}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.Export}">
                     <RibbonButton LargeImageSource="Resources/csv-file-format-extension_64.png"
                                   Label="{x:Static local:Strings.Summary}"
-                                  Click="ExportCsv_Click"/>
+                                  Command="{Binding SummaryCommand}"/>
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>

@@ -1,4 +1,7 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
+
+using Insight.Shared.Model;
 
 namespace Insight
 {
@@ -9,14 +12,9 @@ namespace Insight
         public ViewController(MainWindow mainWindow)
         {
             _mainWindow = mainWindow;
-        }
+        }      
 
-        public bool AskYesNoQuestion(string msg, string caption)
-        {
-            var result = MessageBox.Show(msg, caption, MessageBoxButton.YesNo);
-            return result == MessageBoxResult.Yes;
-        }     
-
+        // TODO return a project
         public bool ShowProjectSettings(Project project)
         {
             var viewModel = new ProjectViewModel(project, new Dialogs());
@@ -25,6 +23,35 @@ namespace Insight
             view.Owner = _mainWindow;
             var result = view.ShowDialog();
             return result.GetValueOrDefault() && viewModel.Changed;
+        }
+
+        public void ShowAbout()
+        {
+            var view = new AboutView();
+            view.Owner = _mainWindow;
+            view.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            view.ShowDialog();
+        }
+
+        public void ShowImageViewer(string path)
+        {
+            // Show image
+            var viewer = new ImageView();
+            viewer.SetImage(path);
+            viewer.Owner = _mainWindow;
+            viewer.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            viewer.SizeToContent = SizeToContent.WidthAndHeight;
+            viewer.ResizeMode = ResizeMode.NoResize;
+            viewer.ShowDialog();
+        }
+
+        public void ShowTrendViewer(List<TrendData> trendOrderedByDate)
+        {
+            var details = new TrendView();
+            details.DataContext = new TrendViewModel(trendOrderedByDate);
+            details.Owner = _mainWindow;
+            details.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            details.ShowDialog();
         }
     }
 }

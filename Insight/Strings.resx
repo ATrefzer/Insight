@@ -218,6 +218,9 @@
   <data name="Visualize" xml:space="preserve">
     <value>Visualize</value>
   </data>
+  <data name="ErrorDirectoryNotInProjectBase" xml:space="preserve">
+    <value>The directory is not contained in the project base. This is not allowed!</value>
+  </data>
   <data name="SyncInstructions" xml:space="preserve">
     <value>Sync reads the version control's log and calculates code metrics for all supported files.
 This takes time. The data is persistently cached and used when doing the various analyses.
