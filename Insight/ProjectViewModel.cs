@@ -111,9 +111,11 @@ namespace Insight
             return null;
         }
 
+        public bool Changed { get; private set; }
         private void ApplySettings(Window wnd)
         {
-            Apply();
+            Changed = Apply();
+            wnd.DialogResult = true;
             wnd.Close();
         }
 

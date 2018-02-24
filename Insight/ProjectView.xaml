@@ -72,7 +72,7 @@
                     Style="{StaticResource DialogButtonStyle}"
                     Margin="0 0 5 0"
                     Command="{Binding ApplyCommand}"
-                    CommandParameter="{Binding ElementName=_settingsView}"/>
+                    CommandParameter="{Binding ElementName=_settingsView}" />
         </StackPanel>
 
         <Grid Margin="5">

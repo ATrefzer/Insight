@@ -97,10 +97,20 @@
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Analyzer.cs" />
+    <Compile Include="BackgroundExecution.cs" />
+    <Compile Include="Progress.cs" />
+    <Compile Include="ProgressService.cs" />
+    <Compile Include="ViewController.cs" />
+    <Compile Include="ViewModels\ChordViewModel.cs" />
+    <Compile Include="ViewModels\CirclePackingViewModel.cs" />
     <Compile Include="ImageView.xaml.cs">
       <DependentUpon>ImageView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ImageViewModel.cs" />
     <Compile Include="NativeMethods.cs" />
+    <Compile Include="ViewModels\TabContentViewModel.cs" />
+    <Compile Include="ViewModels\TableViewModel.cs" />
+    <Compile Include="ViewModels\TreeMapViewModel.cs" />
     <Compile Include="TrendViewModel.cs" />
     <Compile Include="DataGridFriendlyArtifact.cs" />
     <Compile Include="Strings.Designer.cs">
@@ -263,5 +273,6 @@
   <ItemGroup>
     <Resource Include="Resources\about.html" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

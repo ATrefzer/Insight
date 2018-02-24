@@ -1,86 +1,35 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Input;
 
+using Insight.ViewModels;
 using Insight.WpfCore;
 
-using Visualization.Controls;
-using Visualization.Controls.Interfaces;
+using Prism.Commands;
 
 namespace Insight
 {
-    public class ViewDescription : ViewModelBase
-    {
-        private object _data;
-
-        public object Data
-        {
-            get => _data;
-            set
-            {
-                if (_data != value)
-                {
-                    _data = value;
-                    OnPropertyChanged("Data");
-                }
-            }
-        }
-
-        public string Title { get; set; }
-    }
-
-    public class TreeMapDescription : ViewDescription
-    {
-        private HierarchicalDataCommands _commands;
-
-        public HierarchicalDataCommands Commands
-        {
-            get { return _commands; }
-            set
-            {
-                _commands = value;
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    public class CirclePackingDescription : ViewDescription
-    {
-        private HierarchicalDataCommands _commands;
-
-        public HierarchicalDataCommands Commands
-        {
-            get { return _commands; }
-            set
-            {
-                _commands = value; 
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    public class ImageDescription : ViewDescription
-    {
-    }
-
-    public class ChordDescription : ViewDescription
-    {
-    }
-
-    public class RawDataDescription : ViewDescription
-    {
-        public IDataGridViewUserCommands Commands { get; set; }
-    }
-
     public sealed class MainViewModel : ViewModelBase
     {
+        private readonly Analyzer _analyzer;
+        private readonly BackgroundExecution _backgroundExecution;
+
+        // TODO needed?
         private readonly Project _project;
+        private readonly ViewController _viewController;
 
         private int _selectedIndex = -1;
-        private ObservableCollection<ViewDescription> _tabs = new ObservableCollection<ViewDescription>();
+        private ObservableCollection<TabContentViewModel> _tabs = new ObservableCollection<TabContentViewModel>();
 
-        public MainViewModel(Project project)
+        public MainViewModel(ViewController viewController, Project project, Analyzer analyzer, BackgroundExecution backgroundExecution)
         {
+            _viewController = viewController;
             _project = project;
+            _analyzer = analyzer;
+            _backgroundExecution = backgroundExecution;
+
+            SetupCommand = new DelegateCommand(SetupClick);
+            UpdateCommand = new DelegateCommand(UpdateClick);
         }
 
         public bool IsProjectValid => _project.IsValid();
@@ -95,7 +44,9 @@ namespace Insight
             }
         }
 
-        public ObservableCollection<ViewDescription> Tabs
+        public ICommand SetupCommand { get; set; }
+
+        public ObservableCollection<TabContentViewModel> Tabs
         {
             get => _tabs;
             set
@@ -105,24 +56,26 @@ namespace Insight
             }
         }
 
+        public DelegateCommand UpdateCommand { get; set; }
+
         public void Refresh()
         {
             OnAllPropertyChanged();
         }
 
-        public void Show(ViewDescription description, bool toForeground)
+        public void Show(TabContentViewModel info, bool toForeground)
         {
-            var descr = _tabs.FirstOrDefault(d => d.Title == description.Title);
+            var descr = _tabs.FirstOrDefault(d => d.Title == info.Title);
             var index = -1;
             if (descr != null)
             {
-                // TODO commands are not updated. That should be ok
-                descr.Data = description.Data;
                 index = _tabs.IndexOf(descr);
+                _tabs.RemoveAt(index);
+                _tabs.Insert(index, descr);
             }
             else
             {
-                Tabs.Add(description);
+                Tabs.Add(info);
                 index = Tabs.Count - 1;
             }
 
@@ -130,6 +83,35 @@ namespace Insight
             {
                 SelectedIndex = index;
             }
-        }     
+        }
+
+        private void SetupClick()
+        {
+            var changed = _viewController.ShowProjectSettings(_project);
+
+            if (changed)
+            {
+                _tabs.Clear();
+                _project.Save();
+                _analyzer.Clear(); // TODO new project
+            }
+
+            // Refresh state of ribbon
+            Refresh();
+        }
+
+        private async void UpdateClick()
+        {
+            // The functions to update or pull are implemented in SvnProvider and GitProvider.
+            // But actually that is not the task of this tool. Give it an updated repository.
+
+            if (!_viewController.AskYesNoQuestion(Strings.SyncInstructions, "Confirm"))
+            {
+                return;
+            }
+
+            await _backgroundExecution.ExecuteAsync(() => _analyzer.UpdateCache());
+            _analyzer.Clear();
+        }
     }
 }
