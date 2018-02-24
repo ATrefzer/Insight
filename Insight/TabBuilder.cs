@@ -93,7 +93,7 @@ namespace Insight
         public void ShowWarnings(List<WarningMessage> data)
         {
             var title = "Warnings";
-            if (!data.Any())
+            if (data == null || !data.Any())
             {
                 var vm = _mainViewModel.Tabs.FirstOrDefault(x => x.Title == title);
                 if (vm != null)
@@ -114,7 +114,7 @@ namespace Insight
         private void ShowTab(TabContentViewModel info, bool toForeground)
         {
             var descr = _mainViewModel.Tabs.FirstOrDefault(d => d.Title == info.Title);
-            var index = -1;
+            int index;
             if (descr != null)
             {
                 index = _mainViewModel.Tabs.IndexOf(descr);

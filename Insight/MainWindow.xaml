@@ -94,7 +94,7 @@
                 <DataTemplate DataType="{x:Type ViewModels:CirclePackingViewModel}">
                     <!-- DataContext of parent (ContentPresenter) is ViewDescription. This is where CirclePackagingView DataContext binds to
                     As soon as we set the DataContext of the CirclePackagingView control UserCommands will use CirclePackagingView.DataContext. -->
-                    <controls:CirclePackagingView DataContext="{Binding Data}"
+                    <controls:CirclePackingView DataContext="{Binding Data}"
                                                   UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
                              Path=DataContext.Commands}"/>
                 </DataTemplate>

@@ -1,4 +1,4 @@
-﻿<local:HierarchicalDataViewBase x:Class="Visualization.Controls.CirclePackagingView"
+﻿<local:HierarchicalDataViewBase x:Class="Visualization.Controls.CirclePackingView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,7 +11,7 @@
              MouseMove="Window_MouseMove"
              MouseLeave="Window_MouseLeave"
              ContextMenuOpening="OnContextMenuOpening"
-             IsVisibleChanged="CirclePackaging_OnIsVisibleChanged">
+             IsVisibleChanged="CirclePacking_OnIsVisibleChanged">
     <UserControl.Resources>
         <ContextMenu x:Key="contextMenu"/>
         <!-- MenuItem.Click="ContextMenu_OnClick" -->

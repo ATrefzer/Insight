@@ -2,38 +2,35 @@
 In Progress
 ---------------------------------------
 
--Extract all the show methods into tabs view model
-- Refactor Project. Create a new one instead of registering for changes.
-- state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
-- in GetSLummary werden viele Dateien nicht gefunden!!!!! Trotz vereinfachter History? Untersuchen
-- Speichern auch für csv!!!
- - Fensterhandling -> Titel anfragen, schließen.
- - Viewmodel für main window
-
-- Better range selection! based on segments
-- bug Farbe im Work unterscheidet sich von knowledge!
-- Log für einzige Datei anzeigen im Raw Data view
--
 
 - Unit Tests MovementTracker wenn add und remove ein rename darstellen
     - Testfälle für die drei Korrekturfunktionen
-- bug assemblyinfo.cs
+- Speichern auch für csv!!!
 
-- rename circle packaging
+
+- state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
+- Better range selection! based on segments
+
+
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
-- Rename Circle Packaging
+
 ---------------------------------------
-Features
+Features and improvements
 ---------------------------------------
-- specify path to svn.exe or git.exe
+
+- Because we skip large merge commits we may lose final renames. This file is not found in the summary becasue the code metric
+  found the file somewhere unexpected.
 - Return when zooming
-- Developer knowledge for a single developer
 - maybe PieChart
+- (GIT) Show log for a single file in the grid view.
+- specify path to svn.exe or git.exe
+- Developer knowledge for a single developer
 ---------------------------------------
 Bugs
 ---------------------------------------
+- Bug assemblyinfo.cs
 - AssemblyInfo duplicates are not distinguished in chord view.
-- Check if renamings in svn case are handled correctly if we read history incrementially.
+- Color in work is different from knowledge!
 ---------------------------------------
 User interface
 ---------------------------------------

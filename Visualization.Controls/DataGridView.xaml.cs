@@ -9,7 +9,7 @@ namespace Visualization.Controls
     /// <summary>
     /// Interaction logic for DataGridView.xaml
     /// </summary>
-    public partial class DataGridView : UserControl
+    public partial class DataGridView
     {
         public DataGridView()
         {

@@ -7,7 +7,7 @@ using System.Windows;
 using Visualization.Controls.Data;
 using Visualization.Controls.Utility;
 
-namespace Visualization.Controls.CirclePackaging
+namespace Visualization.Controls.CirclePacking
 {
     /*
     Algorithm:
@@ -49,7 +49,7 @@ namespace Visualization.Controls.CirclePackaging
     directly the next overlapping circle. That is ok.
     See Examples\why_we_end_up_with_a_collision_again.html
     */
-    internal sealed class CirclePackagingLayout
+    internal sealed class CirclePackingLayout
     {
         /// When one layer is finished the output files are deleted.
         public bool DebugEnabled { get; } = false;

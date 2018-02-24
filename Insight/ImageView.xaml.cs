@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace Insight
@@ -7,7 +6,7 @@ namespace Insight
     /// <summary>
     /// Interaction logic for ImageView.xaml
     /// </summary>
-    public partial class ImageView : Window
+    public partial class ImageView
     {
         public ImageView()
         {

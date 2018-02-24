@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Visualization.Controls.CirclePackaging
+namespace Visualization.Controls.CirclePacking
 {
-    public class Node
+    public sealed class Node
     {
         public Node Next;
         public Node Previous;
@@ -16,7 +16,7 @@ namespace Visualization.Controls.CirclePackaging
     }
 
     /// <summary>
-    /// Front chain implementation for the circle packaging algorithm
+    /// Front chain implementation for the circle packing algorithm
     /// </summary>
     public sealed class FrontChain
     {

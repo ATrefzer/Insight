@@ -7,7 +7,7 @@ using System.Text;
 
 using Visualization.Controls.Data;
 
-namespace Visualization.Controls.CirclePackaging
+namespace Visualization.Controls.CirclePacking
 {
     public static class DebugHelper
     {

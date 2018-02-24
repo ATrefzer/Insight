@@ -306,10 +306,7 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sync reads the version control&apos;s log and calculates code metrics for all supported files.
-        ///This takes time. The data is persistently cached and used when doing the various analyses.
-        ///If you synced before all cached data is deleted and rebuild.
-        ///Best your repository is up to date and has no local changes.
+        ///   Looks up a localized string similar to Sync reads the version control&apos;s log and calculates code metrics for all supported files. This takes time. The data is persistently cached and used when doing the various analyses. If you synced before all cached data is deleted and rebuild. Best your repository is up to date and has no local changes.
         ///Do you want to proceed?.
         /// </summary>
         public static string SyncInstructions {

@@ -39,7 +39,9 @@ namespace Insight.Shared.Model
             {
                 if (changeset.WorkItems.Count >= WORKITEM_LIMIT)
                 {
-                    // Ignore monster merges
+                    // Ignore monster merges.
+                    // Note: We may lose files for the summary when the last merge with many work items contains a final rename.
+                    // Maybe write a warning or make further analyses.
                     continue;
                 }
 
@@ -70,6 +72,10 @@ namespace Insight.Shared.Model
                             // Because I delete now no longer tracked files from the history we should never end up here!
                             // However in git it is possible because we may see a commit with a modify after a delete.
 
+                            // This may still happen because we skip large merges that may contain a final rename.
+                            // So we have a code metric but still believe that the file is at its former location
+
+                            Trace.WriteLine($"Ignored file: '{item.LocalPath}'. It should exist. Possible cause: Ignored commit with too much work items containing a final rename.");
                             ignore.Add(id);
                             continue;
                         }

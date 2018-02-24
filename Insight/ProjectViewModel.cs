@@ -114,7 +114,8 @@ namespace Insight
         public bool Changed { get; private set; }
         private void ApplySettings(Window wnd)
         {
-            Changed = Apply();
+            Changed |= Apply();
+            Model.Save();
             wnd.DialogResult = true;
             wnd.Close();
         }
@@ -124,6 +125,7 @@ namespace Insight
             var file = _dialogs.GetLoadFile("xml");
             if (file != null)
             {
+                Changed = true;
                 Model.LoadFrom(file);
                 UpdatAll();
             }

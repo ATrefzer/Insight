@@ -1,13 +1,12 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace Insight.Shared.System
 {
-    public class ProcessResult
+    public sealed class ProcessResult
     {
         public int ExitCode { get; set; }
-        public string StdOut { get; set; }
         public string StdErr { get; set; }
+        public string StdOut { get; set; }
     }
 
     public static class ProcessRunner
@@ -36,11 +35,11 @@ namespace Insight.Shared.System
                 process.WaitForExit();
 
                 return new ProcessResult
-                {
-                    ExitCode = process.ExitCode,
-                    StdOut = stdOut,
-                    StdErr = stdErr
-                };
+                       {
+                               ExitCode = process.ExitCode,
+                               StdOut = stdOut,
+                               StdErr = stdErr
+                       };
             }
         }
 
