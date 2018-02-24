@@ -1,8 +1,10 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
+﻿using System.Windows;
+
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace Insight
 {
-    internal sealed class Dialogs
+    public sealed class Dialogs
     {
         public string GetDirectory(string initDirectory = null)
         {
@@ -68,6 +70,11 @@ namespace Insight
             }
 
             return dlg.FileName;
+        }
+
+        public void ShowError(string message)
+        {
+            MessageBox.Show(message, Strings.Error, MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

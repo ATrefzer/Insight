@@ -11,6 +11,7 @@ using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
+using Insight.ViewModels;
 
 using Visualization.Controls;
 using Visualization.Controls.Data;
@@ -27,20 +28,30 @@ namespace Insight
         private readonly Project _project;
         private bool _canClose = true;
         private readonly MainViewModel _mainViewModel;
+        private ViewController _viewController;
 
         public MainWindow()
         {
             InitializeComponent();
 
+            // Last know project
             _project = Application.Current.Properties["project"] as Project;
+
+            _viewController = new ViewController(this);
             _analyzer = new Analyzer(_project);
             _dialogs = new Dialogs();
 
-            _mainViewModel = new MainViewModel(_project);
-            DataContext = _mainViewModel;
+            var progressService = new ProgressService(this);
+            var backgroundExecution = new BackgroundExecution(progressService, _dialogs);
 
-            // TODO Cleanup loaded
-            _project.ProjectLoaded += (sender, args) => _mainViewModel.Tabs.Clear();
+            _mainViewModel = new MainViewModel(_viewController, _project, _analyzer, backgroundExecution);
+            DataContext = _mainViewModel;          
+        }
+
+        public bool CanClose
+        {
+            get { return _canClose; }
+            set { _canClose = value; }
         }
 
 
@@ -136,7 +147,7 @@ namespace Insight
             {
                 IsEnabled = false;
                 progress.CanClose = false;
-                _canClose = false;
+                CanClose = false;
 
                 await func().ConfigureAwait(true);
             }
@@ -148,7 +159,7 @@ namespace Insight
             {
                 IsEnabled = true;
                 progress.CanClose = true;
-                _canClose = true;
+                CanClose = true;
                 progress.Close();
             }
 
@@ -172,7 +183,7 @@ namespace Insight
             {
                 IsEnabled = false;
                 progress.CanClose = false;
-                _canClose = false;
+                CanClose = false;
 
                 result = await func().ConfigureAwait(true);
             }
@@ -189,7 +200,7 @@ namespace Insight
                 progress.CanClose = true;
 
                 // Main window can be closed now
-                _canClose = true;
+                CanClose = true;
 
                 progress.Close();
             }
@@ -291,7 +302,7 @@ namespace Insight
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
-            e.Cancel = !_canClose;
+            e.Cancel = !CanClose;
         }
 
 
@@ -323,18 +334,7 @@ namespace Insight
                 Save(fileName, data);
             }
         }
-
-        private void Setup_Click(object sender, RoutedEventArgs e)
-        {
-            var viewModel = new ProjectViewModel(_project, new Dialogs());
-            var view = new ProjectView();
-            view.DataContext = viewModel;
-            view.Owner = this;
-            view.ShowDialog();
-
-            // Refresh state of ribbon
-            (DataContext as MainViewModel)?.Refresh();
-        }
+     
 
         private void ShowChangeCoupling(List<Coupling> data)
         {
@@ -352,7 +352,7 @@ namespace Insight
                                                      }
                                                  });
 
-            var descr = new RawDataDescription();
+            var descr = new TableViewModel();
             descr.Commands = commands;
             descr.Data = data;
             descr.Title = "Change Couplings";
@@ -363,7 +363,7 @@ namespace Insight
         private void ShowChangeCouplingChord(List<EdgeData> data)
         {
             // Selection from the data grid
-            var descr = new ChordDescription();
+            var descr = new ChordViewModel();
             descr.Data = data;
             descr.Title = "Change Couplings (Chord)";
             _mainViewModel.Show(descr, true);
@@ -382,7 +382,7 @@ namespace Insight
                 title = "Hotspots";
             }
 
-            var cp = new CirclePackingDescription();
+            var cp = new CirclePackingViewModel();
             var commands = new HierarchicalDataCommands();
             commands.Register("Trend", ShowTrend_Click);
             commands.Register("Work", ShowWorkOnSingleFile_Click);
@@ -391,7 +391,7 @@ namespace Insight
             cp.Commands = commands;
             _mainViewModel.Show(cp, true);
 
-            var tm = new TreeMapDescription();
+            var tm = new TreeMapViewModel();
             commands = new HierarchicalDataCommands();
             commands.Register("Trend", ShowTrend_Click);
             commands.Register("Work", ShowWorkOnSingleFile_Click);
@@ -406,7 +406,7 @@ namespace Insight
 
         private void ShowImage(BitmapImage bitmapImage)
         {
-            var descr = new ImageDescription();
+            var descr = new ImageViewModel();
             descr.Data = bitmapImage;
             descr.Title = "Image Viewer";
             _mainViewModel.Show(descr, true);
@@ -414,7 +414,7 @@ namespace Insight
 
         private void ShowSummary(List<DataGridFriendlyArtifact> data)
         {
-            var descr = new RawDataDescription();
+            var descr = new TableViewModel();
             descr.Commands = null;
             descr.Data = data;
             descr.Title = "Summary";
@@ -430,7 +430,7 @@ namespace Insight
                 return;
             }
 
-            var descr = new RawDataDescription();
+            var descr = new TableViewModel();
             descr.Commands = null;
             descr.Data = data;
             descr.Title = "Warnings";
@@ -452,25 +452,6 @@ namespace Insight
         }
 
 
-        private async void Update_Click(object sender, RoutedEventArgs e)
-        {
-            // The functions to update or pull are implemented in SvnProvider and GitProvider.
-            // But actually that is not the task of this tool. Give it an updated repository.
-            var msg = "Sync reads the version control's log and calculates code metrics for all supported files."
-                      + " This takes time. The data is persistently cached and used when doing the various analyses."
-                      + " If you synced before all cached data is deleted and rebuild."
-                      + " Best your repository is up to date and has no local changes."
-                      + " Do you want to proceed?";
-
-            var result = MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo);
-            if (result == MessageBoxResult.No)
-            {
-                return;
-            }
-
-            await ExecuteAsync(_analyzer.UpdateCacheAsyc);
-
-            _analyzer.Clear();
-        }
+    
     }
 }

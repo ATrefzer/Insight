@@ -218,4 +218,11 @@
   <data name="Visualize" xml:space="preserve">
     <value>Visualize</value>
   </data>
+  <data name="SyncInstructions" xml:space="preserve">
+    <value>Sync reads the version control's log and calculates code metrics for all supported files.
+This takes time. The data is persistently cached and used when doing the various analyses.
+If you synced before all cached data is deleted and rebuild.
+Best your repository is up to date and has no local changes.
+Do you want to proceed?</value>
+  </data>
 </root>

@@ -2,6 +2,7 @@
 In Progress
 ---------------------------------------
 
+- Refactor Project. Create a new one instead of registering for changes.
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 - in GetSLummary werden viele Dateien nicht gefunden!!!!! Trotz vereinfachter History? Untersuchen
 - Speichern auch für csv!!!
@@ -82,7 +83,6 @@ Low prio, fun
 - get rid of ConvexHull due to x86
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
-- Refactor Project. Create a new one instead of registering for changes.
 - Use WritableBitmap
 - Alternative to the CLOC because of GPL. Maybe something like this:
   https://github.com/jjrdk/ArchiMetrics/blob/master/src/ArchiMetrics.Analysis/Metrics/LinesOfCodeCalculator.cs

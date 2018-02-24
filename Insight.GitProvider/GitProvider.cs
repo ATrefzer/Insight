@@ -371,6 +371,7 @@ namespace Insight.GitProvider
         {
             if (kind.StartsWith("R"))
             {
+                // Followed by the similarity
                 return KindOfChange.Rename;
             }
             else if (kind == "A")

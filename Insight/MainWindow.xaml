@@ -5,6 +5,7 @@
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
               xmlns:controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
               xmlns:local="clr-namespace:Insight"
+              xmlns:ViewModels="clr-namespace:Insight.ViewModels"
               mc:Ignorable="d"
               Icon="Resources/Lightswitch.ico"
               Title="Insight"
@@ -48,10 +49,10 @@
                 <RibbonGroup Header="{x:Static local:Strings.SourceControl}">
                     <RibbonButton LargeImageSource="Resources/settings_64.png"
                                   Label="{x:Static local:Strings.Settings}"
-                                  Click="Setup_Click"/>
+                                  Command="{Binding SetupCommand}" />
                     <RibbonButton LargeImageSource="Resources/sync_64.png"
                                   Label="{x:Static local:Strings.UpdateCache}"
-                                  Click="Update_Click"
+                                  Command="{Binding UpdateCommand}" 
                                   IsEnabled="{Binding IsProjectValid}"/>
                 </RibbonGroup>
 
@@ -84,13 +85,13 @@
                     SelectedIndex="{Binding SelectedIndex}">
 
             <TabControl.Resources>
-                <DataTemplate DataType="{x:Type local:TreeMapDescription}">
+                <DataTemplate DataType="{x:Type ViewModels:TreeMapViewModel}">
                     <controls:TreeMapView DataContext="{Binding Data}"
                                           UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
                              Path=DataContext.Commands}"/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type local:CirclePackingDescription}">
+                <DataTemplate DataType="{x:Type ViewModels:CirclePackingViewModel}">
                     <!-- DataContext of parent (ContentPresenter) is ViewDescription. This is where CirclePackagingView DataContext binds to
                     As soon as we set the DataContext of the CirclePackagingView control UserCommands will use CirclePackagingView.DataContext. -->
                     <controls:CirclePackagingView DataContext="{Binding Data}"
@@ -98,16 +99,16 @@
                              Path=DataContext.Commands}"/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type local:RawDataDescription}">
+                <DataTemplate DataType="{x:Type ViewModels:TableViewModel}">
                     <controls:DataGridView DataContext="{Binding Data}" UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
                              Path=DataContext.Commands}"/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type local:ChordDescription}">
+                <DataTemplate DataType="{x:Type ViewModels:ChordViewModel}">
                     <controls:ChordView DataContext="{Binding Data}"/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type local:ImageDescription}">
+                <DataTemplate DataType="{x:Type local:ImageViewModel}">
                     <Image Source="{Binding Data}"
                            HorizontalAlignment="Left"
                            VerticalAlignment="Top"

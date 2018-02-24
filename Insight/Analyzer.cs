@@ -19,12 +19,10 @@ using Visualization.Controls.Data;
 
 namespace Insight
 {
-    internal sealed class Analyzer
+    public sealed class Analyzer
     {
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
-
-        public List<WarningMessage> Warnings { get; private set; }
 
         public Analyzer(Project project)
         {
@@ -33,6 +31,8 @@ namespace Insight
         }
 
         public Project Project { get; }
+
+        public List<WarningMessage> Warnings { get; private set; }
 
         /// <summary>
         /// Work for a single file. Developer -> lines of work
@@ -244,19 +244,16 @@ namespace Insight
                             });
         }
 
-        public async Task UpdateCacheAsyc()
+        public void UpdateCache()
         {
-            await Task.Run(() =>
-                           {
-                               // Note: You should have the latest code locally such that history and metrics match!
-                               // Update svn history
-                               var svnProvider = Project.CreateProvider();
-                               svnProvider.UpdateCache();
+            // Note: You should have the latest code locally such that history and metrics match!
+            // Update svn history
+            var svnProvider = Project.CreateProvider();
+            svnProvider.UpdateCache();
 
-                               // Update code metrics (after source was updated)
-                               var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
-                               metricProvider.UpdateCache();
-                           });
+            // Update code metrics (after source was updated)
+            var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
+            metricProvider.UpdateCache();
         }
 
         internal void Clear()
@@ -290,7 +287,7 @@ namespace Insight
 
         private void LoadHistory()
         {
-            // if (_history == null) Allow see warnings every time
+            if (_history == null) 
             {
                 var provider = Project.CreateProvider();
                 _history = provider.QueryChangeSetHistory();

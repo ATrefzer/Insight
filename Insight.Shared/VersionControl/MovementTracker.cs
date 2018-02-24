@@ -114,12 +114,17 @@ namespace Insight.Shared.VersionControl
                     }
                     else
                     {
+                        // TODO
                         // If the file was modified in future the rename was an copy instead!
                         item.Kind = KindOfChange.Add;
 
                         var msg = $"Convert rename to add because source is modified later: '{item.ServerPath}' (from '{item.FromServerPath}')";
                         Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
                     }
+                }
+                else
+                {
+                    Debug.Assert(false);
                 }
             }
         }

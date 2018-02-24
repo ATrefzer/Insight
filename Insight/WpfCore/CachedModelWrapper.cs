@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -20,13 +21,20 @@ namespace Insight.WpfCore
 
         public T Model { get; }
 
-        public void Apply()
+        public bool Apply()
         {
+            if (!_modifications.Any())
+            {
+                return false;
+            }
+
             foreach (var modification in _modifications)
             {
                 var propertyInfo = modification.Key;
                 propertyInfo.SetValue(Model, modification.Value);
             }
+
+            return true;
         }
 
         protected void ClearModifications()
