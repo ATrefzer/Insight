@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls.Primitives;
 
-using Visualization.Controls.CirclePackaging;
+using Visualization.Controls.CirclePacking;
 using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
@@ -9,11 +9,11 @@ using Visualization.Controls.Interfaces;
 namespace Visualization.Controls
 {
     /// <summary>
-    /// Interaction logic for CirclePackagingView.xaml
+    /// Interaction logic for CirclePackingView.xaml
     /// </summary>
-    public sealed partial class CirclePackagingView : HierarchicalDataViewBase
+    public sealed partial class CirclePackingView : HierarchicalDataViewBase
     {
-        public CirclePackagingView()
+        public CirclePackingView()
         {
             InitializeComponent();
             DataContextChanged += OnDataContextChanged;
@@ -26,7 +26,7 @@ namespace Visualization.Controls
 
         protected override IRenderer CreateRenderer()
         {
-            return new CirclePackagingRenderer();
+            return new CirclePackingRenderer();
         }
 
         protected override DrawingCanvas GetCanvas()
@@ -46,7 +46,7 @@ namespace Visualization.Controls
         }
 
 
-        private void CirclePackaging_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void CirclePacking_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             HideToolView();
         }

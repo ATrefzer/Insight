@@ -78,6 +78,11 @@ namespace Insight
             }
 
             var provider = Activator.CreateInstance(type) as ISourceControlProvider;
+            if (provider == null)
+            {
+                throw new Exception($"Failed creating '{type}'");
+            }
+
             provider.Initialize(ProjectBase, Cache, WorkItemRegEx);
             return provider;
         }

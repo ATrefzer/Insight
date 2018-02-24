@@ -106,7 +106,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="CirclePackagingView.xaml">
+    <Page Include="CirclePackingView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -135,16 +135,16 @@
     <Compile Include="Interfaces\IDataGridViewUserCommands.cs" />
     <Compile Include="NameToColor.cs" />
     <Compile Include="Bitmap\FractionBitmap.cs" />
-    <Compile Include="CirclePackagingView.xaml.cs">
-      <DependentUpon>CirclePackagingView.xaml</DependentUpon>
+    <Compile Include="CirclePackingView.xaml.cs">
+      <DependentUpon>CirclePackingView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CirclePackaging\CirclePackagingLayout.cs" />
-    <Compile Include="CirclePackaging\CirclePackagingRenderer.cs" />
-    <Compile Include="CirclePackaging\CircularLayoutInfo.cs" />
+    <Compile Include="CirclePacking\CirclePackingLayout.cs" />
+    <Compile Include="CirclePacking\CirclePackingRenderer.cs" />
+    <Compile Include="CirclePacking\CircularLayoutInfo.cs" />
     <Compile Include="ColorScheme.cs" />
-    <Compile Include="CirclePackaging\DebugHelper.cs" />
-    <Compile Include="CirclePackaging\Desmos.cs" />
-    <Compile Include="CirclePackaging\FrontChain.cs" />
+    <Compile Include="CirclePacking\DebugHelper.cs" />
+    <Compile Include="CirclePacking\Desmos.cs" />
+    <Compile Include="CirclePacking\FrontChain.cs" />
     <Compile Include="Tools\IHighlighting.cs" />
     <Compile Include="Tools\SearchHighlighting.cs" />
     <Compile Include="Utility\Range.cs" />

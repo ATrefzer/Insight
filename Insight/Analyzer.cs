@@ -26,11 +26,10 @@ namespace Insight
 
         public Analyzer(Project project)
         {
-            Project = project;
-            Project.ProjectLoaded += (sender, arg) => { Clear(); };
+            Project = project;    
         }
 
-        public Project Project { get; }
+        private Project Project { get; }
 
         public List<WarningMessage> Warnings { get; private set; }
 

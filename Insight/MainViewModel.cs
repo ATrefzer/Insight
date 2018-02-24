@@ -23,8 +23,6 @@ namespace Insight
         private readonly Analyzer _analyzer;
         private readonly BackgroundExecution _backgroundExecution;
         private readonly Dialogs _dialogs;
-
-        // TODO needed?
         private readonly Project _project;
         private readonly TabBuilder _tabBuilder;
         private readonly ViewController _viewController;
@@ -263,12 +261,10 @@ namespace Insight
         private void SetupClick()
         {
             var changed = _viewController.ShowProjectSettings(_project);
-
             if (changed)
             {
                 _tabs.Clear();
-                _project.Save();
-                _analyzer.Clear(); // TODO new project
+                _analyzer.Clear();
             }
 
             // Refresh state of ribbon

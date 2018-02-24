@@ -157,7 +157,7 @@ namespace Insight.GitProvider
             }
         }
 
-        private ChangeItem CreateChangeItem(string changeItem, MovementTracker tracker)
+        private void CreateChangeItem(string changeItem, MovementTracker tracker)
         {
             var ci = new ChangeItem();
 
@@ -186,7 +186,6 @@ namespace Insight.GitProvider
             }
 
             ci.LocalPath = MapToLocalFile(ci.ServerPath);
-            return ci;
         }
 
 

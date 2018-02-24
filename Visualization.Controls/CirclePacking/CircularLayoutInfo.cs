@@ -4,7 +4,7 @@ using System.Windows;
 
 using Visualization.Controls.TreeMap;
 
-namespace Visualization.Controls.CirclePackaging
+namespace Visualization.Controls.CirclePacking
 {
     [Serializable]
     public sealed class CircularLayoutInfo : LayoutInfo

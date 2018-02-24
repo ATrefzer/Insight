@@ -22,7 +22,7 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Circle Packaging">
-                <Controls:CirclePackagingView Name="_circlePackaging"/>
+                <Controls:CirclePackingView Name="_circlePacking"/>
             </TabItem>
             <TabItem Header="TreeMapView">
                 <Controls:TreeMapView Name="_treeMap"/>

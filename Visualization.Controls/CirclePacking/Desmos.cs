@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 
-namespace Visualization.Controls.CirclePackaging
+namespace Visualization.Controls.CirclePacking
 {
     public static class DebugExtensions
     {

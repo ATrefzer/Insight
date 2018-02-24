@@ -8,9 +8,9 @@ using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Tools;
 
-namespace Visualization.Controls.CirclePackaging
+namespace Visualization.Controls.CirclePacking
 {
-    internal class CirclePackagingRenderer : IRenderer
+    internal sealed class CirclePackingRenderer : IRenderer
     {
         private HierarchicalData _data;
         private GeneralTransform _inverse;
@@ -21,7 +21,7 @@ namespace Visualization.Controls.CirclePackaging
             _data = data;
 
             // Layout once. Later we scale it appropriately
-            var layout = new CirclePackagingLayout();
+            var layout = new CirclePackingLayout();
             layout.Layout(_data, double.MaxValue, double.MaxValue);
         }
 

@@ -1,27 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows;
+
 using Insight.Shared;
+
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
-using Visualization.Controls;
 using Visualization.Controls.Data;
 
 namespace Tests
 {
-  
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow
     {
-      
-            public MainWindow()
+        public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
@@ -44,7 +41,8 @@ namespace Tests
                 dateAxis.StringFormat = "yyyy-MM-dd";
                 dateAxis.MajorGridlineStyle = LineStyle.Solid;
                 dateAxis.MinorGridlineStyle = LineStyle.Dot;
-             //   dateAxis.IntervalLength = 80;
+
+                //   dateAxis.IntervalLength = 80;
                 pm.Axes.Add(dateAxis);
 
                 var valueAxis = new LinearAxis();
@@ -55,33 +53,46 @@ namespace Tests
                 valueAxis.Minimum = 0.0;
                 pm.Axes.Add(valueAxis);
 
-
-
                 var lineSerie = new LineSeries
-                {
-                    StrokeThickness = 2,
-                    MarkerSize = 3,
-                    MarkerStroke = OxyColor.FromRgb(255,0,0),
-                    //    MarkerStroke = colors[data.Key],
-                    //   MarkerType = markerTypes[data.Key],
-                    CanTrackerInterpolatePoints = false,
-                      Title = "for the legend",
-                    Smooth = false,
-                };
+                                {
+                                        StrokeThickness = 2,
+                                        MarkerSize = 3,
+                                        MarkerStroke = OxyColor.FromRgb(255, 0, 0),
+
+                                        //    MarkerStroke = colors[data.Key],
+                                        //   MarkerType = markerTypes[data.Key],
+                                        CanTrackerInterpolatePoints = false,
+                                        Title = "for the legend",
+                                        Smooth = false
+                                };
 
                 var dt = DateTime.Now;
-                for (int i = 100; i < 130; i++)
+                for (var i = 100; i < 130; i++)
                 {
-                 
                     dt = dt.AddDays(1);
                     var dp = new DataPoint(DateTimeAxis.ToDouble(dt), i);
                     lineSerie.Points.Add(dp);
                 }
 
-
                 pm.Series.Add(lineSerie);
-                    return pm;
+                return pm;
             }
+        }
+
+        private static List<EdgeData> GetChordTestData()
+        {
+            var edges = new List<EdgeData>();
+            edges.Add(new EdgeData("AAAA", "B", 0.1));
+            edges.Add(new EdgeData("A", "C", 0.1));
+            edges.Add(new EdgeData("A", "D", 0.1));
+            edges.Add(new EdgeData("B", "C", 0.1));
+            edges.Add(new EdgeData("B", "D", 0.1));
+            edges.Add(new EdgeData("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", "D", 0.1));
+            edges.Add(new EdgeData("C", "K", 0.1));
+            edges.Add(new EdgeData("C", "L", 0.1));
+            edges.Add(new EdgeData("C", "M", 0.1));
+            edges.Add(new EdgeData("C", "N", 0.1));
+            return edges;
         }
 
         private HierarchicalData LoadCached(string cacheFile, string fileName)
@@ -105,28 +116,11 @@ namespace Tests
             return data;
         }
 
-        private static List<EdgeData> GetChordTestData()
-        {
-            var edges = new List<EdgeData>();
-            edges.Add(new EdgeData("AAAA", "B", 0.1));
-            edges.Add(new EdgeData("A", "C", 0.1));
-            edges.Add(new EdgeData("A", "D", 0.1));
-            edges.Add(new EdgeData("B", "C", 0.1));
-            edges.Add(new EdgeData("B", "D", 0.1));
-            edges.Add(new EdgeData("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", "D", 0.1));
-            edges.Add(new EdgeData("C", "K", 0.1));
-            edges.Add(new EdgeData("C", "L", 0.1));
-            edges.Add(new EdgeData("C", "M", 0.1));
-            edges.Add(new EdgeData("C", "N", 0.1));
-            return edges;
-        }
-
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
             // Fill sample data to visualiue
             var builder = new HierarchicalDataBuilder();
-
 
             _chord.DataContext = GetChordTestData();
 
@@ -141,7 +135,7 @@ namespace Tests
             //var circle = LoadCached("sick.bin", "d:\\_Projekte\\Sick");
             //Debug.WriteLine(circle.CountLeafNodes());
 
-            //_circlePackaging.DataContext = circle;
+            //_circlePacking.DataContext = circle;
         }
     }
 }
