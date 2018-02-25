@@ -10,7 +10,7 @@
               Icon="Resources/Lightswitch.ico"
               Title="Insight"
               Height="350"
-              Width="525"
+              Width="580"
               Closing="MainWindow_OnClosing">
     <DockPanel>
 
@@ -76,6 +76,10 @@
                     <RibbonButton LargeImageSource="Resources/csv-file-format-extension_64.png"
                                   Label="{x:Static local:Strings.Summary}"
                                   Command="{Binding SummaryCommand}"/>
+
+                    <RibbonButton LargeImageSource="Resources/chat-comment_64.png"
+                                  Label="{x:Static local:Strings.Comments}"
+                                  Command="{Binding CommentsCommand}"/>
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>

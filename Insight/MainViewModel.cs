@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
+using Insight.Dto;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.ViewModels;
@@ -45,6 +46,7 @@ namespace Insight
             LoadDataCommand = new DelegateCommand(LoadDataClick);
             SaveDataCommand = new DelegateCommand(SaveDataClick);
             SummaryCommand = new DelegateCommand(SummaryClick);
+            CommentsCommand = new DelegateCommand(CommentsClick);
             KnowledgeCommand = new DelegateCommand(KnowledgeClick);
             HotspotsCommand = new DelegateCommand(HotspotsClick);
             ChangeCouplingCommand = new DelegateCommand(ChangeCouplingClick);
@@ -54,6 +56,8 @@ namespace Insight
         public ICommand AboutCommand { get; set; }
 
         public ICommand ChangeCouplingCommand { get; set; }
+
+        public ICommand CommentsCommand { get; set; }
 
         public ICommand HotspotsCommand { get; set; }
 
@@ -147,8 +151,14 @@ namespace Insight
 
         private async void ChangeCouplingClick()
         {
-            var couplings = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeTemporalCoupling);
+            var couplings = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeChangeCoupling);
             _tabBuilder.ShowChangeCoupling(couplings);
+        }
+
+        private async void CommentsClick()
+        {
+            var comments = await _backgroundExecution.ExecuteAsync(_analyzer.ExportComments);
+            _tabBuilder.ShowText<DataGridFriendlyComment>(comments, "Comments");
         }
 
         private EdgeData CreateEdgeData(Coupling coupling)
@@ -203,35 +213,42 @@ namespace Insight
 
         private void LoadDataClick()
         {
-            var fileName = _dialogs.GetLoadFile("bin", _project.Cache);
-            if (fileName != null)
+            try
             {
-                var file = new BinaryFile<HierarchicalData>();
-                var data = file.Read(fileName);
-
-                var keys = new List<string>();
-                data.TraverseBottomUp(x =>
-                                      {
-                                          if (x.IsLeafNode)
-                                          {
-                                              if (x.ColorKey != null)
-                                              {
-                                                  keys.Add(x.ColorKey);
-                                              }
-                                          }
-                                      });
-
-                // Rebuild color scheme if it was used
-                var distinctKeys = keys.Distinct().ToArray();
-                if (distinctKeys.Any())
+                var fileName = _dialogs.GetLoadFile("bin", _project.Cache);
+                if (fileName != null)
                 {
-                    var mapper = new NameToColorMapper(distinctKeys);
+                    var file = new BinaryFile<HierarchicalData>();
+                    var data = file.Read(fileName);
 
-                    // TODO global is not so smart.
-                    ColorScheme.SetColorMapping(mapper);
+                    var keys = new List<string>();
+                    data.TraverseBottomUp(x =>
+                                          {
+                                              if (x.IsLeafNode)
+                                              {
+                                                  if (x.ColorKey != null)
+                                                  {
+                                                      keys.Add(x.ColorKey);
+                                                  }
+                                              }
+                                          });
+
+                    // Rebuild color scheme if it was used
+                    var distinctKeys = keys.Distinct().ToArray();
+                    if (distinctKeys.Any())
+                    {
+                        var mapper = new NameToColorMapper(distinctKeys);
+
+                        // TODO global is not so smart.
+                        ColorScheme.SetColorMapping(mapper);
+                    }
+
+                    _tabBuilder.ShowHierarchicalData(data, "Loaded");
                 }
-
-                _tabBuilder.ShowHierarchicalData(data, "Loaded");
+            }
+            catch (Exception ex)
+            {
+                _dialogs.ShowError(ex.Message);
             }
         }
 
@@ -281,7 +298,7 @@ namespace Insight
         private async void SummaryClick()
         {
             var summary = await _backgroundExecution.ExecuteAsync(_analyzer.ExportSummary);
-            _tabBuilder.ShowSummary(summary);
+            _tabBuilder.ShowText<DataGridFriendlyArtifact>(summary, "Summary");
         }
 
         private async void UpdateClick()
