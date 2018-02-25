@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media.Imaging;
-
+using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 using Insight.ViewModels;
@@ -83,8 +84,17 @@ namespace Insight
 
         public void ShowSummary(List<DataGridFriendlyArtifact> data)
         {
+            var commands = new DataGridViewUserCommands<DataGridFriendlyArtifact>();
+            commands.Register("To clipboard", args =>
+            {
+                var writer = new CsvWriter();
+                writer.Header = true;
+                var toClipboard = writer.ToCsv(args);
+                Clipboard.SetText(toClipboard);
+            });
+
             var descr = new TableViewModel();
-            descr.Commands = null;
+            descr.Commands = commands;
             descr.Data = data;
             descr.Title = "Summary";
             ShowTab(descr, true);

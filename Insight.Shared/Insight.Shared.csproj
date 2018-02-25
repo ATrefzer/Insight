@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryFile.cs" />
+    <Compile Include="CsvWriter.cs" />
     <Compile Include="Exceptions\ProviderException.cs" />
     <Compile Include="Model\FileRevision.cs" />
     <Compile Include="Model\InvertedSpace.cs" />
