@@ -82,9 +82,12 @@ namespace Insight
             ShowTab(descr, true);
         }
 
-        public void ShowSummary(List<DataGridFriendlyArtifact> data)
+        /// <summary>
+        /// Data is a list of data transfer objects. Each property is shown as a column
+        /// </summary>
+        public void ShowText<T>(object data, string title)
         {
-            var commands = new DataGridViewUserCommands<DataGridFriendlyArtifact>();
+            var commands = new DataGridViewUserCommands<T>();
             commands.Register("To clipboard", args =>
             {
                 var writer = new CsvWriter();
@@ -96,7 +99,7 @@ namespace Insight
             var descr = new TableViewModel();
             descr.Commands = commands;
             descr.Data = data;
-            descr.Title = "Summary";
+            descr.Title = title;
             ShowTab(descr, true);
         }
 

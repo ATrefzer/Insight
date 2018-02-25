@@ -1,4 +1,4 @@
-# Insight - An commit history analyzer.
+﻿# Insight - An commit history analyzer.
 
 This utility implements some of the ideas presented in Adam Tornhill's great book "Your Code as a Crime Scene".
 
@@ -91,7 +91,6 @@ Icons made by <a href="https://www.flaticon.com/authors/gregor-cresnar" title="G
 <a href="https://github.com/AlDanial/cloc">Cloc - Count lines of code</a>
 You have to download it from <a href="https://github.com/AlDanial/cloc/releases/tag/v1.76">GitHub</a>
 
-<a href="https://github.com/JoshClose/CsvHelper">CsvHelper</a>
 <a href="http://code.msdn.microsoft.com/WindowsAPICodePack">Windows® API Code Pack</a>
 
 <a href="https://github.com/EricOuellet2/ConvexHull">Eric Ouellet's Convex Hull</a>

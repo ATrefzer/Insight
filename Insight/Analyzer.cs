@@ -7,6 +7,7 @@ using System.Windows;
 
 using Insight.Analyzers;
 using Insight.Builder;
+using Insight.Dto;
 using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
@@ -26,12 +27,12 @@ namespace Insight
 
         public Analyzer(Project project)
         {
-            Project = project;    
+            Project = project;
         }
 
-        private Project Project { get; }
-
         public List<WarningMessage> Warnings { get; private set; }
+
+        private Project Project { get; }
 
         /// <summary>
         /// Work for a single file. Developer -> lines of work
@@ -56,18 +57,34 @@ namespace Insight
             return new MainDeveloper(mainDeveloper, 100.0 * linesOfWork / lineCount);
         }
 
+        public List<Coupling> AnalyzeChangeCoupling()
+        {
+            LoadHistory();
+
+            // Pair wise couplings
+            var tmp = new ChangeCouplingAnalyzer();
+            var couplings = tmp.CalculateChangeCouplings(_history, Project.Filter);
+            var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
+            Csv.Write(Path.Combine(Project.Cache, "change_couplings.csv"), sortedCouplings);
+
+            // Same with classified folders
+            var classifiedCouplings = tmp.CalculateChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
+            Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
+
+            return sortedCouplings;
+        }
+
         public HierarchicalData AnalyzeHotspots()
         {
-                                LoadHistory();
-                                LoadMetrics();
+            LoadHistory();
+            LoadMetrics();
 
-                                // Get summary of all files
-                                var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            // Get summary of all files
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
 
-                                var builder = new HotspotBuilder();
-                                var hierarchicalData = builder.Build(summary, _metrics);
-                                return hierarchicalData;
-                            
+            var builder = new HotspotBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics);
+            return hierarchicalData;
         }
 
         public HierarchicalData AnalyzeKnowledge(string directory)
@@ -130,48 +147,28 @@ namespace Insight
             return hierarchicalData;
         }
 
-        public List<Coupling> AnalyzeTemporalCoupling()
-        {
-                                LoadHistory();
 
-                                // Pair wise couplings
-                                var tmp = new ChangeCouplingAnalyzer();
-                                var couplings = tmp.CalculateChangeCouplings(_history, Project.Filter);
-                                var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
-                                Csv.Write(Path.Combine(Project.Cache, "couplings.csv"), sortedCouplings);
-
-                                // Same with classified folders
-                                var classifiedCouplings = tmp.CalculateChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
-                                Csv.Write(Path.Combine(Project.Cache, "classified_couplings.csv"), classifiedCouplings);
-
-                                return sortedCouplings;
-                          
-        }
-
-
-      
         public List<TrendData> AnalyzeTrend(string localFile)
         {
-                                var trend = new List<TrendData>();
-                             
-            
-                                var svnProvider = Project.CreateProvider();
+            var trend = new List<TrendData>();
 
-                                // Svn log on this file to get all revisions
-                                var fileHistory = svnProvider.ExportFileHistory(localFile);
+            var svnProvider = Project.CreateProvider();
 
-                                // For each file we need to calculate the metrics
-                                var provider = new CodeMetrics();
+            // Svn log on this file to get all revisions
+            var fileHistory = svnProvider.ExportFileHistory(localFile);
 
-                                foreach (var file in fileHistory)
-                                {
-                                    var fileInfo = new FileInfo(file.CachePath);
-                                    var loc = provider.CalculateLinesOfCode(fileInfo);
-                                    var invertedSpace = provider.CalculateInvertedSpaceMetric(fileInfo);
-                                    trend.Add(new TrendData { Date = file.Date, Loc = loc, InvertedSpace = invertedSpace });
-                                }
+            // For each file we need to calculate the metrics
+            var provider = new CodeMetrics();
 
-                                return trend;
+            foreach (var file in fileHistory)
+            {
+                var fileInfo = new FileInfo(file.CachePath);
+                var loc = provider.CalculateLinesOfCode(fileInfo);
+                var invertedSpace = provider.CalculateInvertedSpaceMetric(fileInfo);
+                trend.Add(new TrendData { Date = file.Date, Loc = loc, InvertedSpace = invertedSpace });
+            }
+
+            return trend;
         }
 
         public string AnalyzeWorkOnSingleFile(string fileName)
@@ -191,7 +188,7 @@ namespace Insight
             return path;
         }
 
-        public Task ExportComments()
+        public List<DataGridFriendlyComment> ExportComments()
         {
             /*
               R Code
@@ -212,20 +209,20 @@ namespace Insight
 
               wordcloud(colnames(all), colSums(all))
           */
+            
+            LoadHistory();
+            var result = new List<DataGridFriendlyComment>();
+            foreach (var cs in _history.ChangeSets)
+            {
+                result.Add(new DataGridFriendlyComment
+                           {
+                                   Committer = cs.Committer,
+                                   Comment = cs.Comment
+                           });
+            }
 
-            return Task.Run(() =>
-                            {
-                                LoadHistory();
-
-                                var fileName = Path.Combine(Project.Cache, "comments.csv");
-                                using (var file = File.CreateText(fileName))
-                                {
-                                    foreach (var cs in _history.ChangeSets)
-                                    {
-                                        file.WriteLine("\"" + cs.Comment + "\"");
-                                    }
-                                }
-                            });
+            Csv.Write(Path.Combine(Project.Cache, "comments.csv"), result);
+            return result;
         }
 
         public List<DataGridFriendlyArtifact> ExportSummary()
@@ -252,8 +249,7 @@ namespace Insight
                              });
             }
 
-            // TODO save!
-            //Csv.Write(Path.Combine(Project.Cache, "Export.csv"), gridData);
+            Csv.Write(Path.Combine(Project.Cache, "summary.csv"), gridData);
             return gridData;
         }
 

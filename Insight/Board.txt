@@ -2,11 +2,13 @@
 In Progress
 ---------------------------------------
 
+Load and save buttons
+Absturz bei Text
+- Speichern auch für csv!!!
+Dialogs
 
 - Unit Tests MovementTracker wenn add und remove ein rename darstellen
     - Testfälle für die drei Korrekturfunktionen
-- Speichern auch für csv!!!
-
 
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 - Better range selection! based on segments
@@ -17,7 +19,7 @@ In Progress
 ---------------------------------------
 Features and improvements
 ---------------------------------------
-
+- Commits pro line statt absolute 
 - Because we skip large merge commits we may lose final renames. This file is not found in the summary becasue the code metric
   found the file somewhere unexpected.
 - Return when zooming
