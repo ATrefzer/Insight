@@ -45,7 +45,7 @@ namespace Insight.Shared.VersionControl
         /// Requires kind and serverpath to calculate the id.
         /// The previousServerPath is only given on rename operations.
         /// </summary>
-        public void TrackId(ChangeItem changeItem) // TODO move to changeitem
+        public void TrackId(ChangeItem changeItem)
         {
             ValidateArguments(changeItem);
 
@@ -144,10 +144,12 @@ namespace Insight.Shared.VersionControl
             var deletesToRemove = new List<ChangeItem>();
             foreach (var item in addWithServerFromPath)
             {
+                var copies = addWithServerFromPath.Where(a => a.FromServerPath == item.FromServerPath).ToList();
+
                 // Is there exactly one delete for the from path and no second copy?
-                var copies = addWithServerFromPath.Where(a => a.FromServerPath == item.ServerPath).ToList();
                 var deletes = allDeletes.Where(d => d.ServerPath == item.FromServerPath).ToList();
-                if (copies.Count == 1 && deletes.Count > 0)
+
+                if (copies.Count == 1 && deletes.Count == 1)
                 {
                     // We can convert this to a move. The source was copied into one file and then deleted.
                     deletesToRemove.AddRange(deletes);
@@ -172,15 +174,18 @@ namespace Insight.Shared.VersionControl
         private void ConvertMultipleCopiesIntoAdd()
         {
             var copies = _changeItems.Where(r => r.IsRename() || r.IsAdd() && r.FromServerPath != null).ToList();
-            foreach (var copy in copies)
+
+            var fromServerPaths = copies.Select(c => c.FromServerPath).Distinct();
+            foreach (var fromServerPath in fromServerPaths)
             {
-                var combined = copies.Where(c => c.FromServerPath == copy.FromServerPath).ToList();
-                if (combined.Count > 1)
+                var itemsWithSameFromPath = copies.Where(c => c.FromServerPath == fromServerPath).ToList();
+                if (itemsWithSameFromPath.Count > 1)
                 {
-                    foreach (var tmp in combined)
+                    // This from server path is used more than once!
+                    foreach (var item in itemsWithSameFromPath)
                     {
-                        tmp.Kind = KindOfChange.Add;
-                        var msg = $"Convert multiple copied file to add: '{tmp.ServerPath}' (from '{tmp.FromServerPath}')";
+                        item.Kind = KindOfChange.Add;
+                        var msg = $"Convert multiple copied file to add: '{item.ServerPath}' (from '{item.FromServerPath}')";
                         Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
                     }
                 }
