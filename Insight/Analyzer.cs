@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,7 +17,6 @@ using Insight.Shared.VersionControl;
 
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
-using Visualization.Controls.Data;
 
 namespace Insight
 {
@@ -74,7 +74,7 @@ namespace Insight
             return sortedCouplings;
         }
 
-        public HierarchicalData AnalyzeHotspots()
+        public HierarchicalDataContext AnalyzeHotspots()
         {
             LoadHistory();
             LoadMetrics();
@@ -84,10 +84,10 @@ namespace Insight
 
             var builder = new HotspotBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
-            return hierarchicalData;
+            return new HierarchicalDataContext(hierarchicalData);
         }
 
-        public HierarchicalData AnalyzeKnowledge(string directory)
+        public HierarchicalDataContext AnalyzeKnowledge(string directory)
         {
             var scanner = new DirectoryScanner();
             var filesToAnalyze = scanner.GetFilesRecursive(directory);
@@ -115,16 +115,6 @@ namespace Insight
             // Calculate main developer for each file
             var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
 
-            // //Single core processing
-            //foreach (var artifact in summary)
-            //{
-            //    var svnProvider = Project.CreateProvider();
-
-            //    var work = svnProvider.CalculateDeveloperWork(artifact);
-            //    var mainDeveloper = GetMainDeveloper(work);
-            //    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-            //}
-
             Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
                              artifact =>
                              {
@@ -138,13 +128,15 @@ namespace Insight
             // Assign a color to each developer
             var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
             var mapper = new NameToColorMapper(developers.ToArray());
-            ColorScheme.SetColorMapping(mapper);
+            var scheme = new ColorScheme();
+            scheme.SetColorMapping(mapper);
 
             // Build the knowledge data
             var builder = new KnowledgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, mainDeveloperPerFile
                                                          .ToDictionary(pair => pair.Key, pair => pair.Value));
-            return hierarchicalData;
+
+            return new HierarchicalDataContext(hierarchicalData, scheme);
         }
 
 
@@ -171,8 +163,13 @@ namespace Insight
             return trend;
         }
 
-        public string AnalyzeWorkOnSingleFile(string fileName)
+        /// <summary>
+        /// If we call this in context of a knowledge map we reuse existing colors colors and simply add
+        /// missing developers/colors. You can optionally add a uninitialized (default ctor) NameToColorMapper.
+        /// </summary>
+        public string AnalyzeWorkOnSingleFile(string fileName, NameToColorMapper colorMapping)
         {
+            Debug.Assert(colorMapping != null);
             var provider = Project.CreateProvider();
             var workByDeveloper = provider.CalculateDeveloperWork(new Artifact { LocalPath = fileName });
 
@@ -181,9 +178,9 @@ namespace Insight
             var fi = new FileInfo(fileName);
             var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
 
-            // Let determine colors automatically 
-            var colorMapping = new NameToColorMapper(workByDeveloper.Keys.ToArray());
-            bitmap.Create(path, workByDeveloper, colorMapping, true);
+            var mapping = InitColorMappingForWork(colorMapping, workByDeveloper);
+
+            bitmap.Create(path, workByDeveloper, mapping, true);
 
             return path;
         }
@@ -209,7 +206,7 @@ namespace Insight
 
               wordcloud(colnames(all), colSums(all))
           */
-            
+
             LoadHistory();
             var result = new List<DataGridFriendlyComment>();
             foreach (var cs in _history.ChangeSets)
@@ -292,6 +289,16 @@ namespace Insight
             }
 
             return string.Empty;
+        }
+
+        private static NameToColorMapper InitColorMappingForWork(NameToColorMapper colorMapping, Dictionary<string, int> workByDeveloper)
+        {
+            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x)) // order such that same developers get same colors regardless of order.
+            {
+                colorMapping.AddColorKey(developer);
+            }
+
+            return colorMapping;
         }
 
         private void LoadHistory()

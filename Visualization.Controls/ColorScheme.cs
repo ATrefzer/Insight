@@ -3,21 +3,19 @@ using System.Windows.Media;
 
 namespace Visualization.Controls
 {
-    public static class ColorScheme
+    // TODO remove statics
+    public sealed class ColorScheme : IColorScheme
     {
+        public static readonly SolidColorBrush _highlightBrush = Brushes.Yellow;
         public static readonly Pen BlackPen = new Pen(Brushes.Black, 1.0);
 
         public static readonly SolidColorBrush DefaultColor = Brushes.LightGray;
 
-
-        public static readonly SolidColorBrush Highlight = Brushes.Yellow;
-
         public static readonly GradientBrush RedToWhiteGradient;
 
 
-
         public static readonly GradientBrush WhiteToRedGradient;
-        private static NameToColorMapper _mapper;
+        private NameToColorMapper _mapper;
 
         static ColorScheme()
         {
@@ -33,9 +31,10 @@ namespace Visualization.Controls
             BlackPen.Freeze();
         }
 
-     
+        public SolidColorBrush Highlight => _highlightBrush;
 
-        public static SolidColorBrush GetBrush(string key)
+
+        public SolidColorBrush GetBrush(string key)
         {
             if (_mapper == null)
             {
@@ -45,7 +44,12 @@ namespace Visualization.Controls
             return _mapper.GetMediaBrush(key);
         }
 
-        public static void SetColorMapping(NameToColorMapper mapper)
+        public NameToColorMapper GetColorMapping()
+        {
+            return _mapper;
+        }
+
+        public void SetColorMapping(NameToColorMapper mapper)
         {
             _mapper = mapper;
         }

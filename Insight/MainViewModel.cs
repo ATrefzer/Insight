@@ -124,10 +124,10 @@ namespace Insight
         }
 
 
-        public async void OnShowWork(HierarchicalData data)
+        public async void OnShowWork(HierarchicalData data, NameToColorMapper colorMapping)
         {
             var fileToAnalyze = data.Tag as string;
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze)).ConfigureAwait(true);
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorMapping)).ConfigureAwait(true);
 
             if (path == null)
             {
@@ -187,9 +187,9 @@ namespace Insight
         private async void HotspotsClick()
         {
             // Analyze hotspots from summary and code metrics
-            var data = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
+            var dataContext = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
 
-            _tabBuilder.ShowHierarchicalData(data, "Hotspots");
+            _tabBuilder.ShowHierarchicalData(dataContext, "Hotspots");
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
@@ -233,17 +233,18 @@ namespace Insight
                                               }
                                           });
 
+                    var colorScheme = new ColorScheme();
+
                     // Rebuild color scheme if it was used
                     var distinctKeys = keys.Distinct().ToArray();
                     if (distinctKeys.Any())
                     {
                         var mapper = new NameToColorMapper(distinctKeys);
-
-                        // TODO global is not so smart.
-                        ColorScheme.SetColorMapping(mapper);
+                        colorScheme.SetColorMapping(mapper);
                     }
 
-                    _tabBuilder.ShowHierarchicalData(data, "Loaded");
+                    var context = new HierarchicalDataContext(data, colorScheme);
+                    _tabBuilder.ShowHierarchicalData(context, "Loaded");
                 }
             }
             catch (Exception ex)
@@ -270,13 +271,12 @@ namespace Insight
             var descr = Tabs.ElementAt(SelectedIndex);
 
             // Saving hierarchical data
-            var data = descr.Data as HierarchicalData;
-            if (data != null)
+            if (descr.Data is HierarchicalDataContext context)
             {
                 var fileName = _dialogs.GetSaveFile("bin", _project.Cache);
                 if (fileName != null)
                 {
-                    Save(fileName, data);
+                    Save(fileName, context.Data);
                 }
             }
         }
@@ -317,13 +317,16 @@ namespace Insight
 
         private async void WorkOnSingleFileClick()
         {
+            // Called from ribbon. Select a file and show the work.
+            // Colors are assinged on the fly.
+
             var fileName = _dialogs.GetLoadFile(null, _project.ProjectBase);
             if (string.IsNullOrEmpty(fileName))
             {
                 return;
             }
 
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileName));
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileName, new NameToColorMapper()));
 
             _tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }

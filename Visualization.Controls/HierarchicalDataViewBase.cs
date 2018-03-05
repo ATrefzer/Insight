@@ -18,6 +18,7 @@ namespace Visualization.Controls
                                                                                                      "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase), new PropertyMetadata(null));
 
         protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
+        protected ColorScheme _colorScheme;
 
         /// <summary>
         /// Filtered data
@@ -141,15 +142,23 @@ namespace Visualization.Controls
 
         protected void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            _root = DataContext as HierarchicalData;
-            if (_root != null)
-            {
-                InitializeTools();
+            _root = null;
+            _colorScheme = null;
 
-                // Initially no filtering so skip removing nodes.
-                _filtered = _root;
-                ZoomLevelChanged(_filtered);
+            if (!(DataContext is HierarchicalDataContext context) || context.Data == null)
+            {
+                // This is called once with the wrong context.
+                return;
             }
+
+            _colorScheme = context.ColorScheme;
+            _root = context.Data;
+
+            InitializeTools();
+
+            // Initially no filtering so skip removing nodes.
+            _filtered = _root;
+            ZoomLevelChanged(_filtered);
         }
 
 

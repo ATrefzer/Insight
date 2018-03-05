@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Windows.Media;
 
-using Visualization.Controls.Bitmap;
-
 using Brush = System.Drawing.Brush;
-using Brushes = System.Drawing.Brushes;
 using Color = System.Drawing.Color;
-using FontFamily = System.Drawing.FontFamily;
 
 namespace Visualization.Controls
 {
@@ -28,7 +22,7 @@ namespace Visualization.Controls
         /// </summary>
         private readonly Dictionary<string, SolidColorBrush> _nameToMediaBrush = new Dictionary<string, SolidColorBrush>();
 
-        private readonly bool _usegivenColors;
+        private readonly bool _useGivenColors;
         private string[] _colorDefinitions;
 
         private int _colorIndex;
@@ -38,7 +32,7 @@ namespace Visualization.Controls
         {
             CreateColors();
 
-            _usegivenColors = true;
+            _useGivenColors = true;
             _names = names.ToList();
             for (var index = 0; index < names.Length; index++)
             {
@@ -53,60 +47,38 @@ namespace Visualization.Controls
             // all other names get the default color: White
         }
 
+        public NameToColorMapper()
+        {
+            CreateColors();
+            _useGivenColors = false;
+            _names = new List<string>();
+        }
+
         public NameToColorMapper(string[] names)
         {
             CreateColors();
 
-            // Create colors on the fly for better selection of colors (some names are not even used)
-            _usegivenColors = false;
-            _names = names.ToList();
-        }
+            _useGivenColors = false;
 
-        public void CreateLegendBitmap(string file)
-        {
-            var bitmap = new System.Drawing.Bitmap(2000, 2000);
-            var graphics = Graphics.FromImage(bitmap);
-
-            var line = 0;
-            var namesToPrint = _nameToColor.Keys.ToList();
-            Debug.Assert(namesToPrint.Count > 0);
-
-            foreach (var name in namesToPrint)
+            // Ensure that same color is assigned independent of order requesting the color.
+            _names = names.OrderBy(x => x).ToList();
+            foreach (var name in _names)
             {
-                // Legend
-                var x = 0;
-                var y = 30 * line;
-
-                var offsetColorName = 25;
-                var offsetName = 200;
-
-                var brush = GetBrush(name);
-
-                graphics.FillRectangle(brush, x, y, 20, 20);
-
-                graphics.DrawString("(" + GetColorName(name) + ")",
-                                    new Font(FontFamily.GenericSansSerif, 12), Brushes.Black, x + offsetColorName, y);
-                graphics.DrawString(name, new Font(FontFamily.GenericSansSerif, 12), Brushes.Black,
-                                    x + offsetName, y);
-
-                line++;
-            }
-
-            var trimmed = BitmapManipulation.TrimBitmap(bitmap);
-            trimmed.Save(file);
-        }
-
-        public void CreateLegendText(string path)
-        {
-            using (var file = File.CreateText(path))
-            {
-                foreach (var name in _nameToColor.Keys) // dump only used names!
-                {
-                    file.WriteLine(name + "\t" + GetColorName(name));
-                }
+                InitializeName(name);
             }
         }
 
+        /// <summary>
+        /// TODO This is ugly. If we add keys with unknown order the colors may be different the next time.
+        /// </summary>
+        public void AddColorKey(string name)
+        {
+            if (_useGivenColors == false && _names.Contains(name) == false)
+            {
+                _names.Add(name);
+                InitializeName(name);
+            }
+        }
 
         public string GetColorName(string name)
         {
@@ -236,7 +208,7 @@ namespace Visualization.Controls
 
         private void InitializeName(string name)
         {
-            if (_usegivenColors)
+            if (_useGivenColors)
             {
                 // Don't add any further colors, given in ctor.
                 return;
@@ -253,8 +225,6 @@ namespace Visualization.Controls
                 // Already known
                 return;
             }
-
-            //  var color = Color.FromName(_defaultColorNames[_colorIndex]);
 
             var color = Color.FromArgb(int.Parse(_colorDefinitions[_colorIndex], NumberStyles.HexNumber));
 
