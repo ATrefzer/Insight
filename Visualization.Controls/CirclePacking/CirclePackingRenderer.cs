@@ -12,9 +12,17 @@ namespace Visualization.Controls.CirclePacking
 {
     internal sealed class CirclePackingRenderer : IRenderer
     {
+        private readonly IColorScheme _colorScheme;
         private HierarchicalData _data;
         private GeneralTransform _inverse;
         private Pen _pen;
+
+        public CirclePackingRenderer(IColorScheme colorScheme)
+        {
+            _colorScheme = colorScheme;
+        }
+
+        public IHighlighting Highlighing { get; set; }
 
         public void LoadData(HierarchicalData data)
         {
@@ -68,8 +76,6 @@ namespace Visualization.Controls.CirclePacking
             return _inverse.Transform(point);
         }
 
-        public IHighlighting Highlighing { get; set; }
-
 
         private void Draw(DrawingContext dc, HierarchicalData data)
         {
@@ -88,19 +94,20 @@ namespace Visualization.Controls.CirclePacking
         {
             if (Highlighing != null && Highlighing.IsHighlighted(data))
             {
-                return ColorScheme.Highlight;
+                return _colorScheme.Highlight;
             }
 
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {
-                return ColorScheme.GetBrush(data.ColorKey);
+                return _colorScheme.GetBrush(data.ColorKey);
             }
             else
             {
                 // For non leaf nodes the weight is 0. We only can merge area metrics.
                 // See HiearchyBuilder.InsertLeaf.
 
+                // TODO
                 var color = ColorScheme.WhiteToRedGradient.GradientStops.GetRelativeColor(data.NormalizedWeightMetric);
                 brush = new SolidColorBrush(color);
                 brush.Freeze();
@@ -122,6 +129,5 @@ namespace Visualization.Controls.CirclePacking
             var scale = min / GetLayout(_data).Radius;
             return scale;
         }
-     
     }
 }

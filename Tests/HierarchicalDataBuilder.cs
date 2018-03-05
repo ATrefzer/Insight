@@ -11,7 +11,7 @@ namespace Tests
     {
         private readonly Random _random = new Random(355);
 
-        public HierarchicalData CreateHierarchyFromFilesystem(string path, bool subDirs)
+        public HierarchicalDataContext CreateHierarchyFromFilesystem(string path, bool subDirs)
         {
             var item = new HierarchicalData(path);
             FillChildren(item, subDirs);
@@ -21,14 +21,15 @@ namespace Tests
             item.NormalizeWeightMetrics();
 
             Debug.WriteLine("Nodes: " + item.CountLeafNodes());
-            return item;
+            return new HierarchicalDataContext(item);
         }
 
-        public HierarchicalData GetColoredNestedExample()
+        public HierarchicalDataContext GetColoredNestedExample()
         {
             var root = new HierarchicalData("root");
             var mapper = new NameToColorMapper(new[] { "c1", "c2", "c3" });
-            ColorScheme.SetColorMapping(mapper);
+            var scheme = new ColorScheme();
+            scheme.SetColorMapping(mapper);
 
             HierarchicalData child;
             child = new HierarchicalData("ra", 10);
@@ -46,10 +47,10 @@ namespace Tests
 
             root.SumAreaMetrics();
             Console.WriteLine(root.CountLeafNodes());
-            return root;
+            return new HierarchicalDataContext(root, scheme);
         }
 
-        public HierarchicalData GetFlatExample()
+        public HierarchicalDataContext GetFlatExample()
         {
             var root = new HierarchicalData("");
             root.AddChild(new HierarchicalData("6", 60));
@@ -63,10 +64,10 @@ namespace Tests
             var child = new HierarchicalData("3", 30);
             root.AddChild(child);
             root.SumAreaMetrics();
-            return root;
+            return new HierarchicalDataContext(root);
         }
 
-        public HierarchicalData ShowCollisionWithLastElementProblem()
+        public HierarchicalDataContext ShowCollisionWithLastElementProblem()
         {
             var root = new HierarchicalData("");
             root.AddChild(new HierarchicalData("6", 10));
@@ -79,7 +80,7 @@ namespace Tests
             root.AddChild(new HierarchicalData("3", 10));
             root.AddChild(new HierarchicalData("1", 10));
             root.SumAreaMetrics();
-            return root;
+            return new HierarchicalDataContext(root);
         }
 
         internal HierarchicalData GetNumberOfCircles(int circles, int radius)

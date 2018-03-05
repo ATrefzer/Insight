@@ -26,7 +26,7 @@ namespace Visualization.Controls
 
         protected override IRenderer CreateRenderer()
         {
-            return new SquarifiedTreeMapRenderer();
+            return new SquarifiedTreeMapRenderer(_colorScheme);
         }
 
         protected override DrawingCanvas GetCanvas()

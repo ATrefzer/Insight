@@ -2,26 +2,23 @@
 In Progress
 ---------------------------------------
 
-Load and save buttons
-Absturz bei Text
-- Speichern auch für csv!!!
-Dialogs
+- Remove static methods in ColorSCheme
+- Color sheme reuse, no longer static. Conflicts with further ideas
+- Color in work is different from knowledge!
 
-- Unit Tests MovementTracker wenn add und remove ein rename darstellen
-    - Testfälle für die drei Korrekturfunktionen
 
-- state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 - Better range selection! based on segments
-
-
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+- state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
+
+
+
+
 
 ---------------------------------------
 Features and improvements
 ---------------------------------------
 - Commits pro line statt absolute 
-- Because we skip large merge commits we may lose final renames. This file is not found in the summary becasue the code metric
-  found the file somewhere unexpected.
 - Return when zooming
 - maybe PieChart
 - (GIT) Show log for a single file in the grid view.
@@ -30,9 +27,7 @@ Features and improvements
 ---------------------------------------
 Bugs
 ---------------------------------------
-- Bug assemblyinfo.cs
-- AssemblyInfo duplicates are not distinguished in chord view.
-- Color in work is different from knowledge!
+
 ---------------------------------------
 User interface
 ---------------------------------------

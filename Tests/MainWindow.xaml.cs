@@ -9,6 +9,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
+using Visualization.Controls;
 using Visualization.Controls.Data;
 
 namespace Tests
@@ -95,27 +96,25 @@ namespace Tests
             return edges;
         }
 
-        private HierarchicalData LoadCached(string cacheFile, string fileName)
+        private HierarchicalDataContext LoadCached(string cacheFile, string fileName)
         {
             var builder = new HierarchicalDataBuilder();
 
             //var cacheFile = "d:\\data.bin";
-            HierarchicalData data;
             if (File.Exists(cacheFile))
             {
                 var file = new BinaryFile<HierarchicalData>();
-                data = file.Read(cacheFile);
+                var data = file.Read(cacheFile);
+                return new HierarchicalDataContext(data);
             }
             else
             {
-                data = builder.CreateHierarchyFromFilesystem(fileName, true);
+                var context = builder.CreateHierarchyFromFilesystem(fileName, true);
                 var file = new BinaryFile<HierarchicalData>();
-                file.Write(cacheFile, data);
+                file.Write(cacheFile, context.Data);
+                return context;
             }
-
-            return data;
         }
-
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
