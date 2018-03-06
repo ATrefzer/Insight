@@ -27,9 +27,7 @@ namespace Tests
         public HierarchicalDataContext GetColoredNestedExample()
         {
             var root = new HierarchicalData("root");
-            var mapper = new NameToColorMapper(new[] { "c1", "c2", "c3" });
-            var scheme = new ColorScheme();
-            scheme.SetColorMapping(mapper);
+            var scheme = new ColorScheme(new[] { "c1", "c2", "c3" });
 
             HierarchicalData child;
             child = new HierarchicalData("ra", 10);

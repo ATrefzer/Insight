@@ -124,10 +124,10 @@ namespace Insight
         }
 
 
-        public async void OnShowWork(HierarchicalData data, NameToColorMapper colorMapping)
+        public async void OnShowWork(HierarchicalData data, ColorScheme colorScheme)
         {
             var fileToAnalyze = data.Tag as string;
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorMapping)).ConfigureAwait(true);
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme)).ConfigureAwait(true);
 
             if (path == null)
             {
@@ -239,8 +239,7 @@ namespace Insight
                     var distinctKeys = keys.Distinct().ToArray();
                     if (distinctKeys.Any())
                     {
-                        var mapper = new NameToColorMapper(distinctKeys);
-                        colorScheme.SetColorMapping(mapper);
+                        colorScheme = new ColorScheme(distinctKeys);
                     }
 
                     var context = new HierarchicalDataContext(data, colorScheme);
@@ -326,7 +325,7 @@ namespace Insight
                 return;
             }
 
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileName, new NameToColorMapper()));
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileName, new ColorScheme()));
 
             _tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }

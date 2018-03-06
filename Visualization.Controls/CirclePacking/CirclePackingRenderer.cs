@@ -94,21 +94,20 @@ namespace Visualization.Controls.CirclePacking
         {
             if (Highlighing != null && Highlighing.IsHighlighted(data))
             {
-                return _colorScheme.Highlight;
+                return DefaultDrawingPrimitives.HighlightBrush;
             }
 
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {
-                return _colorScheme.GetBrush(data.ColorKey);
+                return _colorScheme.GetMediaBrush(data.ColorKey);
             }
             else
             {
                 // For non leaf nodes the weight is 0. We only can merge area metrics.
                 // See HiearchyBuilder.InsertLeaf.
 
-                // TODO
-                var color = ColorScheme.WhiteToRedGradient.GradientStops.GetRelativeColor(data.NormalizedWeightMetric);
+                var color = DefaultDrawingPrimitives.WhiteToRedGradient.GradientStops.GetRelativeColor(data.NormalizedWeightMetric);
                 brush = new SolidColorBrush(color);
                 brush.Freeze();
             }
