@@ -95,6 +95,7 @@
     </Compile>
     <Compile Include="Analyzer.cs" />
     <Compile Include="BackgroundExecution.cs" />
+    <Compile Include="Builder\CodeAgeBuilder.cs" />
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="ProgressService.cs" />
@@ -274,6 +275,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\chat-comment_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\sands-of-time-64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\sands-of-time-16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

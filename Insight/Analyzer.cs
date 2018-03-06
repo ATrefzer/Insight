@@ -75,6 +75,19 @@ namespace Insight
             return sortedCouplings;
         }
 
+        public HierarchicalDataContext AnalyzeCodeAge()
+        {
+            LoadHistory();
+            LoadMetrics();
+
+            // Get summary of all files
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+
+            var builder = new CodeAgeBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics);
+            return new HierarchicalDataContext(hierarchicalData);
+        }
+
         public HierarchicalDataContext AnalyzeHotspots()
         {
             LoadHistory();
@@ -292,7 +305,7 @@ namespace Insight
         private void InitColorMappingForWork(ColorScheme colorMapping, Dictionary<string, int> workByDeveloper)
         {
             // order such that same developers get same colors regardless of order.
-            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x)) 
+            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
             {
                 colorMapping.AddColorKey(developer);
             }

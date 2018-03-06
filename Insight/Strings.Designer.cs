@@ -97,6 +97,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Code Age.
+        /// </summary>
+        public static string CodeAge {
+            get {
+                return ResourceManager.GetString("CodeAge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Comments {
