@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Insight.Shared.Model
 {
@@ -21,6 +22,8 @@ namespace Insight.Shared.Model
         ///  It still may be around on hard disk but removed from TFS!
         /// </summary>
         public bool IsDeleted { get; set; }
+
+        public DateTime Date { get; set; }
 
         public string LocalPath { get; set; }
 

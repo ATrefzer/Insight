@@ -1,6 +1,6 @@
 ﻿using Insight.Shared.Model;
 
-namespace Insight
+namespace Insight.Dto
 {
     public sealed class DataGridFriendlyArtifact
     {
@@ -10,6 +10,7 @@ namespace Insight
         public string LocalPath { get; set; }
         public Id Revision { get; set; }
         public int WorkItems { get; set; }
+        public int CodeAge_Days { get; set; }
     }
 
    
