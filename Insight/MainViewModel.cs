@@ -49,9 +49,14 @@ namespace Insight
             CommentsCommand = new DelegateCommand(CommentsClick);
             KnowledgeCommand = new DelegateCommand(KnowledgeClick);
             HotspotsCommand = new DelegateCommand(HotspotsClick);
+            CodeAgeCommand = new DelegateCommand(CodeAgeClick);
             ChangeCouplingCommand = new DelegateCommand(ChangeCouplingClick);
             AboutCommand = new DelegateCommand(AboutClick);
         }
+
+    
+
+        public ICommand CodeAgeCommand { get; set; }
 
         public ICommand AboutCommand { get; set; }
 
@@ -209,6 +214,15 @@ namespace Insight
 
             var data = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(directory));
             _tabBuilder.ShowHierarchicalData(data, "Knowledge");
+        }
+
+        private async void CodeAgeClick()
+        {
+            // Analyze hotspots from summary and code metrics
+            var dataContext = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
+
+            _tabBuilder.ShowHierarchicalData(dataContext, "Code Age");
+            _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
         private void LoadDataClick()
