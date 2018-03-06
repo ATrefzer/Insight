@@ -282,5 +282,25 @@
   <ItemGroup>
     <Resource Include="Resources\sands-of-time-16.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\birds-in-love_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\pie-graph-split_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\fire_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\knowledge-transfer_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\csv-file-format-extension_16.png" />
+    <Resource Include="Resources\settings_16.png" />
+    <Resource Include="Resources\sync_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\chat-comment_16.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
