@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -238,7 +239,8 @@ namespace Insight
                                      Commits = artifact.Commits,
                                      Committers = artifact.Committers.Count,
                                      LOC = loc,
-                                     WorkItems = artifact.WorkItems.Count
+                                     WorkItems = artifact.WorkItems.Count,
+                                     CodeAge_Days = (DateTime.Now - artifact.Date).Days
                              });
             }
 

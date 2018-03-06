@@ -80,7 +80,12 @@ namespace Insight.Shared.Model
                             continue;
                         }
 
-                        artifacts[id] = CreateArtifact(changeset.Id, item);
+                        artifacts[id] = CreateArtifact(changeset, item);
+                    }
+                    else
+                    {
+                        // Changesets seen first are expected so have newer dates.
+                        Debug.Assert(artifacts[id].Date >= changeset.Date);
                     }
 
                     var artifact = artifacts[id];
@@ -125,7 +130,7 @@ namespace Insight.Shared.Model
             }
         }
 
-        private static Artifact CreateArtifact(Id changeSetId, ChangeItem item)
+        private static Artifact CreateArtifact(ChangeSet cs, ChangeItem item)
         {
             Debug.Assert(item.LocalPath != null);
             var artifact = new Artifact
@@ -136,10 +141,12 @@ namespace Insight.Shared.Model
                                    Commits = 0,
 
                                    // Item used to create sets the revision (latest)
-                                   Revision = changeSetId,
+                                   Revision = cs.Id,
 
                                    // Assume first item is latest revision. If this is deleted the item should no longer be on hard disk.
-                                   IsDeleted = item.IsDelete()
+                                   IsDeleted = item.IsDelete(),
+
+                                   Date = cs.Date
                            };
 
             return artifact;
