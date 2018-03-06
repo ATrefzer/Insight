@@ -9,7 +9,7 @@ namespace Visualization.Controls.Bitmap
     public sealed class FractionBitmap
     {
         public void Create(string filename, Dictionary<string, int> workByDevelopers,
-                           NameToColorMapper colorMapperMapping, bool legend)
+                           ColorScheme colorMapperMapping, bool legend)
         {
             double allWork = workByDevelopers.Values.Sum();
 

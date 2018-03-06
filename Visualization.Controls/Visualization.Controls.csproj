@@ -126,6 +126,7 @@
     <Compile Include="ChordView.xaml.cs">
       <DependentUpon>ChordView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DefaultDrawingPrimitives.cs" />
     <Compile Include="HierarchicalDataContext.cs" />
     <Compile Include="IColorScheme.cs" />
     <Compile Include="Tools\ToolView.xaml.cs">
@@ -135,7 +136,7 @@
     <Compile Include="HierarchicalDataCommands.cs" />
     <Compile Include="HierarchicalDataViewBase.cs" />
     <Compile Include="Interfaces\IDataGridViewUserCommands.cs" />
-    <Compile Include="NameToColorMapper.cs" />
+    <Compile Include="ColorScheme.cs" />
     <Compile Include="Bitmap\FractionBitmap.cs" />
     <Compile Include="CirclePackingView.xaml.cs">
       <DependentUpon>CirclePackingView.xaml</DependentUpon>
@@ -143,7 +144,6 @@
     <Compile Include="CirclePacking\CirclePackingLayout.cs" />
     <Compile Include="CirclePacking\CirclePackingRenderer.cs" />
     <Compile Include="CirclePacking\CircularLayoutInfo.cs" />
-    <Compile Include="ColorScheme.cs" />
     <Compile Include="CirclePacking\DebugHelper.cs" />
     <Compile Include="CirclePacking\Desmos.cs" />
     <Compile Include="CirclePacking\FrontChain.cs" />

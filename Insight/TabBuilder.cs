@@ -57,18 +57,13 @@ namespace Insight
                 return;
             }
 
-            var mapping = context.ColorScheme.GetColorMapping();
-            if (mapping == null)
-            {
-                mapping = new NameToColorMapper();
-                context.ColorScheme.SetColorMapping(mapping);
-            }
+            var colorScheme = context.ColorScheme;
 
 
             var cp = new CirclePackingViewModel();
             var commands = new HierarchicalDataCommands();
             commands.Register("Trend", _mainViewModel.OnShowTrend);
-            commands.Register("Work", data => _mainViewModel.OnShowWork(data, mapping));
+            commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
             cp.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
             cp.Title = title + " (Circle)";
             cp.Commands = commands;
@@ -77,7 +72,7 @@ namespace Insight
             var tm = new TreeMapViewModel();
             commands = new HierarchicalDataCommands();
             commands.Register("Trend", _mainViewModel.OnShowTrend);
-            commands.Register("Work", data => _mainViewModel.OnShowWork(data, mapping));
+            commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
             tm.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
             tm.Title = title + " (Treemap)";
             tm.Commands = commands;

@@ -127,9 +127,7 @@ namespace Insight
 
             // Assign a color to each developer
             var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
-            var mapper = new NameToColorMapper(developers.ToArray());
-            var scheme = new ColorScheme();
-            scheme.SetColorMapping(mapper);
+            var scheme = new ColorScheme(developers.ToArray());
 
             // Build the knowledge data
             var builder = new KnowledgeBuilder();
@@ -165,11 +163,11 @@ namespace Insight
 
         /// <summary>
         /// If we call this in context of a knowledge map we reuse existing colors colors and simply add
-        /// missing developers/colors. You can optionally add a uninitialized (default ctor) NameToColorMapper.
+        /// missing developers/colors. You can optionally add a uninitialized (default ctor) ColorScheme.
         /// </summary>
-        public string AnalyzeWorkOnSingleFile(string fileName, NameToColorMapper colorMapping)
+        public string AnalyzeWorkOnSingleFile(string fileName, ColorScheme colorScheme)
         {
-            Debug.Assert(colorMapping != null);
+            Debug.Assert(colorScheme != null);
             var provider = Project.CreateProvider();
             var workByDeveloper = provider.CalculateDeveloperWork(new Artifact { LocalPath = fileName });
 
@@ -178,9 +176,9 @@ namespace Insight
             var fi = new FileInfo(fileName);
             var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
 
-            var mapping = InitColorMappingForWork(colorMapping, workByDeveloper);
+            InitColorMappingForWork(colorScheme, workByDeveloper);
 
-            bitmap.Create(path, workByDeveloper, mapping, true);
+            bitmap.Create(path, workByDeveloper, colorScheme, true);
 
             return path;
         }
@@ -291,14 +289,13 @@ namespace Insight
             return string.Empty;
         }
 
-        private static NameToColorMapper InitColorMappingForWork(NameToColorMapper colorMapping, Dictionary<string, int> workByDeveloper)
+        private void InitColorMappingForWork(ColorScheme colorMapping, Dictionary<string, int> workByDeveloper)
         {
-            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x)) // order such that same developers get same colors regardless of order.
+            // order such that same developers get same colors regardless of order.
+            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x)) 
             {
                 colorMapping.AddColorKey(developer);
             }
-
-            return colorMapping;
         }
 
         private void LoadHistory()
