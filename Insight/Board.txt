@@ -2,22 +2,24 @@
 In Progress
 ---------------------------------------
 
-- Remove static methods in ColorSCheme
-- Color sheme reuse, no longer static. Conflicts with further ideas
-- Color in work is different from knowledge!
+- Check why git history is deeper for some files.
+
+- Global limits and constants (App config)
+    - change coupling
+    - Min Commits
+    - Max Workitems etc
+    - Code Age base
 
 
 - Better range selection! based on segments
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 
-
-
-
-
 ---------------------------------------
 Features and improvements
 ---------------------------------------
+- Code Aging
+
 - Commits pro line statt absolute 
 - Return when zooming
 - maybe PieChart
@@ -44,6 +46,7 @@ Svn
 Controls
 ---------------------------------------
 
+- Overlay texts
 - Profile both algorithms.
 
 ---------------------------------------
@@ -70,18 +73,9 @@ Chord
 Low prio, fun
 ---------------------------------------
 
-- Global limits and constants (App config)
-    - change coupling
-    - Min Commits
-    - Max Workitems etc
-  
 - get rid of ConvexHull due to x86
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
 - Use WritableBitmap
-- Alternative to the CLOC because of GPL. Maybe something like this:
-  https://github.com/jjrdk/ArchiMetrics/blob/master/src/ArchiMetrics.Analysis/Metrics/LinesOfCodeCalculator.cs
-- Find code similarities
-- Log scaling for filter, or coloring or exclude outliers
 - Write all input / output of the command line tools
 

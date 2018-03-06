@@ -128,7 +128,7 @@
     </Compile>
     <Compile Include="DefaultDrawingPrimitives.cs" />
     <Compile Include="HierarchicalDataContext.cs" />
-    <Compile Include="IColorScheme.cs" />
+    <Compile Include="Interfaces\IColorScheme.cs" />
     <Compile Include="Tools\ToolView.xaml.cs">
       <DependentUpon>ToolView.xaml</DependentUpon>
     </Compile>

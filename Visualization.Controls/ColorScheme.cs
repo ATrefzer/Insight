@@ -5,6 +5,8 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Media;
 
+using Visualization.Controls.Interfaces;
+
 using Brush = System.Drawing.Brush;
 using Color = System.Drawing.Color;
 

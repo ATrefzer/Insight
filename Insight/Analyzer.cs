@@ -102,8 +102,6 @@ namespace Insight
             LoadHistory();
             LoadMetrics();
 
-            // TODO check if metrics exist and history exist => Sync first!
-
             // Extend the default filter to only accept files from the given directory.
             // This is faster than summary.Where() because we skip a lot of File.Exist() calls.
             var newFilter = new Filter(Project.Filter, new FileFilter(filesToAnalyze));
