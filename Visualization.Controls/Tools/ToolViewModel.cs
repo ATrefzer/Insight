@@ -1,24 +1,105 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-
-using Visualization.Controls.Utility;
-
-// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace Visualization.Controls.Tools
 {
     public sealed class ToolViewModel : INotifyPropertyChanged
     {
-        private double _maxArea;
-        private double _maxWeight;
-        private double _minArea;
-        private double _minWeight;
+        /// <summary>
+        /// Sorted list of all areas occurring in the data.
+        /// </summary>
+        List<double> _areas;
 
-        public ToolViewModel(Range<double> areaRange, Range<double> weightRange)
+        /// <summary>
+        /// Sorted list of all weights occurring in the data.
+        /// </summary>
+        List<double> _weights;
+
+        int _minAreaIndex;
+        int _maxAreaIndex;
+        int _minWeightIndex;
+        int _maxWeightIndex;
+
+        /// <summary>
+        /// Min area for user feedback.
+        /// </summary>
+        public double MinArea
         {
-            AreaRange = areaRange;
-            WeightRange = weightRange;
+            get
+            {
+                return _areas[_minAreaIndex];
+            }
+        }
+
+        /// <summary>
+        /// Max area for user feedback.
+        /// </summary>
+        public double MaxArea
+        {
+            get
+            {
+                return _areas[_maxAreaIndex];
+            }
+        }
+
+        /// <summary>
+        /// Min weight for user feedback.
+        /// </summary>
+        public double MinWeight
+        {
+            get
+            {
+                return _weights[_minWeightIndex];
+            }
+        }
+
+        /// <summary>
+        /// Max weighta for user feedback.
+        /// </summary>
+        public double MaxWeight
+        {
+            get
+            {
+                return _weights[_maxWeightIndex];
+            }
+        }
+
+        public int AreaIndexLower
+        {
+            get
+            {
+                return 0;
+            }
+        }
+        public int AreaIndexUpper
+        {
+            get
+            {
+                return _areas.Count - 1;
+            }
+        }
+
+        public int WeightIndexLower
+        {
+            get
+            {
+                return 0;
+            }
+        }
+        public int WeightIndexUpper
+        {
+            get
+            {
+                return _weights.Count - 1;
+            }
+        }
+
+        public ToolViewModel(List<double> areas, List<double> weights)
+        {
+            _areas = areas;
+            _weights = weights;
             Reset();
         }
 
@@ -26,19 +107,18 @@ namespace Visualization.Controls.Tools
         public event EventHandler SearchPatternChanged;
 
         public event PropertyChangedEventHandler PropertyChanged;
-     
 
-        public Range<double> AreaRange { get; }
-
-        public double MaxArea
+        public int MaxAreaIndex
         {
-            get => _maxArea;
+            get => _maxAreaIndex;
             set
             {
-                if (_maxArea != value)
+                if (_maxAreaIndex != value)
                 {
-                    _maxArea = value;
+                    _maxAreaIndex = value;
+                    
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(MaxArea));
                     OnFilterChanged();
                 }
             }
@@ -59,66 +139,69 @@ namespace Visualization.Controls.Tools
             }
         }
 
-        public double MaxWeight
+        public int MaxWeightIndex
         {
-            get => _maxWeight;
+            get => _maxWeightIndex;
             set
             {
-                if (_maxWeight != value)
+                if (_maxWeightIndex != value)
                 {
-                    _maxWeight = value;
+                    _maxWeightIndex = value;                    
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(MaxWeight));
                     OnFilterChanged();
                 }
             }
         }
 
-        public double MinArea
+        public int MinAreaIndex
         {
-            get => _minArea;
+            get => _minAreaIndex;
             set
             {
-                if (_minArea != value)
+                if (_minAreaIndex != value)
                 {
-                    _minArea = value;
+                    _minAreaIndex = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(MinArea));
                     OnFilterChanged();
                 }
             }
         }
 
-        public double MinWeight
+        public int MinWeightIndex
         {
-            get => _minWeight;
+            get => _minWeightIndex;
             set
             {
-                if (_minWeight != value)
+                if (_minWeightIndex != value)
                 {
-                    _minWeight = value;
+                    _minWeightIndex = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(MinWeight));
                     OnFilterChanged();
                 }
             }
         }
-
-        public Range<double> WeightRange { get; }
 
         public bool IsAreaValid(double area)
         {
-            return area >= MinArea && area <= MaxArea;
+            return area >= _areas[_minAreaIndex] &&
+                 area <= _areas[_maxAreaIndex];
         }
 
         public bool IsWeightValid(double weight)
         {
-            return weight >= MinWeight && weight <= MaxWeight;
+            return weight >= _weights[_minWeightIndex] &&
+                   weight <= _weights[_maxWeightIndex];
         }
 
         public void Reset()
         {
-            MinWeight = WeightRange.Min;
-            MaxWeight = WeightRange.Max;
-            MinArea = AreaRange.Min;
-            MaxArea = AreaRange.Max;
+            MinWeightIndex = WeightIndexLower;
+            MaxWeightIndex = WeightIndexUpper;
+            MinAreaIndex = AreaIndexLower;
+            MaxAreaIndex = AreaIndexUpper;
         }
 
         private void OnFilterChanged()
@@ -132,10 +215,8 @@ namespace Visualization.Controls.Tools
         }
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {            
+        {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-      
     }
 }

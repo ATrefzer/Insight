@@ -55,17 +55,17 @@ namespace Tests
                 pm.Axes.Add(valueAxis);
 
                 var lineSerie = new LineSeries
-                                {
-                                        StrokeThickness = 2,
-                                        MarkerSize = 3,
-                                        MarkerStroke = OxyColor.FromRgb(255, 0, 0),
+                {
+                    StrokeThickness = 2,
+                    MarkerSize = 3,
+                    MarkerStroke = OxyColor.FromRgb(255, 0, 0),
 
-                                        //    MarkerStroke = colors[data.Key],
-                                        //   MarkerType = markerTypes[data.Key],
-                                        CanTrackerInterpolatePoints = false,
-                                        Title = "for the legend",
-                                        Smooth = false
-                                };
+                    //    MarkerStroke = colors[data.Key],
+                    //   MarkerType = markerTypes[data.Key],
+                    CanTrackerInterpolatePoints = false,
+                    Title = "for the legend",
+                    Smooth = false
+                };
 
                 var dt = DateTime.Now;
                 for (var i = 100; i < 130; i++)
@@ -123,18 +123,11 @@ namespace Tests
 
             _chord.DataContext = GetChordTestData();
 
-            //_treeMap.DataContext = builder.CreateHierarchyFromFilesystem("d:\\downloads", true);
+            var circle = builder.GetFlatExample();
+            var tree = builder.GetFlatExample();
 
-            //var circle = builder.GetColoredNestedExample();
-            //var circle = LoadCached("all.bin", "d:\\");
-            //var circle = LoadCached("downloads.bin", "d:\\Downloads");
-
-            //var circle = LoadCached("downloads.bin", "d:\\Private");
-            //var circle = LoadCached("sick_binaries.bin", "d:\\_Projekte\\Sick_binaries");
-            //var circle = LoadCached("sick.bin", "d:\\_Projekte\\Sick");
-            //Debug.WriteLine(circle.CountLeafNodes());
-
-            //_circlePacking.DataContext = circle;
+            _circlePacking.DataContext = circle;
+            _treeMap.DataContext = tree;
         }
     }
 }

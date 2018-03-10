@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -46,7 +48,7 @@ namespace Visualization.Controls
         /// </summary>
         public HierarchicalDataCommands UserCommands
         {
-            get => (HierarchicalDataCommands) GetValue(UserCommandsProperty);
+            get => (HierarchicalDataCommands)GetValue(UserCommandsProperty);
             set => SetValue(UserCommandsProperty, value);
         }
 
@@ -73,7 +75,10 @@ namespace Visualization.Controls
         protected void FilterLevelChanged(object sender, EventArgs args)
         {
             _filtered = _root.Clone();
-            _filtered.RemoveLeafNodes(leaf => !_toolViewModel.IsAreaValid(leaf.AreaMetric) || !_toolViewModel.IsWeightValid(leaf.WeightMetric));
+            _filtered.RemoveLeafNodes(leaf =>
+                !_toolViewModel.IsAreaValid(leaf.AreaMetric) ||
+                !_toolViewModel.IsWeightValid(leaf.WeightMetric));
+
             try
             {
                 _filtered.RemoveLeafNodesWithoutArea();
@@ -103,10 +108,24 @@ namespace Visualization.Controls
 
         protected void InitializeTools()
         {
-            var areaRange = _root.GetMinMaxArea();
-            var weightRange = _root.GetMinMaxWeight();
+            var area = new HashSet<double>();
+            var weight = new HashSet<double>();
 
-            _toolViewModel = new ToolViewModel(areaRange, weightRange);
+            // Distinct areas and weights. Each slider tick goes to the next value.
+            // This allows smooth naviation even if there are large outliers.
+            _root.TraverseTopDown(data =>
+            {
+                if (data.IsLeafNode)
+                {
+                    area.Add(data.AreaMetric);
+                    weight.Add(data.WeightMetric);
+                }
+            });
+
+            var areaList = area.OrderBy(x => x).ToList();
+            var weightList = weight.OrderBy(x => x).ToList();
+
+            _toolViewModel = new ToolViewModel(areaList, weightList);
             _toolViewModel.FilterChanged += FilterLevelChanged;
             _toolViewModel.SearchPatternChanged += ChangeSearchHighlightingCommand;
         }

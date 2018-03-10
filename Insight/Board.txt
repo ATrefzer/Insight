@@ -1,31 +1,26 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-
-- Check why git history is deeper for some files.
-
 - Global limits and constants (App config)
     - change coupling
     - Min Commits
     - Max Workitems etc
     - Code Age base
 
-
-- Better range selection! based on segments
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
+- Check why git history is deeper for some files.
 
 ---------------------------------------
 Features and improvements
 ---------------------------------------
-- Code Aging
+- Code Fragmentation!
+    - Cache developer info and ask (message box) if use old calculation
+    - Use same for Knowledge and Age and fragmentation!
 
 - Commits pro line statt absolute 
 - Return when zooming
 - maybe PieChart
-- (GIT) Show log for a single file in the grid view.
-- specify path to svn.exe or git.exe
-- Developer knowledge for a single developer
 ---------------------------------------
 Bugs
 ---------------------------------------
@@ -76,6 +71,4 @@ Low prio, fun
 - get rid of ConvexHull due to x86
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
-- Use WritableBitmap
-- Write all input / output of the command line tools
-
+- Use WritableBitmap?
