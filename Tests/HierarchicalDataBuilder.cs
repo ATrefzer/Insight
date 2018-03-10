@@ -51,17 +51,18 @@ namespace Tests
         public HierarchicalDataContext GetFlatExample()
         {
             var root = new HierarchicalData("");
-            root.AddChild(new HierarchicalData("6", 60));
-            root.AddChild(new HierarchicalData("6", 60));
-            root.AddChild(new HierarchicalData("4", 40));
-            root.AddChild(new HierarchicalData("3", 30));
-            root.AddChild(new HierarchicalData("1", 10));
-            root.AddChild(new HierarchicalData("2", 20));
-            root.AddChild(new HierarchicalData("2", 20));
+            root.AddChild(new HierarchicalData("6", 300, 8));
+            root.AddChild(new HierarchicalData("6", 60, 7));
+            root.AddChild(new HierarchicalData("4", 40, 6));
+            root.AddChild(new HierarchicalData("3", 30, 6));
+            root.AddChild(new HierarchicalData("1", 10, 6));
+            root.AddChild(new HierarchicalData("2", 20, 200));
+            root.AddChild(new HierarchicalData("2", 20, 1));
 
-            var child = new HierarchicalData("3", 30);
+            var child = new HierarchicalData("3", 30, 1);
             root.AddChild(child);
             root.SumAreaMetrics();
+            root.NormalizeWeightMetrics();
             return new HierarchicalDataContext(root);
         }
 
