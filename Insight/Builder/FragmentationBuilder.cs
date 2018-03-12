@@ -34,10 +34,23 @@ namespace Insight.Builder
             return area;
         }
 
-       
+
         protected override string GetDescription(Artifact item)
         {
             return item.ServerPath + "\nFragmentation: " + GetWeight(item).ToString("F5");
+        }
+
+        protected override double GetWeight(Artifact item)
+        {
+            // Fractal value
+            var key = item.LocalPath.ToLowerInvariant();
+            return _fileToFractalValue[key];
+        }
+
+        protected override bool GetWeightIsAlreadyNormalized()
+        {
+            // Fractal value is already in range  [0...1)
+            return true;
         }
 
         protected override bool IsAccepted(Artifact item)
@@ -47,13 +60,5 @@ namespace Insight.Builder
 
             return area > 1;
         }
-
-        protected override double GetWeight(Artifact item)
-        {
-            // Fractal value
-            var key = item.LocalPath.ToLowerInvariant();
-            return _fileToFractalValue[key];
-        }
-       
     }
 }
