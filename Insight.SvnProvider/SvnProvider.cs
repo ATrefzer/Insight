@@ -52,12 +52,12 @@ namespace Insight.SvnProvider
         /// Note: Use local path to avoid the problem that power tools are called from a non mapped directory.
         /// Developer -> lines of code
         /// </summary>
-        public Dictionary<string, int> CalculateDeveloperWork(Artifact artifact)
+        public Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact)
         {
             var blame = Blame(artifact.LocalPath);
 
             // Parse annotated file
-            var workByDevelopers = new Dictionary<string, int>();
+            var workByDevelopers = new Dictionary<string, uint>();
             var changeSetRegex = new Regex(@"^\s*(?<revision>\d+)\s*(?<developerName>\S+)(?<codeLine>.*)",
                                            RegexOptions.Compiled | RegexOptions.Multiline);
 

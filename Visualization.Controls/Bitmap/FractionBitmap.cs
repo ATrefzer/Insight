@@ -8,10 +8,10 @@ namespace Visualization.Controls.Bitmap
     // TODO Separate calculation from visualization.
     public sealed class FractionBitmap
     {
-        public void Create(string filename, Dictionary<string, int> workByDevelopers,
+        public void Create(string filename, Dictionary<string, uint> workByDevelopers,
                            ColorScheme colorMapperMapping, bool legend)
         {
-            double allWork = workByDevelopers.Values.Sum();
+            double allWork = workByDevelopers.Values.Sum(w => w);
 
             // For the fractal
             var width = 200;
