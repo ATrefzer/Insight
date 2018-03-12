@@ -37,7 +37,7 @@ namespace Insight.Shared.Model
 
             foreach (var changeset in ChangeSets)
             {
-                if (changeset.WorkItems.Count >= WORKITEM_LIMIT)
+                if (changeset.WorkItems.Count >= Thresholds.MaxWorkItemsPerCommitForSummary)
                 {
                     // Ignore monster merges.
                     // Note: We may lose files for the summary when the last merge with many work items contains a final rename.

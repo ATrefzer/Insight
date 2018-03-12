@@ -13,16 +13,19 @@ namespace Insight
     {
     }
 
+  
+
     [Serializable]
     public sealed class Project
     {
         private string _extensionsToInclude = "";
         private string _pathToExclude = "";
+        private string _pathToInclude;
 
         private string _projectBase;
-        public string Cache { get; set; }
 
         public event EventHandler ProjectLoaded;
+        public string Cache { get; set; }
 
         public string ExtensionsToInclude
         {
@@ -40,12 +43,28 @@ namespace Insight
         [XmlIgnore]
         public Filter Filter { get; set; }
 
+        /// <summary>
+        /// Need one to reject
+        /// </summary>
         public string PathsToExclude
         {
             get => _pathToExclude;
             set
             {
                 _pathToExclude = value;
+                UpdateFilter();
+            }
+        }
+
+        /// <summary>
+        /// Need one to accept
+        /// </summary>
+        public string PathsToInclude
+        {
+            get => _pathToInclude;
+            set
+            {
+                _pathToInclude = value;
                 UpdateFilter();
             }
         }
@@ -133,6 +152,7 @@ namespace Insight
             Cache = Settings.Default.Cache.Trim();
             ExtensionsToInclude = Settings.Default.ExtensionsToInclude.Trim();
             PathsToExclude = Settings.Default.PathsToExclude.Trim();
+            PathsToInclude = Settings.Default.PathsToInclude.Trim();
             Provider = Settings.Default.Provider.Trim();
             WorkItemRegEx = Settings.Default.WorkItemRegEx.Trim();
             TeamClassifier = default(ITeamClassifier);
@@ -149,6 +169,7 @@ namespace Insight
             Cache = tmp.Cache;
             ExtensionsToInclude = tmp.ExtensionsToInclude;
             PathsToExclude = tmp.PathsToExclude;
+            PathsToInclude = tmp.PathsToInclude;
             Provider = tmp.Provider;
             WorkItemRegEx = tmp.WorkItemRegEx;
             TeamClassifier = tmp.TeamClassifier;
@@ -161,6 +182,7 @@ namespace Insight
             Settings.Default.ProjectBase = ProjectBase;
             Settings.Default.Cache = Cache;
             Settings.Default.PathsToExclude = PathsToExclude;
+            Settings.Default.PathsToInclude = PathsToInclude;
             Settings.Default.ExtensionsToInclude = ExtensionsToInclude;
             Settings.Default.Provider = Provider;
             Settings.Default.WorkItemRegEx = WorkItemRegEx;
@@ -171,6 +193,11 @@ namespace Insight
         {
             var file = new XmlFile<Project>();
             file.Write(path, this);
+        }
+
+        private void OnProjectLoaded()
+        {
+            ProjectLoaded?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -207,17 +234,18 @@ namespace Insight
                 filters.Add(new PathExcludeFilter(paths.ToArray()));
             }
 
+            if (!string.IsNullOrEmpty(PathsToInclude))
+            {
+                var paths = SplitTrimAndToLower(PathsToInclude);
+                filters.Add(new PathIncludeFilter(paths.ToArray()));
+            }
+
             // Remvove all files that are not in the base directory.
             // (History / log may return files outside)
             filters.Add(new OnlyFilesWithinRootDirectoryFilter(ProjectBase));
 
             // All filters must apply
             Filter = new Filter(filters.ToArray());
-        }
-
-        private void OnProjectLoaded()
-        {
-            ProjectLoaded?.Invoke(this, EventArgs.Empty);
         }
     }
 }

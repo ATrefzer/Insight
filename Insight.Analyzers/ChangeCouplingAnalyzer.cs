@@ -12,15 +12,7 @@ namespace Insight.Analyzers
     ///     Change coupling based on commits! Alternative would be logical work items.
     /// </summary>
     public sealed class ChangeCouplingAnalyzer
-    {
-        /// <summary>
-        ///     Changesets with more modifications are ignored.
-        /// </summary>
-        private const int MaxChangesInChangeset = 300;
-
-        // Reduce output
-        private const int MinCoupling = 2;
-
+    {      
 
         private readonly Dictionary<string, uint> _count = new Dictionary<string, uint>();
 
@@ -34,7 +26,7 @@ namespace Insight.Analyzers
 
             foreach (var cs in history.ChangeSets)
             {
-                if (cs.Items.Count > MaxChangesInChangeset)
+                if (cs.Items.Count > Thresholds.MaxItemsInChangesetForChangeCoupling)
                 {
                     continue;
                 }
@@ -62,7 +54,7 @@ namespace Insight.Analyzers
             CalculateDegree();
 
             return _couplings.Values
-                             .Where(coupling => coupling.Couplings > MinCoupling)
+                             .Where(coupling => coupling.Couplings > Thresholds.MinCouplingForChangeCoupling)
                              .OrderByDescending(coupling => coupling.Degree).ToList();
         }
 
@@ -95,7 +87,7 @@ namespace Insight.Analyzers
             CalculateDegree();
 
             return _couplings.Values
-                             .Where(coupling => coupling.Couplings > MinCoupling)
+                             .Where(coupling => coupling.Couplings > Thresholds.MinCouplingForChangeCoupling)
                              .OrderByDescending(coupling => coupling.Degree).ToList();
         }
 

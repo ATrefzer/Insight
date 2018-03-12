@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Insight"
         mc:Ignorable="d"
         Title="{x:Static local:Strings.ProjectViewTitle}"
-        Height="360"
+        Height="385"
         Width="440"
         Name="_settingsView">
 
@@ -77,6 +77,7 @@
 
         <Grid Margin="5">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -168,7 +169,7 @@
                      Text="{Binding ExtensionsToInclude}"
                      Style="{StaticResource TextBoxStyle}"/>
 
-            <Label Content="{x:Static local:Strings.Paths}"
+            <Label Content="{x:Static local:Strings.PathsExclude}"
                    Grid.Row="7"
                    Grid.Column="0"
                    Style="{StaticResource LabelStyle}"/>
@@ -176,6 +177,16 @@
                      Grid.Column="1"
                      Grid.ColumnSpan="2"
                      Text="{Binding PathsToExclude}"
+                     Style="{StaticResource TextBoxStyle}"/>
+
+            <Label Content="{x:Static local:Strings.PathsInclude}"
+                   Grid.Row="8"
+                   Grid.Column="0"
+                   Style="{StaticResource LabelStyle}"/>
+            <TextBox Grid.Row="8"
+                     Grid.Column="1"
+                     Grid.ColumnSpan="2"
+                     Text="{Binding PathsToInclude}"
                      Style="{StaticResource TextBoxStyle}"/>
         </Grid>
 
