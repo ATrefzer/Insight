@@ -172,7 +172,7 @@
     <value>File extensions
 (Include)</value>
   </data>
-  <data name="Paths" xml:space="preserve">
+  <data name="PathsExclude" xml:space="preserve">
     <value>Paths
 (Exclude)</value>
   </data>
@@ -233,5 +233,9 @@ Do you want to proceed?</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>Confirm</value>
+  </data>
+  <data name="PathsInclude" xml:space="preserve">
+    <value>Paths
+(Include)</value>
   </data>
 </root>

@@ -65,6 +65,12 @@ namespace Insight
             set => SetValue(value);
         }
 
+        public string PathsToInclude
+        {
+            get => GetValue<string>();
+            set => SetValue(value);
+        }
+
         public string ProjectBase
         {
             get => GetValue<string>();

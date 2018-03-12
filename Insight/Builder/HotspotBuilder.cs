@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 
+using Insight.Shared;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;
@@ -48,7 +49,7 @@ namespace Insight.Builder
             var weight = GetWeight(item);
 
             // File must have a size (lines of code) and must have been at least 2 times committed.
-            return area > 0 && weight > 2;
+            return area > Thresholds.MinLinesOfCodeForHotspot && weight > Thresholds.MinCommitsForHotspots;
         }
     }
 }

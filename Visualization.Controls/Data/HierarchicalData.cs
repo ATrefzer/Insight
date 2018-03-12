@@ -75,6 +75,7 @@ namespace Visualization.Controls.Data
 
             if (_weightIsAleadyNormalized)
             {
+                NormalizedWeightMetric = weightMetric;
                 if (WeightMetric < 0.0 || WeightMetric > 1)
                 {
                     throw new ArgumentException("Normalized weight not in range [0,1]");

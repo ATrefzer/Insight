@@ -245,9 +245,19 @@ namespace Insight {
         ///   Looks up a localized string similar to Paths
         ///(Exclude).
         /// </summary>
-        public static string Paths {
+        public static string PathsExclude {
             get {
-                return ResourceManager.GetString("Paths", resourceCulture);
+                return ResourceManager.GetString("PathsExclude", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paths
+        ///(Include).
+        /// </summary>
+        public static string PathsInclude {
+            get {
+                return ResourceManager.GetString("PathsInclude", resourceCulture);
             }
         }
         

@@ -1,12 +1,23 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-- Fragmentation is already normalized!
+
 - Global limits and constants (App config)
     - change coupling
     - Min Commits
     - Max Workitems etc
     - Code Age base
+    => Coupling 20 Commits AND 50% degree!!!!
+
+- Warning if changed filters!
+- TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
+  after the filters are changed. More restrictive is ok!
+
+
+-progress shall show current steps.
+
+
+- If the contribution is available show them in the sumary csv.
 
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
@@ -22,7 +33,7 @@ Features and improvements
 ---------------------------------------
 Bugs
 ---------------------------------------
-
+- GDI+ Error when showing work fraction
 ---------------------------------------
 User interface
 ---------------------------------------

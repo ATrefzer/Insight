@@ -95,8 +95,29 @@ namespace Insight.Shared
 
         public bool IsAccepted(string path)
         {
+            // One disallowed path is enough to reject.
             var reject = _disallowedPaths.Any(path.ToLowerInvariant().Contains);
             return !reject;
+        }
+    }
+
+    /// <summary>
+    ///     Note that given paths are allowed!
+    /// </summary>
+    public sealed class PathIncludeFilter : IFilter
+    {
+        private readonly string[] _expectedPaths;
+
+        public PathIncludeFilter(params string[] expectedPaths)
+        {
+            _expectedPaths = expectedPaths.Select(path => path.ToLowerInvariant()).ToArray();
+        }
+
+        public bool IsAccepted(string path)
+        {
+            // One expected path is enough to accept.
+            var accept = _expectedPaths.Any(path.ToLowerInvariant().Contains);
+            return accept;
         }
     }
 
