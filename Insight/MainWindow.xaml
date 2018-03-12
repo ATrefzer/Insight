@@ -60,10 +60,7 @@
 
                 <RibbonGroup Header="{x:Static local:Strings.Analysis}"
                              IsEnabled="{Binding IsProjectValid}">
-                    <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
-                                  SmallImageSource="Resources/knowledge-transfer_16.png"
-                                  Label="{x:Static local:Strings.Knowledge}"
-                                  Command="{Binding KnowledgeCommand}"/>
+                 
                     <RibbonButton LargeImageSource="Resources/fire_64.png"
                                   SmallImageSource="Resources/fire_16.png"
                                   Label="{x:Static local:Strings.Hotspots}"
@@ -72,14 +69,18 @@
                                   SmallImageSource="Resources/birds-in-love_16.png"
                                   Label="{x:Static local:Strings.Coupling}"
                                   Command="{Binding ChangeCouplingCommand}"/>
+                    <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
+                                  SmallImageSource="Resources/knowledge-transfer_16.png"
+                                  Label="{x:Static local:Strings.Knowledge}"
+                                  Command="{Binding KnowledgeCommand}"/>
+                    <RibbonButton LargeImageSource="Resources/pie-graph-split_64.png"
+                                  SmallImageSource="Resources/pie-graph-split_16.png"
+                                  Label="{x:Static local:Strings.Work}"
+                                  Command="{Binding FragmentationCommand}"/>
                     <RibbonButton LargeImageSource="Resources/sands-of-time-64.png"
                                   SmallImageSource="Resources/sands-of-time-16.png"
                                   Label="{x:Static local:Strings.CodeAge}"
                                   Command="{Binding CodeAgeCommand}"/>
-                    <RibbonButton LargeImageSource="Resources/pie-graph-split_64.png"
-                                  SmallImageSource="Resources/pie-graph-split_16.png"
-                                  Label="{x:Static local:Strings.Work}"
-                                  Command="{Binding WorkOnSingleFileCommand}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.Export}">

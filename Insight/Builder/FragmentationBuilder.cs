@@ -6,20 +6,17 @@ using Visualization.Controls.Data;
 
 namespace Insight.Builder
 {
-    /// <summary>
-    /// Transforms the given artifact summary, code metrics and main developer per file into a knowledge map.
-    /// </summary>
-    public sealed class KnowledgeBuilder : HierarchyBuilder
+    public sealed class FragmentationBuilder : HierarchyBuilder
     {
-        private Dictionary<string, MainDeveloper> _mainDeveloper;
+        private Dictionary<string, double> _fileToFractalValue;
         private Dictionary<string, LinesOfCode> _metrics;
 
         public HierarchicalData Build(List<Artifact> summary,
                                       Dictionary<string, LinesOfCode> metrics,
-                                      Dictionary<string, MainDeveloper> mainDeveloper)
+                                      Dictionary<string, double> fileToFractalValue)
         {
             _metrics = metrics;
-            _mainDeveloper = mainDeveloper;
+            _fileToFractalValue = fileToFractalValue;
             return Build(summary);
         }
 
@@ -37,17 +34,10 @@ namespace Insight.Builder
             return area;
         }
 
-        protected override string GetColorKey(Artifact item)
-        {
-            return GetMainDeveloper(item).Developer;
-        }
-
+       
         protected override string GetDescription(Artifact item)
         {
-            var mainDev = GetMainDeveloper(item);
-            return item.ServerPath + "\nCommits: " + item.Commits
-                   + "\nLOC: " + GetArea(item)
-                   + "\nMain developer: " + mainDev.Developer + " " + mainDev.Percent.ToString("F5") + "%";
+            return item.ServerPath + "\nFragmentation: " + GetWeight(item).ToString("F5");
         }
 
         protected override bool IsAccepted(Artifact item)
@@ -58,16 +48,12 @@ namespace Insight.Builder
             return area > 1;
         }
 
-        private MainDeveloper GetMainDeveloper(Artifact item)
+        protected override double GetWeight(Artifact item)
         {
+            // Fractal value
             var key = item.LocalPath.ToLowerInvariant();
-            if (_mainDeveloper.ContainsKey(key))
-            {
-                return _mainDeveloper[key];
-            }
-
-            // Default color
-            return new MainDeveloper("unknown", 0.0);
+            return _fileToFractalValue[key];
         }
+       
     }
 }
