@@ -59,6 +59,11 @@ namespace Insight.Builder
             return 0.0;
         }
 
+        protected virtual bool GetWeightIsAlreadyNormalized()
+        {
+            return false;
+        }
+
         protected virtual bool IsAccepted(Artifact item)
         {
             return true;
@@ -125,7 +130,7 @@ namespace Insight.Builder
                 return;
             }
 
-            var leaf = new HierarchicalData(leafName, GetArea(item), GetWeight(item));
+            var leaf = new HierarchicalData(leafName, GetArea(item), GetWeight(item), GetWeightIsAlreadyNormalized());
             leaf.Description = GetDescription(item);
             leaf.ColorKey = GetColorKey(item);
             leaf.Tag = item.LocalPath;

@@ -30,6 +30,7 @@ namespace Visualization.Controls.Data
         private const string PathSeparator = "/";
 
         private readonly List<HierarchicalData> _children = new List<HierarchicalData>();
+        private readonly bool _weightIsAleadyNormalized;
 
         public HierarchicalData(string name)
         {
@@ -39,6 +40,7 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
+            _weightIsAleadyNormalized = true;
         }
 
         /// <summary>
@@ -52,9 +54,10 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
+            _weightIsAleadyNormalized = true;
         }
 
-        public HierarchicalData(string name, double areaMetric, double weightMetric)
+        public HierarchicalData(string name, double areaMetric, double weightMetric, bool weightIsAleadyNormalized = false)
         {
             Name = name;
             Description = Name;
@@ -62,6 +65,15 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = weightMetric;
             NormalizedWeightMetric = 0.0;
+            _weightIsAleadyNormalized = weightIsAleadyNormalized;
+
+            if (_weightIsAleadyNormalized)
+            {
+                if (WeightMetric < 0.0 || WeightMetric > 1)
+                {
+                    throw new ArgumentException("Normalized weight not in range [0,1]");
+                }
+            }
         }
 
         public double AreaMetric { get; }
@@ -83,23 +95,13 @@ namespace Visualization.Controls.Data
 
         public HierarchicalData Parent { get; set; }
 
-        public HierarchicalData Shrink()
-        {
-            if (Children.Count == 1)
-            {
-                return Children.First().Shrink();
-            }
-
-            // Leaf node or more than one children.
-            return this;
-        }
-
         /// <summary>
         /// Needs to be serializable
         /// </summary>
         public object Tag { get; set; }
 
         public double WeightMetric { get; }
+
 
         public static HierarchicalData NoData()
         {
@@ -233,6 +235,11 @@ namespace Visualization.Controls.Data
         /// </summary>
         public void NormalizeWeightMetrics()
         {
+            if (_weightIsAleadyNormalized)
+            {
+                return;
+            }
+
             // Get min and max of weight metric and map to range 0...1.
             var range = GetMinMaxWeight();
             var min = range.Min;
@@ -263,6 +270,17 @@ namespace Visualization.Controls.Data
             {
                 throw new Exception("Hierarchical data is not valid. Singular root node does not have an area.");
             }
+        }
+
+        public HierarchicalData Shrink()
+        {
+            if (Children.Count == 1)
+            {
+                return Children.First().Shrink();
+            }
+
+            // Leaf node or more than one children.
+            return this;
         }
 
         /// <summary>
@@ -334,7 +352,7 @@ namespace Visualization.Controls.Data
 
         private HierarchicalData Clone(HierarchicalData cloneThis)
         {
-            var newData = new HierarchicalData(cloneThis.Name, cloneThis.AreaMetric, cloneThis.WeightMetric);
+            var newData = new HierarchicalData(cloneThis.Name, cloneThis.AreaMetric, cloneThis.WeightMetric, _weightIsAleadyNormalized);
             newData.Description = cloneThis.Description;
             newData.ColorKey = cloneThis.ColorKey;
             newData.Tag = cloneThis.Tag;
@@ -356,7 +374,6 @@ namespace Visualization.Controls.Data
                 Dump(child, level + 1);
             }
         }
-
 
         private void GetMinMaxArea(ref double min, ref double max)
         {

@@ -47,7 +47,7 @@ namespace Insight.Builder
             var mainDev = GetMainDeveloper(item);
             return item.ServerPath + "\nCommits: " + item.Commits
                    + "\nLOC: " + GetArea(item)
-                   + "\nMain developer: " + mainDev.Developer + " " + mainDev.Percent.ToString("F5") + "%";
+                   + "\nMain developer: " + mainDev.Developer + " " + mainDev.Percent.ToString("F2") + "%";
         }
 
         protected override bool IsAccepted(Artifact item)
