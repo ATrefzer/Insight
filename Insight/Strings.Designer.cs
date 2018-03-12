@@ -379,7 +379,7 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Work on single file.
+        ///   Looks up a localized string similar to Fragmentation.
         /// </summary>
         public static string Work {
             get {

@@ -1,8 +1,7 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-
-- Json serializer
+- Fragmentation is already normalized!
 - Global limits and constants (App config)
     - change coupling
     - Min Commits
@@ -16,9 +15,6 @@ In Progress
 ---------------------------------------
 Features and improvements
 ---------------------------------------
-- Code Fragmentation!
-    - Cache developer info and ask (message box) if use old calculation
-    - Use same for Knowledge and Age and fragmentation!
 
 - Commits pro line statt absolute 
 - Return when zooming

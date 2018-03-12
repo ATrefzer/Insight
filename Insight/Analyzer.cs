@@ -124,9 +124,23 @@ namespace Insight
         }
 
         /// <summary>
-        /// If we call this in context of a knowledge map we reuse existing colors colors and simply add
-        /// missing developers/colors. You can optionally add a uninitialized (default ctor) ColorScheme.
+        /// Analyzes the fragmentation per file.
         /// </summary>
+        public HierarchicalDataContext AnalyzeFragmentation()
+        {
+            LoadHistory();
+            LoadMetrics();
+            LoadContributions();
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var fileToFractalValue = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
+
+            var builder = new FragmentationBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics, fileToFractalValue);
+
+            return new HierarchicalDataContext(hierarchicalData);
+        }
+
         public string AnalyzeWorkOnSingleFile(string fileName, ColorScheme colorScheme)
         {
             Debug.Assert(colorScheme != null);
@@ -275,7 +289,7 @@ namespace Insight
                                  fileToContribution.TryAdd(artifact.LocalPath, contribution);
                              });
 
-            return fileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value);
+            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
         }
 
         private string GetPathToContributionFile()

@@ -42,7 +42,7 @@ namespace Insight
 
             SetupCommand = new DelegateCommand(SetupClick);
             UpdateCommand = new DelegateCommand(UpdateClick);
-            WorkOnSingleFileCommand = new DelegateCommand(WorkOnSingleFileClick);
+            FragmentationCommand = new DelegateCommand(FragmentationClick);
             LoadDataCommand = new DelegateCommand(LoadDataClick);
             SaveDataCommand = new DelegateCommand(SaveDataClick);
             SummaryCommand = new DelegateCommand(SummaryClick);
@@ -100,7 +100,7 @@ namespace Insight
 
         public ICommand UpdateCommand { get; set; }
 
-        public ICommand WorkOnSingleFileCommand { get; set; }
+        public ICommand FragmentationCommand { get; set; }
 
         public void OnShowChangeCouplingChord(List<Coupling> args)
         {
@@ -214,6 +214,14 @@ namespace Insight
 
             var data = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());
             _tabBuilder.ShowHierarchicalData(data, "Knowledge");
+        }
+
+        private async void FragmentationClick()
+        {
+
+            var data = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
+            _tabBuilder.ShowHierarchicalData(data, "Fragmentation");
+            //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }
 
         private async void CodeAgeClick()
@@ -333,20 +341,6 @@ namespace Insight
             _tabs.Clear();
         }
 
-        private async void WorkOnSingleFileClick()
-        {
-            // Called from ribbon. Select a file and show the work.
-            // Colors are assinged on the fly.
-
-            var fileName = _dialogs.GetLoadFile(null, _project.ProjectBase);
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileName, new ColorScheme()));
-
-            _tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
-        }
+      
     }
 }
