@@ -14,7 +14,7 @@ namespace Visualization.Controls.Data
     /// For a leaf node:
     ///  - If a color key is set (not null) it is used for rendering
     ///  - If not the weight metric is used to derive a color
-    ///  - If the weight is 0 the default color (light gray is used)
+    ///  - If the weight is 0 the default color (light gray) is used
     /// For a non leaf node
     ///  - Typically the weight is 0 here, so we render hierarchy
     ///    with the default color. The weight is only set for leaf nodes.
@@ -23,6 +23,11 @@ namespace Visualization.Controls.Data
     /// If we remove leaf nodes and an inner node becomes a leaf now, its area is still NaN.
     /// Now we can call RemoveLeafNodesWithoutArea to remove these nodes (recursively).
     /// The AreaMeticSum however is initialized with 0.
+    /// 
+    /// Normally weight can be anything and it is normalized via NormalizeWeightMetrics.
+    /// If you want to provide an already normalized weight metric you have to tell via ctor.
+    /// This should be consistent with leaf and inner nodes, even if the inner nodes do not have a 
+    /// weight!
     /// </summary>
     [Serializable]
     public sealed class HierarchicalData
@@ -32,7 +37,7 @@ namespace Visualization.Controls.Data
         private readonly List<HierarchicalData> _children = new List<HierarchicalData>();
         private readonly bool _weightIsAleadyNormalized;
 
-        public HierarchicalData(string name)
+        public HierarchicalData(string name, bool weightIsAleadyNormalized = false)
         {
             Name = name;
             Description = Name;
@@ -40,13 +45,13 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
-            _weightIsAleadyNormalized = true;
+            _weightIsAleadyNormalized = weightIsAleadyNormalized;
         }
 
         /// <summary>
         /// Leaf node must provide an area metric.
         /// </summary>
-        public HierarchicalData(string name, double areaMetric)
+        public HierarchicalData(string name, double areaMetric, bool weightIsAleadyNormalized = false)
         {
             Name = name;
             Description = Name;
@@ -54,7 +59,8 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
-            _weightIsAleadyNormalized = true;
+            _weightIsAleadyNormalized = weightIsAleadyNormalized;
+
         }
 
         public HierarchicalData(string name, double areaMetric, double weightMetric, bool weightIsAleadyNormalized = false)
