@@ -7,7 +7,7 @@ namespace Insight.Shared
 {
     public interface ISourceControlProvider
     {
-        Dictionary<string, int> CalculateDeveloperWork(Artifact artifact);
+        Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact);
 
         /// <summary>
         /// Returns path to the cached file

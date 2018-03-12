@@ -200,19 +200,19 @@ namespace Insight
 
         private async void KnowledgeClick()
         {
-            var directory = _dialogs.GetDirectory(_project.ProjectBase);
-            if (string.IsNullOrEmpty(directory))
-            {
-                return;
-            }
+            //var directory = _dialogs.GetDirectory(_project.ProjectBase);
+            //if (string.IsNullOrEmpty(directory))
+            //{
+            //    return;
+            //}
 
-            if (!directory.StartsWith(_project.ProjectBase, StringComparison.OrdinalIgnoreCase))
-            {
-                _dialogs.ShowError(Strings.ErrorDirectoryNotInProjectBase);
-                return;
-            }
+            //if (!directory.StartsWith(_project.ProjectBase, StringComparison.OrdinalIgnoreCase))
+            //{
+            //    _dialogs.ShowError(Strings.ErrorDirectoryNotInProjectBase);
+            //    return;
+            //}
 
-            var data = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(directory));
+            var data = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());
             _tabBuilder.ShowHierarchicalData(data, "Knowledge");
         }
 
@@ -319,13 +319,18 @@ namespace Insight
             // The functions to update or pull are implemented in SvnProvider and GitProvider.
             // But actually that is not the task of this tool. Give it an updated repository.
 
-            if (!_dialogs.AskYesNoQuestion(Strings.SyncInstructions, "Confirm"))
+            if (!_dialogs.AskYesNoQuestion(Strings.SyncInstructions, Strings.Confirm))
             {
                 return;
             }
 
-            await _backgroundExecution.ExecuteAsync(() => _analyzer.UpdateCache());
+            // Contributions may be too much if using svn.
+            var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
+
+            await _backgroundExecution.ExecuteAsync(() => _analyzer.UpdateCache(includeContributions));
+
             _analyzer.Clear();
+            _tabs.Clear();
         }
 
         private async void WorkOnSingleFileClick()

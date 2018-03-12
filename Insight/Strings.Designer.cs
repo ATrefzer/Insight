@@ -115,6 +115,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Confirm.
+        /// </summary>
+        public static string Confirm {
+            get {
+                return ResourceManager.GetString("Confirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change Coupling.
         /// </summary>
         public static string Coupling {
@@ -315,7 +324,16 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sync reads the version control&apos;s log and calculates code metrics for all supported files. This takes time. The data is persistently cached and used when doing the various analyses. If you synced before all cached data is deleted and rebuild. Best your repository is up to date and has no local changes.
+        ///   Looks up a localized string similar to Do you want to include the work related information?.
+        /// </summary>
+        public static string SyncIncludeContributions {
+            get {
+                return ResourceManager.GetString("SyncIncludeContributions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sync reads the version control&apos;s log and calculates metrics for all supported files. This takes time. The data is persistently cached and used when doing the various analyses. If you synced before all cached data is deleted and rebuild. Best your repository is up to date and has no local changes.
         ///Do you want to proceed?.
         /// </summary>
         public static string SyncInstructions {

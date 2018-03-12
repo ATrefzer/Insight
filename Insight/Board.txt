@@ -1,6 +1,8 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
+
+- Json serializer
 - Global limits and constants (App config)
     - change coupling
     - Min Commits

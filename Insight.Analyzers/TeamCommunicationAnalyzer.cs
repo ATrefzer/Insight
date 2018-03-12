@@ -10,16 +10,16 @@ namespace Insight.Analyzers
 {
     public class TeamCommunicationAnalyzer
     {
-        private readonly Dictionary<string, int> _notClassifiedDevelopers = new Dictionary<string, int>();
+        private readonly Dictionary<string, uint> _notClassifiedDevelopers = new Dictionary<string, uint>();
 
         /// <summary>
         /// returns the team communication path.
         /// If no team classifier is provided, the developer himself is used.
         /// </summary>
-        public Dictionary<OrderedPair, int> AnalyzeTeamCommunication(ChangeSetHistory history, ITeamClassifier teamClassifier)
+        public Dictionary<OrderedPair, uint> AnalyzeTeamCommunication(ChangeSetHistory history, ITeamClassifier teamClassifier)
         {
             // file -> dictionary{team, #commits}
-            var fileToCommitsPerTeam = new Dictionary<Id, Dictionary<string, int>>();
+            var fileToCommitsPerTeam = new Dictionary<Id, Dictionary<string, uint>>();
 
             foreach (var cs in history.ChangeSets)
             {
@@ -31,7 +31,7 @@ namespace Insight.Analyzers
                     // Add team to file
                     if (!fileToCommitsPerTeam.Keys.Contains(item.Id))
                     {
-                        fileToCommitsPerTeam.Add(item.Id, new Dictionary<string, int>());
+                        fileToCommitsPerTeam.Add(item.Id, new Dictionary<string, uint>());
                     }
 
                     var commitsPerTeam = fileToCommitsPerTeam[item.Id];
@@ -43,7 +43,7 @@ namespace Insight.Analyzers
             // Each file that was accessed by two teams leads to a link between the teams.
 
             // pair of teams -> number of commits.
-            var teamCommunicationPaths = new Dictionary<OrderedPair, int>();
+            var teamCommunicationPaths = new Dictionary<OrderedPair, uint>();
 
             foreach (var file in fileToCommitsPerTeam)
             {

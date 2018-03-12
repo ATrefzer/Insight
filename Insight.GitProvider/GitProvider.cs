@@ -37,7 +37,7 @@ namespace Insight.GitProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-        public Dictionary<string, int> CalculateDeveloperWork(Artifact artifact)
+        public Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact)
         {
             var annotate = _gitCli.Annotate(artifact.LocalPath);
 
@@ -45,7 +45,7 @@ namespace Insight.GitProvider
             //s = whitespace
 
             // Parse annotated file
-            var workByDevelopers = new Dictionary<string, int>();
+            var workByDevelopers = new Dictionary<string, uint>();
             var changeSetRegex = new Regex(@"^\S+\t\(\s*(?<developerName>[^\t]+).*", RegexOptions.Multiline | RegexOptions.Compiled);
 
             // Work by changesets (line by line)

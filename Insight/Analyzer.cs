@@ -4,17 +4,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 using Insight.Analyzers;
 using Insight.Builder;
 using Insight.Dto;
 using Insight.Metrics;
-using Insight.Shared;
 using Insight.Shared.Model;
-using Insight.Shared.System;
 using Insight.Shared.VersionControl;
+
+using Newtonsoft.Json;
 
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
@@ -23,6 +23,7 @@ namespace Insight
 {
     public sealed class Analyzer
     {
+        private Dictionary<string, Contribution> _contributions;
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
 
@@ -35,28 +36,6 @@ namespace Insight
 
         private Project Project { get; }
 
-        /// <summary>
-        /// Work for a single file. Developer -> lines of work
-        /// </summary>
-        public static MainDeveloper GetMainDeveloper(Dictionary<string, int> workByDevelopers)
-        {
-            // Find main developer
-            string mainDeveloper = null;
-            double linesOfWork = 0;
-
-            double lineCount = workByDevelopers.Values.Sum();
-
-            foreach (var pair in workByDevelopers)
-            {
-                if (pair.Value > linesOfWork)
-                {
-                    mainDeveloper = pair.Key;
-                    linesOfWork = pair.Value;
-                }
-            }
-
-            return new MainDeveloper(mainDeveloper, 100.0 * linesOfWork / lineCount);
-        }
 
         public List<Coupling> AnalyzeChangeCoupling()
         {
@@ -101,54 +80,25 @@ namespace Insight
             return new HierarchicalDataContext(hierarchicalData);
         }
 
-        public HierarchicalDataContext AnalyzeKnowledge(string directory)
+        public HierarchicalDataContext AnalyzeKnowledge()
         {
-            var scanner = new DirectoryScanner();
-            var filesToAnalyze = scanner.GetFilesRecursive(directory);
-
-            // With git we have all files locally. But think first before requesting many thousand files from the Svn server.
-            if (MessageBox.Show($"The folder contains {filesToAnalyze.Count} files to analyze. Really?", "Really?", MessageBoxButton.YesNo) == MessageBoxResult.No)
-            {
-                return null;
-            }
-
-            // Get summary of all files within the selected direcory
             LoadHistory();
             LoadMetrics();
+            LoadContributions();
 
-            // Extend the default filter to only accept files from the given directory.
-            // This is faster than summary.Where() because we skip a lot of File.Exist() calls.
-            var newFilter = new Filter(Project.Filter, new FileFilter(filesToAnalyze));
-            var summary = _history.GetArtifactSummary(newFilter, new HashSet<string>(_metrics.Keys));
-
-            // We have a summary of just a sub directory with a limited amount of files.
-            // I don't want to download that many files from the server.
-
-            // Calculate main developer for each file
-            var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
-
-            Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                             artifact =>
-                             {
-                                 var provider = Project.CreateProvider();
-
-                                 var work = provider.CalculateDeveloperWork(artifact);
-                                 var mainDeveloper = GetMainDeveloper(work);
-                                 mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                             });
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Assign a color to each developer
-            var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
-            var scheme = new ColorScheme(developers.ToArray());
+            var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
+            var scheme = new ColorScheme(mainDevelopers.ToArray());
 
             // Build the knowledge data
             var builder = new KnowledgeBuilder();
-            var hierarchicalData = builder.Build(summary, _metrics, mainDeveloperPerFile
-                                                         .ToDictionary(pair => pair.Key, pair => pair.Value));
+            var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
             return new HierarchicalDataContext(hierarchicalData, scheme);
         }
-
 
         public List<TrendData> AnalyzeTrend(string localFile)
         {
@@ -261,22 +211,30 @@ namespace Insight
             return gridData;
         }
 
-        public void UpdateCache()
+        public void UpdateCache(bool includeContributions)
         {
             // Note: You should have the latest code locally such that history and metrics match!
             // Update svn history
             var svnProvider = Project.CreateProvider();
             svnProvider.UpdateCache();
 
-            // Update code metrics (after source was updated)
+            // Update code metrics
             var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
             metricProvider.UpdateCache();
+
+            File.Delete(GetPathToContributionFile());
+            if (includeContributions)
+            {
+                // Update contributions. This takes a long time. Not useful for svn.
+                UpdateContributions();
+            }
         }
 
         internal void Clear()
         {
             _history = null;
             _metrics = null;
+            _contributions = null;
         }
 
         private static string ClassifyDirectory(string localPath)
@@ -302,12 +260,49 @@ namespace Insight
             return string.Empty;
         }
 
-        private void InitColorMappingForWork(ColorScheme colorMapping, Dictionary<string, int> workByDeveloper)
+        private Dictionary<string, Contribution> CalculateContributionsParallel(List<Artifact> summary)
+        {
+            // Calculate main developer for each file
+            var fileToContribution = new ConcurrentDictionary<string, Contribution>();
+
+            Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                             artifact =>
+                             {
+                                 var provider = Project.CreateProvider();
+                                 var work = provider.CalculateDeveloperWork(artifact);
+                                 var contribution = new Contribution(work);
+
+                                 fileToContribution.TryAdd(artifact.LocalPath, contribution);
+                             });
+
+            return fileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
+
+        private string GetPathToContributionFile()
+        {
+            return Path.Combine(Project.Cache, "contribution_analysis.json");
+        }
+
+        private void InitColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
         {
             // order such that same developers get same colors regardless of order.
             foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
             {
                 colorMapping.AddColorKey(developer);
+            }
+        }
+
+        private void LoadContributions()
+        {
+            if (_contributions == null)
+            {
+                if (File.Exists(GetPathToContributionFile()) == false)
+                {
+                    throw new Exception($"The file '{GetPathToContributionFile()}' was not found. Please click Sync to create it.");
+                }
+
+                var input = File.ReadAllText(GetPathToContributionFile(), Encoding.UTF8);
+                _contributions = JsonConvert.DeserializeObject<Dictionary<string, Contribution>>(input);
             }
         }
 
@@ -332,6 +327,19 @@ namespace Insight
                 var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
                 _metrics = metricProvider.QueryCodeMetrics();
             }
+        }
+
+        private void UpdateContributions()
+        {
+            LoadHistory();
+            LoadMetrics();
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            _contributions = CalculateContributionsParallel(summary);
+
+            var json = JsonConvert.SerializeObject(_contributions);
+            var path = GetPathToContributionFile();
+            File.WriteAllText(path, json, Encoding.UTF8);
         }
     }
 }
