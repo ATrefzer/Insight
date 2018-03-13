@@ -71,5 +71,31 @@ namespace Insight
                 _dialogs.ShowError(exception.Message);
             }
         }
+
+        /// <summary>
+        /// Call from Ui thread
+        /// </summary>
+        public async Task ExecuteWithProgressAsync(Action<Progress> action)
+        {
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId == Application.Current.Dispatcher.Thread.ManagedThreadId);
+
+            Exception exception = null;
+            using (var progress = _progressService.CreateProgress())
+            {
+                try
+                {
+                    await Task.Run(() => action(progress)).ConfigureAwait(true);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            }
+
+            if (exception != null)
+            {
+                _dialogs.ShowError(exception.Message);
+            }
+        }
     }
 }

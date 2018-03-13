@@ -152,7 +152,7 @@ namespace Insight
             var fi = new FileInfo(fileName);
             var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
 
-            InitColorMappingForWork(colorScheme, workByDeveloper);
+            AppendColorMappingForWork(colorScheme, workByDeveloper);
 
             bitmap.Create(path, workByDeveloper, colorScheme, true);
 
@@ -225,13 +225,15 @@ namespace Insight
             return gridData;
         }
 
-        public void UpdateCache(bool includeContributions)
+        public void UpdateCache(Progress progress, bool includeContributions)
         {
+            progress.Message("Updating source control history.");
             // Note: You should have the latest code locally such that history and metrics match!
             // Update svn history
             var svnProvider = Project.CreateProvider();
             svnProvider.UpdateCache();
 
+            progress.Message("Updating code metrics.");
             // Update code metrics
             var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
             metricProvider.UpdateCache();
@@ -240,7 +242,7 @@ namespace Insight
             if (includeContributions)
             {
                 // Update contributions. This takes a long time. Not useful for svn.
-                UpdateContributions();
+                UpdateContributions(progress);
             }
         }
 
@@ -274,11 +276,12 @@ namespace Insight
             return string.Empty;
         }
 
-        private Dictionary<string, Contribution> CalculateContributionsParallel(List<Artifact> summary)
+        private Dictionary<string, Contribution> CalculateContributionsParallel(Progress progress, List<Artifact> summary)
         {
             // Calculate main developer for each file
             var fileToContribution = new ConcurrentDictionary<string, Contribution>();
 
+            var all = summary.Count;
             Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
                              artifact =>
                              {
@@ -286,7 +289,15 @@ namespace Insight
                                  var work = provider.CalculateDeveloperWork(artifact);
                                  var contribution = new Contribution(work);
 
-                                 fileToContribution.TryAdd(artifact.LocalPath, contribution);
+                                 var result = fileToContribution.TryAdd(artifact.LocalPath, contribution);
+                                 Debug.Assert(result);
+
+                                 // Progress
+                                 var count = fileToContribution.Count;
+                                // if (count % 10 == 0)
+                                 {
+                                     progress.Message($"Calculating work {count}/{all}");
+                                 }
                              });
 
             return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
@@ -297,7 +308,7 @@ namespace Insight
             return Path.Combine(Project.Cache, "contribution_analysis.json");
         }
 
-        private void InitColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
+        private void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
         {
             // order such that same developers get same colors regardless of order.
             foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
@@ -343,13 +354,13 @@ namespace Insight
             }
         }
 
-        private void UpdateContributions()
+        private void UpdateContributions(Progress progress)
         {
             LoadHistory();
             LoadMetrics();
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
-            _contributions = CalculateContributionsParallel(summary);
+            _contributions = CalculateContributionsParallel(progress, summary);
 
             var json = JsonConvert.SerializeObject(_contributions);
             var path = GetPathToContributionFile();

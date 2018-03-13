@@ -1,7 +1,6 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-
 - Global limits and constants (App config)
     - change coupling
     - Min Commits
@@ -12,10 +11,6 @@ In Progress
 - Warning if changed filters!
 - TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
   after the filters are changed. More restrictive is ok!
-
-
--progress shall show current steps.
-
 
 - If the contribution is available show them in the sumary csv.
 

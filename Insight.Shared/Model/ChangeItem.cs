@@ -11,15 +11,9 @@ namespace Insight.Shared.Model
         Branch = 128,
         Delete = 32,
         Edit = 4,
-        Encoding = 8,
-        Lock = 512,
         Merge = 256,
         None = 1,
-        Property = 8192,
         Rename = 16,
-        Rollback = 1024,
-        SourceRename = 2048,
-        Undelete = 64
     }
 
     [Serializable]

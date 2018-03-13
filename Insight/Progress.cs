@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 
 namespace Insight
 {
@@ -15,7 +16,12 @@ namespace Insight
 
         public void Message(string msg)
         {
-            // TODO upate message
+            Application.Current.Dispatcher.Invoke(() =>
+                                                  {
+                                                      _progressView.Message.Visibility = Visibility.Visible;
+                                                      _progressView.Message.Text = msg;
+                                                      _progressView.SizeToContent = SizeToContent.Height;
+                                                  });
         }
 
         public void Dispose()

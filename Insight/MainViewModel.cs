@@ -335,7 +335,7 @@ namespace Insight
             // Contributions may be too much if using svn.
             var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
 
-            await _backgroundExecution.ExecuteAsync(() => _analyzer.UpdateCache(includeContributions));
+            await _backgroundExecution.ExecuteWithProgressAsync((progress) => _analyzer.UpdateCache(progress, includeContributions));
 
             _analyzer.Clear();
             _tabs.Clear();
