@@ -373,6 +373,13 @@ namespace Insight.GitProvider
                 // Followed by the similarity
                 return KindOfChange.Rename;
             }
+            if (kind.StartsWith("C"))
+            {
+                // Followed by the similarity. 
+                // I tread a copy of a file as a new start.
+                Trace.WriteLine("Found copy operation for git!");
+                return KindOfChange.Add;
+            }
             else if (kind == "A")
             {
                 return KindOfChange.Add;
@@ -387,6 +394,7 @@ namespace Insight.GitProvider
             }
             else
             {
+                Debug.Assert(false);
                 return KindOfChange.None;
             }
         }
