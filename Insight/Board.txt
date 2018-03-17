@@ -1,6 +1,8 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
+
+- Extend summary files
 - Global limits and constants (App config)
     - change coupling
     - Min Commits
@@ -8,6 +10,7 @@ In Progress
     - Code Age base
     => Coupling 20 Commits AND 50% degree!!!!
 
+- Try on different git projects
 - Warning if changed filters!
 - TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
   after the filters are changed. More restrictive is ok!
@@ -21,7 +24,9 @@ In Progress
 ---------------------------------------
 Features and improvements
 ---------------------------------------
-
+- Knowledge loss for a single developer
+- Predict future => Save and compare summary files ( 2 Month)
+    - How to calculate hotspots (normalized multiplication?)
 - Commits pro line statt absolute 
 - Return when zooming
 - maybe PieChart
