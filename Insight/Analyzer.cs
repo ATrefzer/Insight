@@ -52,7 +52,7 @@ namespace Insight
             Csv.Write(Path.Combine(Project.Cache, "change_couplings.csv"), sortedCouplings);
 
             // Same with classified folders
-            var classifiedCouplings = tmp.CalculateChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
+            var classifiedCouplings = tmp.CalculateClassifiedChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
             Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
 
             return sortedCouplings;
@@ -231,13 +231,14 @@ namespace Insight
             LoadContributions(true); // silent
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            HotspotCalculator hotspotCalculator = new HotspotCalculator(summary, _metrics);
 
             var gridData = new List<object>();
             foreach (var artifact in summary)
             {
                 var metricKey = artifact.LocalPath.ToLowerInvariant();
                 var loc = _metrics.ContainsKey(metricKey) ? _metrics[metricKey].Code : 0;
-                gridData.Add(CreateDataGridFriendlyArtifact(artifact, loc));
+                gridData.Add(CreateDataGridFriendlyArtifact(artifact, hotspotCalculator));
             }
 
             Csv.Write(Path.Combine(Project.Cache, "summary.csv"), gridData);
@@ -340,8 +341,9 @@ namespace Insight
             return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
         }
 
-        private object CreateDataGridFriendlyArtifact(Artifact artifact, int loc)
+        private object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
         {
+            int linesOfCode = (int)hotspotCalculator.GetArea(artifact);
             if (_contributions != null)
             {
                 var result = new DataGridFriendlyArtifact();
@@ -352,9 +354,10 @@ namespace Insight
                 result.Revision = artifact.Revision;
                 result.Commits = artifact.Commits;
                 result.Committers = artifact.Committers.Count;
-                result.LOC = loc;
+                result.LOC = linesOfCode;
                 result.WorkItems = artifact.WorkItems.Count;
                 result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
+                result.Hotspot = hotspotCalculator.GetHotspot(artifact);
 
                 // Work related information
                 result.FractalValue = artifactContribution.CalculateFractalValue();
@@ -369,9 +372,10 @@ namespace Insight
                 result.Revision = artifact.Revision;
                 result.Commits = artifact.Commits;
                 result.Committers = artifact.Committers.Count;
-                result.LOC = loc;
+                result.LOC = linesOfCode;
                 result.WorkItems = artifact.WorkItems.Count;
                 result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
+                result.Hotspot = hotspotCalculator.GetHotspot(artifact);
                 return result;
             }
         }

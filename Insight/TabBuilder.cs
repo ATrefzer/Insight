@@ -99,7 +99,7 @@ namespace Insight
             // You can specify the real type here (dto)! I chose object only because I don't know the type when
             // calling this function.
             var commands = new DataGridViewUserCommands<object>();
-            commands.Register("To clipboard", args =>
+            commands.Register(Strings.ToClipboard, args =>
                                               {
                                                   var writer = new CsvWriter();
                                                   writer.Header = true;
@@ -116,9 +116,10 @@ namespace Insight
 
         public void ShowWarnings(List<WarningMessage> data)
         {
-            var title = "Warnings";
+            var title = Strings.Warning;
             if (data == null || !data.Any())
             {
+                // Show warnings tab only if there are warnings
                 var vm = _mainViewModel.Tabs.FirstOrDefault(x => x.Title == title);
                 if (vm != null)
                 {

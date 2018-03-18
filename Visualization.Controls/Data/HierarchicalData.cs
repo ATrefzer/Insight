@@ -410,16 +410,16 @@ namespace Visualization.Controls.Data
             }
         }
 
-        private void NormalizeWeightMetrics(double min, double scale)
+        private void NormalizeWeightMetrics(double min, double range)
         {
             if (IsLeafNode)
             {
-                NormalizedWeightMetric = (WeightMetric - min) / scale;
+                NormalizedWeightMetric = (WeightMetric - min) / range;
             }
 
             foreach (var child in Children)
             {
-                child.NormalizeWeightMetrics(min, scale);
+                child.NormalizeWeightMetrics(min, range);
             }
         }
 

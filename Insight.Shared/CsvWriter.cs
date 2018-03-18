@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -26,6 +25,11 @@ namespace Insight.Shared
 
         public void Process<T>(List<T> items, Action<string> writeLine)
         {
+            if (items.Any() == false)
+            {
+                return;
+            }
+
             var type = items.First().GetType();
 
             var propertyInfos = type.GetProperties();
