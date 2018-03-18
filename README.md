@@ -75,7 +75,8 @@ If you use TortoiseSVN take care that the "Command line client tools" are instal
 
 * Start Binaries\Insight.exe
 * Click Setup and select the root folder of the project you want to analyze. Also, specify a cache directory. Create an empty directory for each project you want to analyze. The application uses this directory to cache files downloaded from the version control and uses it as output directory for CSV exports.
-* Click Sync to update the working copy of your project and calculate some metrics of the files in the project directory.
+* Click Sync to obtain the history from the version control and calculate some metrics for the files in the project directory. All collected information is stored in the Cache directory and is used later.
+Before you click Sync your working copy should be up to date.
 * Now the functions in the Analysis group are available.
 
 # Resources
