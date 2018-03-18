@@ -100,6 +100,7 @@
     <Compile Include="BackgroundExecution.cs" />
     <Compile Include="Builder\CodeAgeBuilder.cs" />
     <Compile Include="Builder\FragmentationBuilder.cs" />
+    <Compile Include="Dto\DataGridFriendlyArtifactBasic.cs" />
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="ProgressService.cs" />

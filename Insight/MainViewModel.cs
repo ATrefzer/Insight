@@ -54,15 +54,16 @@ namespace Insight
             AboutCommand = new DelegateCommand(AboutClick);
         }
 
-     
-
-        public ICommand CodeAgeCommand { get; set; }
-
         public ICommand AboutCommand { get; set; }
 
         public ICommand ChangeCouplingCommand { get; set; }
 
+
+        public ICommand CodeAgeCommand { get; set; }
+
         public ICommand CommentsCommand { get; set; }
+
+        public ICommand FragmentationCommand { get; set; }
 
         public ICommand HotspotsCommand { get; set; }
 
@@ -101,8 +102,6 @@ namespace Insight
         }
 
         public ICommand UpdateCommand { get; set; }
-
-        public ICommand FragmentationCommand { get; set; }
 
         public void OnShowChangeCouplingChord(List<Coupling> args)
         {
@@ -162,10 +161,21 @@ namespace Insight
             _tabBuilder.ShowChangeCoupling(couplings);
         }
 
+        private async void CodeAgeClick()
+        {
+            // Analyze hotspots from summary and code metrics
+            var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
+            var colorScheme = context.ColorScheme;
+
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowWarnings(_analyzer.Warnings);
+        }
+
         private async void CommentsClick()
         {
             var comments = await _backgroundExecution.ExecuteAsync(_analyzer.ExportComments);
-            _tabBuilder.ShowText<DataGridFriendlyComment>(comments, "Comments");
+            _tabBuilder.ShowText(comments, "Comments");
         }
 
         private EdgeData CreateEdgeData(Coupling coupling)
@@ -175,6 +185,26 @@ namespace Insight
                            Node1DisplayName = GetVertexName(coupling.Item1),
                            Node2DisplayName = GetVertexName(coupling.Item2)
                    };
+        }
+
+        private async void FragmentationClick()
+        {
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
+            var colorScheme = context.ColorScheme;
+
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands(colorScheme));
+
+            //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
+        }
+
+        private HierarchicalDataCommands GetDefaultCommands(ColorScheme colorScheme)
+        {
+            var commands = new HierarchicalDataCommands();
+            commands.Register("Trend", OnShowTrend);
+            commands.Register("Work", data => OnShowWork(data, colorScheme));
+
+            return commands;
         }
 
         private string GetVertexName(string path)
@@ -196,32 +226,18 @@ namespace Insight
             // Analyze hotspots from summary and code metrics
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
             var colorScheme = context.ColorScheme;
-            
+
             _tabBuilder.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands(colorScheme));
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
-        enum HierarchicalCommandOptions
-        {
-            Trend,
-            Work,
-        }
-        HierarchicalDataCommands GetDefaultCommands(ColorScheme colorScheme)
-        {
-            var commands = new HierarchicalDataCommands();
-            commands.Register("Trend", OnShowTrend);
-            commands.Register("Work", data => OnShowWork(data, colorScheme));
-
-            return commands;
-        }
-
         private async void KnowledgeClick()
         {
-            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());            
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands(colorScheme));       
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands(colorScheme));
         }
 
@@ -230,34 +246,15 @@ namespace Insight
             var mainDevelopers = _analyzer.GetMainDevelopers();
             var forDeveloper = _viewController.SelectDeveloper(mainDevelopers);
             if (forDeveloper == null)
+            {
                 return;
+            }
 
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper));
             var colorScheme = context.ColorScheme;
 
             _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands(colorScheme));
-        }
-
-        private async void FragmentationClick()
-        {
-            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
-            var colorScheme = context.ColorScheme;
-        
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands(colorScheme));
-            //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
-        }
-
-        private async void CodeAgeClick()
-        {
-            // Analyze hotspots from summary and code metrics
-            var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
-            var colorScheme = context.ColorScheme;
-      
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
         private void LoadDataClick()
@@ -347,7 +344,8 @@ namespace Insight
         private async void SummaryClick()
         {
             var summary = await _backgroundExecution.ExecuteAsync(_analyzer.ExportSummary);
-            _tabBuilder.ShowText<DataGridFriendlyArtifact>(summary, "Summary");
+
+            _tabBuilder.ShowText(summary, "Summary");
         }
 
         private async void UpdateClick()
@@ -363,12 +361,10 @@ namespace Insight
             // Contributions may be too much if using svn.
             var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
 
-            await _backgroundExecution.ExecuteWithProgressAsync((progress) => _analyzer.UpdateCache(progress, includeContributions));
+            await _backgroundExecution.ExecuteWithProgressAsync(progress => _analyzer.UpdateCache(progress, includeContributions));
 
             _analyzer.Clear();
             _tabs.Clear();
         }
-
-      
     }
 }

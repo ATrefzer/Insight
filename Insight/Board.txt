@@ -2,7 +2,6 @@
 In Progress
 ---------------------------------------
 
-- Extend summary files
 - Global limits and constants (App config)
     - change coupling
     - Min Commits
@@ -24,7 +23,6 @@ In Progress
 ---------------------------------------
 Features and improvements
 ---------------------------------------
-- Knowledge loss for a single developer
 - Predict future => Save and compare summary files ( 2 Month)
     - How to calculate hotspots (normalized multiplication?)
 - Commits pro line statt absolute 
@@ -77,7 +75,6 @@ Chord
 Low prio, fun
 ---------------------------------------
 
-- get rid of ConvexHull due to x86
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
 - Use WritableBitmap?
