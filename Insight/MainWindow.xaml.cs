@@ -17,7 +17,7 @@ namespace Insight
 
             var viewController = new ViewController(this);
             var analyzer = new Analyzer(project); // TODO create on the fly?
-            var dialogs = new Dialogs();
+            var dialogs = new DialogService();
             var progressService = new ProgressService(this);
             var backgroundExecution = new BackgroundExecution(progressService, dialogs);
 

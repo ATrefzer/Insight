@@ -1,9 +1,10 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
+
+using Insight.Dialogs;
 
 namespace Insight
 {
-    public class ProgressService
+    public sealed class ProgressService
     {
         private readonly MainWindow _mainWindow;
 

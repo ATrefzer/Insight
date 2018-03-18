@@ -10,9 +10,9 @@ namespace Insight
     public sealed class BackgroundExecution
     {
         private readonly ProgressService _progressService;
-        private readonly Dialogs _dialogs;
+        private readonly DialogService _dialogs;
 
-        public BackgroundExecution(ProgressService progressService, Dialogs dialogs)
+        public BackgroundExecution(ProgressService progressService, DialogService dialogs)
         {
             _progressService = progressService;
             _dialogs = dialogs;

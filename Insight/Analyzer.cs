@@ -277,11 +277,6 @@ namespace Insight
         internal List<string> GetMainDevelopers()
         {
             LoadContributions();
-            if (_contributions == null)
-            {
-                return new List<string>();
-            }
-
             return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
 

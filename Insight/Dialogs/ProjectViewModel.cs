@@ -7,13 +7,13 @@ using Insight.WpfCore;
 
 using Prism.Commands;
 
-namespace Insight
+namespace Insight.Dialogs
 {
     internal sealed class ProjectViewModel : CachedModelWrapper<Project>
     {
-        private readonly Dialogs _dialogs;
+        private readonly DialogService _dialogs;
 
-        public ProjectViewModel(Project project, Dialogs dialogs) : base(project)
+        public ProjectViewModel(Project project, DialogService dialogs) : base(project)
         {
             _dialogs = dialogs;
             UpdatAll();

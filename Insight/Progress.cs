@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows;
 
+using Insight.Dialogs;
+
 namespace Insight
 {
     public sealed class Progress : IDisposable

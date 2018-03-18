@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
+using Insight.Dialogs;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;

@@ -7,7 +7,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
-namespace Insight
+namespace Insight.Dialogs
 {
     internal sealed class TrendViewModel : ViewModelBase
     {

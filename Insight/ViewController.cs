@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 
+using Insight.Dialogs;
 using Insight.Shared.Model;
 
 namespace Insight
@@ -16,10 +16,9 @@ namespace Insight
             _mainWindow = mainWindow;
         }      
 
-        // TODO return a project
         public bool ShowProjectSettings(Project project)
         {
-            var viewModel = new ProjectViewModel(project, new Dialogs());
+            var viewModel = new ProjectViewModel(project, new DialogService());
             var view = new ProjectView();
             view.DataContext = viewModel;
             view.Owner = _mainWindow;
