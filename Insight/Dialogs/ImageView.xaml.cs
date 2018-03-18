@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Media.Imaging;
 
-namespace Insight
+namespace Insight.Dialogs
 {
     /// <summary>
     /// Interaction logic for ImageView.xaml

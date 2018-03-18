@@ -4,7 +4,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace Insight
 {
-    public sealed class Dialogs
+    public sealed class DialogService
     {
         public string GetDirectory(string initDirectory = null)
         {

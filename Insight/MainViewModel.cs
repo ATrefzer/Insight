@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Input;
 
-using Insight.Dto;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.ViewModels;
@@ -22,7 +21,7 @@ namespace Insight
     {
         private readonly Analyzer _analyzer;
         private readonly BackgroundExecution _backgroundExecution;
-        private readonly Dialogs _dialogs;
+        private readonly DialogService _dialogs;
         private readonly Project _project;
         private readonly TabBuilder _tabBuilder;
         private readonly ViewController _viewController;
@@ -30,7 +29,7 @@ namespace Insight
         private int _selectedIndex = -1;
         private ObservableCollection<TabContentViewModel> _tabs = new ObservableCollection<TabContentViewModel>();
 
-        public MainViewModel(ViewController viewController, Dialogs dialogs, Project project, Analyzer analyzer, BackgroundExecution backgroundExecution)
+        public MainViewModel(ViewController viewController, DialogService dialogs, Project project, Analyzer analyzer, BackgroundExecution backgroundExecution)
         {
             _tabBuilder = new TabBuilder(this);
             _viewController = viewController;
@@ -207,6 +206,23 @@ namespace Insight
             return commands;
         }
 
+        private string GetDeveloperForKnowledgeLoss()
+        {
+            string forDeveloper;
+            try
+            {
+                var mainDevelopers = _analyzer.GetMainDevelopers();
+                forDeveloper = _viewController.SelectDeveloper(mainDevelopers);
+            }
+            catch (Exception ex)
+            {
+                _dialogs.ShowError(ex.Message);
+                forDeveloper = null;
+            }
+
+            return forDeveloper;
+        }
+
         private string GetVertexName(string path)
         {
             var lastBackSlash = path.LastIndexOf('\\');
@@ -235,6 +251,11 @@ namespace Insight
         private async void KnowledgeClick()
         {
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());
+            if (context == null)
+            {
+                return;
+            }
+
             var colorScheme = context.ColorScheme;
 
             _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands(colorScheme));
@@ -243,14 +264,18 @@ namespace Insight
 
         private async void KnowledgeLossClick()
         {
-            var mainDevelopers = _analyzer.GetMainDevelopers();
-            var forDeveloper = _viewController.SelectDeveloper(mainDevelopers);
+            var forDeveloper = GetDeveloperForKnowledgeLoss();
             if (forDeveloper == null)
             {
                 return;
             }
 
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper));
+            if (context == null)
+            {
+                return;
+            }
+
             var colorScheme = context.ColorScheme;
 
             _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands(colorScheme));

@@ -1,32 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 using Insight.Analyzers;
 
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 
 namespace Tests
 {
-   
-
     [TestFixture]
-    sealed class FractalValueTests
+    internal sealed class FractalValueTests
     {
         [Test]
         public void UnderstandingTheFomrula()
-        {            
-            var developerToContribution = new Dictionary<string, uint>();
+        {
+            Dictionary<string, uint> developerToContribution;
             double value;
-          
+
             // The higher the number the more "fractalized"
             // The more developers the higher the number gets.
             // However: Some (very) small contributions make the number smaller.
-
 
             // 0
             developerToContribution = new Dictionary<string, uint>();
@@ -83,7 +74,5 @@ namespace Tests
             developerToContribution.Add("D", 1);
             value = FractalValue.Calculate(developerToContribution);
         }
-
-
     }
 }

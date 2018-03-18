@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Windows.Interop;
 
-namespace Insight
+namespace Insight.Dialogs
 {
     /// <summary>
     /// Interaction logic for ProgressViewxaml.xaml

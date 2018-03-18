@@ -1,6 +1,6 @@
 ﻿using Insight.ViewModels;
 
-namespace Insight
+namespace Insight.Dialogs
 {
     public sealed class ImageViewModel : TabContentViewModel
     {

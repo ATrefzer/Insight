@@ -38,9 +38,7 @@ namespace Visualization.Controls
             return true;
         }
 
-        /// <summary>
-        /// Note: Action<List<object>> is accepted
-        /// </summary>
+        // Note: Action<List<object>> is accepted
         public void Register(string label, Action<List<T>> action)
         {
             var menuItem = new MenuItem();

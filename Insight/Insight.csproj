@@ -104,42 +104,42 @@
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="ProgressService.cs" />
-    <Compile Include="SelectDeveloperView.xaml.cs">
+    <Compile Include="Dialogs\SelectDeveloperView.xaml.cs">
       <DependentUpon>SelectDeveloperView.xaml</DependentUpon>
     </Compile>
     <Compile Include="TabBuilder.cs" />
     <Compile Include="ViewController.cs" />
     <Compile Include="ViewModels\ChordViewModel.cs" />
     <Compile Include="ViewModels\CirclePackingViewModel.cs" />
-    <Compile Include="ImageView.xaml.cs">
+    <Compile Include="Dialogs\ImageView.xaml.cs">
       <DependentUpon>ImageView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ImageViewModel.cs" />
+    <Compile Include="Dialogs\ImageViewModel.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="ViewModels\TabContentViewModel.cs" />
     <Compile Include="ViewModels\TableViewModel.cs" />
     <Compile Include="ViewModels\TreeMapViewModel.cs" />
-    <Compile Include="TrendViewModel.cs" />
+    <Compile Include="Dialogs\TrendViewModel.cs" />
     <Compile Include="Dto\DataGridFriendlyArtifact.cs" />
     <Compile Include="Strings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
-    <Compile Include="TrendView.xaml.cs">
+    <Compile Include="Dialogs\TrendView.xaml.cs">
       <DependentUpon>TrendView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs.cs" />
+    <Compile Include="DialogService.cs" />
     <Compile Include="MainViewModel.cs" />
-    <Compile Include="ProgressView.xaml.cs">
+    <Compile Include="Dialogs\ProgressView.xaml.cs">
       <DependentUpon>ProgressView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ProviderDescription.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="ProjectView.xaml.cs">
+    <Compile Include="Dialogs\ProjectView.xaml.cs">
       <DependentUpon>ProjectView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ProjectViewModel.cs" />
+    <Compile Include="Dialogs\ProjectViewModel.cs" />
     <Compile Include="WpfCore\ModelWrapper.cs" />
     <Compile Include="WpfCore\CachedModelWrapper.cs" />
     <Compile Include="WpfCore\NotifyDataErrorInfoBase.cs" />
@@ -148,15 +148,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ImageView.xaml">
+    <Page Include="Dialogs\ImageView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="SelectDeveloperView.xaml">
+    <Page Include="Dialogs\SelectDeveloperView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="TrendView.xaml">
+    <Page Include="Dialogs\TrendView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -176,11 +176,11 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="ProgressView.xaml">
+    <Page Include="Dialogs\ProgressView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ProjectView.xaml">
+    <Page Include="Dialogs\ProjectView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

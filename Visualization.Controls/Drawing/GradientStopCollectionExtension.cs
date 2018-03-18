@@ -7,8 +7,8 @@ namespace Visualization.Controls.Drawing
     {
         public static Color GetRelativeColor(this GradientStopCollection gsc, double offset)
         {
-            var before = gsc.Where(w => w.Offset == gsc.Min(m => m.Offset)).First();
-            var after = gsc.Where(w => w.Offset == gsc.Max(m => m.Offset)).First();
+            var before = gsc.First(w => w.Offset == gsc.Min(m => m.Offset));
+            var after = gsc.First(w => w.Offset == gsc.Max(m => m.Offset));
 
             foreach (var gs in gsc)
             {

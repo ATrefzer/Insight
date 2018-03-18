@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace Insight
+namespace Insight.Dialogs
 {
     /// <summary>
     /// Interaction logic for DetailGraph.xaml
