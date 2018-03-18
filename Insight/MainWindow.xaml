@@ -73,6 +73,10 @@
                                   SmallImageSource="Resources/knowledge-transfer_16.png"
                                   Label="{x:Static local:Strings.Knowledge}"
                                   Command="{Binding KnowledgeCommand}"/>
+                    <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
+                                  SmallImageSource="Resources/knowledge-transfer_16.png"
+                                  Label="{x:Static local:Strings.KnowledgeLoss}"
+                                  Command="{Binding KnowledgeLossCommand}"/>
                     <RibbonButton LargeImageSource="Resources/pie-graph-split_64.png"
                                   SmallImageSource="Resources/pie-graph-split_16.png"
                                   Label="{x:Static local:Strings.Work}"

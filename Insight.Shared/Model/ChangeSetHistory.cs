@@ -8,8 +8,6 @@ namespace Insight.Shared.Model
     [Serializable]
     public sealed class ChangeSetHistory
     {
-        private readonly int WORKITEM_LIMIT = 3;
-
         public ChangeSetHistory(List<ChangeSet> changeSets)
         {
             ChangeSets = changeSets;

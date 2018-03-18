@@ -238,4 +238,13 @@ Do you want to proceed?</value>
     <value>Paths
 (Include)</value>
   </data>
+  <data name="KnowledgeLoss" xml:space="preserve">
+    <value>Knowledge Loss</value>
+  </data>
+  <data name="SelectDeveloper" xml:space="preserve">
+    <value>Select the developer for knowledge loss</value>
+  </data>
+  <data name="SelectDeveloperTitle" xml:space="preserve">
+    <value>Select developer</value>
+  </data>
 </root>

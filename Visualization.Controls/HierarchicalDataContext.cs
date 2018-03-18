@@ -10,6 +10,11 @@ namespace Visualization.Controls
             ColorScheme = colorScheme;
         }
 
+        public HierarchicalDataContext Clone()
+        {
+            return new HierarchicalDataContext(Data.Clone(), ColorScheme);
+        }
+
         public HierarchicalDataContext(HierarchicalData data)
         {
             Data = data;

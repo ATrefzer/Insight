@@ -103,6 +103,9 @@
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="ProgressService.cs" />
+    <Compile Include="SelectDeveloperView.xaml.cs">
+      <DependentUpon>SelectDeveloperView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TabBuilder.cs" />
     <Compile Include="ViewController.cs" />
     <Compile Include="ViewModels\ChordViewModel.cs" />
@@ -145,6 +148,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ImageView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SelectDeveloperView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -49,7 +50,37 @@ namespace Insight
         }
 
 
-        public void ShowHierarchicalData(HierarchicalDataContext context, string title)
+        //public void ShowHierarchicalData(HierarchicalDataContext context, string title)
+        //{
+        //    // Note: The same color scheme is used for both treemap and circle packing.
+        //    if (context == null)
+        //    {
+        //        return;
+        //    }
+
+        //    var colorScheme = context.ColorScheme;
+
+
+        //    var cp = new CirclePackingViewModel();
+        //    var commands = new HierarchicalDataCommands();
+        //    commands.Register("Trend", _mainViewModel.OnShowTrend);
+        //    commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
+        //    cp.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
+        //    cp.Title = title + " (Circle)";
+        //    cp.Commands = commands;
+        //    ShowTab(cp, true);
+
+        //    var tm = new TreeMapViewModel();
+        //    commands = new HierarchicalDataCommands();
+        //    commands.Register("Trend", _mainViewModel.OnShowTrend);
+        //    commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
+        //    tm.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
+        //    tm.Title = title + " (Treemap)";
+        //    tm.Commands = commands;
+        //    ShowTab(tm, false);
+        //}
+
+        public void ShowHierarchicalDataAsCirclePackaging(string title, HierarchicalDataContext context, HierarchicalDataCommands commands)
         {
             // Note: The same color scheme is used for both treemap and circle packing.
             if (context == null)
@@ -61,23 +92,31 @@ namespace Insight
 
 
             var cp = new CirclePackingViewModel();
-            var commands = new HierarchicalDataCommands();
-            commands.Register("Trend", _mainViewModel.OnShowTrend);
-            commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
-            cp.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
+            cp.Commands = commands;
+            cp.Data = context;
             cp.Title = title + " (Circle)";
             cp.Commands = commands;
             ShowTab(cp, true);
+        }
+
+        public void ShowHierarchicalDataAsTreeMap(string title, HierarchicalDataContext context, HierarchicalDataCommands commands)
+        {
+            // Note: The same color scheme is used for both treemap and circle packing.
+            if (context == null)
+            {
+                return;
+            }
+
+            var colorScheme = context.ColorScheme;
 
             var tm = new TreeMapViewModel();
-            commands = new HierarchicalDataCommands();
-            commands.Register("Trend", _mainViewModel.OnShowTrend);
-            commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
-            tm.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
+            tm.Commands = commands;
+            tm.Data = context;
             tm.Title = title + " (Treemap)";
             tm.Commands = commands;
             ShowTab(tm, false);
         }
+
 
         public void ShowImage(BitmapImage bitmapImage)
         {
