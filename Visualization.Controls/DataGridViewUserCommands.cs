@@ -38,6 +38,9 @@ namespace Visualization.Controls
             return true;
         }
 
+        /// <summary>
+        /// Note: Action<List<object>> is accepted
+        /// </summary>
         public void Register(string label, Action<List<T>> action)
         {
             var menuItem = new MenuItem();
@@ -48,6 +51,8 @@ namespace Visualization.Controls
         private void OnMenuClick(MenuItem item, List<T> selectedItems)
         {
             var action = _menuItemToAction[item];
+
+            // To list of object works, so the action can be of type Action<List<object>>
             action.Invoke(selectedItems);
         }
     }

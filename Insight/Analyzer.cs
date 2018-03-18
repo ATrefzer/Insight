@@ -23,7 +23,11 @@ namespace Insight
 {
     public sealed class Analyzer
     {
+        /// <summary>
+        /// Local path to contribution
+        /// </summary>
         private Dictionary<string, Contribution> _contributions;
+
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
 
@@ -64,6 +68,24 @@ namespace Insight
 
             var builder = new CodeAgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
+            return new HierarchicalDataContext(hierarchicalData);
+        }
+
+        /// <summary>
+        /// Analyzes the fragmentation per file.
+        /// </summary>
+        public HierarchicalDataContext AnalyzeFragmentation()
+        {
+            LoadHistory();
+            LoadMetrics();
+            LoadContributions();
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var fileToFractalValue = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
+
+            var builder = new FragmentationBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics, fileToFractalValue);
+
             return new HierarchicalDataContext(hierarchicalData);
         }
 
@@ -147,24 +169,6 @@ namespace Insight
             return trend;
         }
 
-        /// <summary>
-        /// Analyzes the fragmentation per file.
-        /// </summary>
-        public HierarchicalDataContext AnalyzeFragmentation()
-        {
-            LoadHistory();
-            LoadMetrics();
-            LoadContributions();
-
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
-            var fileToFractalValue = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
-
-            var builder = new FragmentationBuilder();
-            var hierarchicalData = builder.Build(summary, _metrics, fileToFractalValue);
-
-            return new HierarchicalDataContext(hierarchicalData);
-        }
-
         public string AnalyzeWorkOnSingleFile(string fileName, ColorScheme colorScheme)
         {
             Debug.Assert(colorScheme != null);
@@ -220,38 +224,20 @@ namespace Insight
             return result;
         }
 
-        internal List<string> GetMainDevelopers()
-        {
-            LoadContributions();
-            if (_contributions == null)
-                return new List<string>();
-
-            return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
-        }
-
-        public List<DataGridFriendlyArtifact> ExportSummary()
+        public List<object> ExportSummary()
         {
             LoadHistory();
             LoadMetrics();
+            LoadContributions(true); // silent
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
 
-            var gridData = new List<DataGridFriendlyArtifact>();
+            var gridData = new List<object>();
             foreach (var artifact in summary)
             {
                 var metricKey = artifact.LocalPath.ToLowerInvariant();
                 var loc = _metrics.ContainsKey(metricKey) ? _metrics[metricKey].Code : 0;
-                gridData.Add(
-                             new DataGridFriendlyArtifact
-                             {
-                                     LocalPath = artifact.LocalPath,
-                                     Revision = artifact.Revision,
-                                     Commits = artifact.Commits,
-                                     Committers = artifact.Committers.Count,
-                                     LOC = loc,
-                                     WorkItems = artifact.WorkItems.Count,
-                                     CodeAge_Days = (DateTime.Now - artifact.Date).Days
-                             });
+                gridData.Add(CreateDataGridFriendlyArtifact(artifact, loc));
             }
 
             Csv.Write(Path.Combine(Project.Cache, "summary.csv"), gridData);
@@ -261,12 +247,14 @@ namespace Insight
         public void UpdateCache(Progress progress, bool includeContributions)
         {
             progress.Message("Updating source control history.");
+
             // Note: You should have the latest code locally such that history and metrics match!
             // Update svn history
             var svnProvider = Project.CreateProvider();
             svnProvider.UpdateCache();
 
             progress.Message("Updating code metrics.");
+
             // Update code metrics
             var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
             metricProvider.UpdateCache();
@@ -284,6 +272,17 @@ namespace Insight
             _history = null;
             _metrics = null;
             _contributions = null;
+        }
+
+        internal List<string> GetMainDevelopers()
+        {
+            LoadContributions();
+            if (_contributions == null)
+            {
+                return new List<string>();
+            }
+
+            return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
 
         private static string ClassifyDirectory(string localPath)
@@ -309,6 +308,15 @@ namespace Insight
             return string.Empty;
         }
 
+        private void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
+        {
+            // order such that same developers get same colors regardless of order.
+            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
+            {
+                colorMapping.AddColorKey(developer);
+            }
+        }
+
         private Dictionary<string, Contribution> CalculateContributionsParallel(Progress progress, List<Artifact> summary)
         {
             // Calculate main developer for each file
@@ -327,7 +335,8 @@ namespace Insight
 
                                  // Progress
                                  var count = fileToContribution.Count;
-                                // if (count % 10 == 0)
+
+                                 // if (count % 10 == 0)
                                  {
                                      progress.Message($"Calculating work {count}/{all}");
                                  }
@@ -336,26 +345,58 @@ namespace Insight
             return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
         }
 
+        private object CreateDataGridFriendlyArtifact(Artifact artifact, int loc)
+        {
+            if (_contributions != null)
+            {
+                var result = new DataGridFriendlyArtifact();
+                var artifactContribution = _contributions[artifact.LocalPath.ToLowerInvariant()];
+                var mainDev = artifactContribution.GetMainDeveloper();
+
+                result.LocalPath = artifact.LocalPath;
+                result.Revision = artifact.Revision;
+                result.Commits = artifact.Commits;
+                result.Committers = artifact.Committers.Count;
+                result.LOC = loc;
+                result.WorkItems = artifact.WorkItems.Count;
+                result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
+
+                // Work related information
+                result.FractalValue = artifactContribution.CalculateFractalValue();
+                result.MainDev = mainDev.Developer;
+                result.MainDevPercent = mainDev.Percent;
+                return result;
+            }
+            else
+            {
+                var result = new DataGridFriendlyArtifactBasic();
+                result.LocalPath = artifact.LocalPath;
+                result.Revision = artifact.Revision;
+                result.Commits = artifact.Commits;
+                result.Committers = artifact.Committers.Count;
+                result.LOC = loc;
+                result.WorkItems = artifact.WorkItems.Count;
+                result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
+                return result;
+            }
+        }
+
         private string GetPathToContributionFile()
         {
             return Path.Combine(Project.Cache, "contribution_analysis.json");
         }
 
-        private void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
-        {
-            // order such that same developers get same colors regardless of order.
-            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
-            {
-                colorMapping.AddColorKey(developer);
-            }
-        }
-
-        private void LoadContributions()
+        private void LoadContributions(bool silent = false)
         {
             if (_contributions == null)
             {
                 if (File.Exists(GetPathToContributionFile()) == false)
                 {
+                    if (silent)
+                    {
+                        return;
+                    }
+
                     throw new Exception($"The file '{GetPathToContributionFile()}' was not found. Please click Sync to create it.");
                 }
 

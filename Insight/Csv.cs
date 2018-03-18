@@ -18,11 +18,11 @@ namespace Insight
             writer.ToCsv(csvFile, couplings);
         }
 
-        public static void Write(string csvFile, List<DataGridFriendlyArtifact> artifacts)
+        public static void Write(string csvFile, List<DataGridFriendlyArtifact> artifactsBase)
         {
             var writer = new CsvWriter();
             writer.Header = true;
-            writer.ToCsv(csvFile, artifacts);
+            writer.ToCsv(csvFile, artifactsBase);
         }
 
         public static void Write(string csvFile, List<DataGridFriendlyComment> comments)
@@ -30,6 +30,13 @@ namespace Insight
             var writer = new CsvWriter();
             writer.Header = true;
             writer.ToCsv(csvFile, comments);
+        }
+
+        public static void Write(string csvFile, List<object> data)
+        {
+            var writer = new CsvWriter();
+            writer.Header = true;
+            writer.ToCsv(csvFile, data);
         }
     }
 }

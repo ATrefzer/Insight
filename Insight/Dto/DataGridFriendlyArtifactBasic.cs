@@ -2,10 +2,7 @@
 
 namespace Insight.Dto
 {
-    /// <summary>
-    /// Copied base class attributes to control order in data grid / csv
-    /// </summary>
-    public sealed class DataGridFriendlyArtifact
+    public class DataGridFriendlyArtifactBasic
     {
         public Id Revision { get; set; }
         public string LocalPath { get; set; }
@@ -14,12 +11,5 @@ namespace Insight.Dto
         public int LOC { get; set; }
         public int WorkItems { get; set; }
         public int CodeAge_Days { get; set; }
-
-        // All worker related information
-        public double FractalValue { get; set; }
-        public string MainDev { get; set; }
-        public double MainDevPercent { get; set; }
     }
-
-   
 }

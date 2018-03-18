@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
+
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
@@ -49,37 +49,6 @@ namespace Insight
             ShowTab(descr, true);
         }
 
-
-        //public void ShowHierarchicalData(HierarchicalDataContext context, string title)
-        //{
-        //    // Note: The same color scheme is used for both treemap and circle packing.
-        //    if (context == null)
-        //    {
-        //        return;
-        //    }
-
-        //    var colorScheme = context.ColorScheme;
-
-
-        //    var cp = new CirclePackingViewModel();
-        //    var commands = new HierarchicalDataCommands();
-        //    commands.Register("Trend", _mainViewModel.OnShowTrend);
-        //    commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
-        //    cp.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
-        //    cp.Title = title + " (Circle)";
-        //    cp.Commands = commands;
-        //    ShowTab(cp, true);
-
-        //    var tm = new TreeMapViewModel();
-        //    commands = new HierarchicalDataCommands();
-        //    commands.Register("Trend", _mainViewModel.OnShowTrend);
-        //    commands.Register("Work", data => _mainViewModel.OnShowWork(data, colorScheme));
-        //    tm.Data = new HierarchicalDataContext(context.Data.Clone(), context.ColorScheme);
-        //    tm.Title = title + " (Treemap)";
-        //    tm.Commands = commands;
-        //    ShowTab(tm, false);
-        //}
-
         public void ShowHierarchicalDataAsCirclePackaging(string title, HierarchicalDataContext context, HierarchicalDataCommands commands)
         {
             // Note: The same color scheme is used for both treemap and circle packing.
@@ -87,9 +56,6 @@ namespace Insight
             {
                 return;
             }
-
-            var colorScheme = context.ColorScheme;
-
 
             var cp = new CirclePackingViewModel();
             cp.Commands = commands;
@@ -106,8 +72,6 @@ namespace Insight
             {
                 return;
             }
-
-            var colorScheme = context.ColorScheme;
 
             var tm = new TreeMapViewModel();
             tm.Commands = commands;
@@ -129,16 +93,18 @@ namespace Insight
         /// <summary>
         /// Data is a list of data transfer objects. Each property is shown as a column
         /// </summary>
-        public void ShowText<T>(object data, string title)
+        public void ShowText(object data, string title)
         {
-            var commands = new DataGridViewUserCommands<T>();
+            // You can specify the real type here (dto)! I chose object only because I don't know the type when
+            // calling this function.
+            var commands = new DataGridViewUserCommands<object>();
             commands.Register("To clipboard", args =>
-            {
-                var writer = new CsvWriter();
-                writer.Header = true;
-                var toClipboard = writer.ToCsv(args);
-                Clipboard.SetText(toClipboard);
-            });
+                                              {
+                                                  var writer = new CsvWriter();
+                                                  writer.Header = true;
+                                                  var toClipboard = writer.ToCsv(args);
+                                                  Clipboard.SetText(toClipboard);
+                                              });
 
             var descr = new TableViewModel();
             descr.Commands = commands;
