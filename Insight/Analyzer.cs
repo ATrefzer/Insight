@@ -100,6 +100,30 @@ namespace Insight
             return new HierarchicalDataContext(hierarchicalData, scheme);
         }
 
+        /// <summary>
+        /// Same as knowledge but uses a different color scheme
+        /// </summary>
+        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer)
+        {
+            LoadHistory();
+            LoadMetrics();
+            LoadContributions();
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
+
+            // Assign a color to each developer
+            // Include all other developers. So we have a more consistent coloring.
+            var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
+            var scheme = new ColorScheme(mainDevelopers.ToArray());
+
+            // Build the knowledge data
+            var builder = new KnowledgeBuilder(developer);
+            var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
+
+            return new HierarchicalDataContext(hierarchicalData, scheme);
+        }
+
         public List<TrendData> AnalyzeTrend(string localFile)
         {
             var trend = new List<TrendData>();
@@ -194,6 +218,15 @@ namespace Insight
 
             Csv.Write(Path.Combine(Project.Cache, "comments.csv"), result);
             return result;
+        }
+
+        internal List<string> GetMainDevelopers()
+        {
+            LoadContributions();
+            if (_contributions == null)
+                return new List<string>();
+
+            return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
 
         public List<DataGridFriendlyArtifact> ExportSummary()

@@ -215,6 +215,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Knowledge Loss.
+        /// </summary>
+        public static string KnowledgeLoss {
+            get {
+                return ResourceManager.GetString("KnowledgeLoss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lines of Code.
         /// </summary>
         public static string LinesOfCode {
@@ -294,6 +303,24 @@ namespace Insight {
         public static string Save {
             get {
                 return ResourceManager.GetString("Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the developer for knowledge loss.
+        /// </summary>
+        public static string SelectDeveloper {
+            get {
+                return ResourceManager.GetString("SelectDeveloper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select developer.
+        /// </summary>
+        public static string SelectDeveloperTitle {
+            get {
+                return ResourceManager.GetString("SelectDeveloperTitle", resourceCulture);
             }
         }
         

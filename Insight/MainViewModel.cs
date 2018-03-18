@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 
 using Insight.Dto;
 using Insight.Shared;
@@ -48,13 +47,14 @@ namespace Insight
             SummaryCommand = new DelegateCommand(SummaryClick);
             CommentsCommand = new DelegateCommand(CommentsClick);
             KnowledgeCommand = new DelegateCommand(KnowledgeClick);
+            KnowledgeLossCommand = new DelegateCommand(KnowledgeLossClick);
             HotspotsCommand = new DelegateCommand(HotspotsClick);
             CodeAgeCommand = new DelegateCommand(CodeAgeClick);
             ChangeCouplingCommand = new DelegateCommand(ChangeCouplingClick);
             AboutCommand = new DelegateCommand(AboutClick);
         }
 
-    
+     
 
         public ICommand CodeAgeCommand { get; set; }
 
@@ -69,6 +69,8 @@ namespace Insight
         public bool IsProjectValid => _project.IsValid();
 
         public ICommand KnowledgeCommand { get; set; }
+
+        public ICommand KnowledgeLossCommand { get; set; }
 
         public ICommand LoadDataCommand { get; set; }
 
@@ -192,44 +194,69 @@ namespace Insight
         private async void HotspotsClick()
         {
             // Analyze hotspots from summary and code metrics
-            var dataContext = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
-
-            _tabBuilder.ShowHierarchicalData(dataContext, "Hotspots");
+            var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
+            var colorScheme = context.ColorScheme;
+            
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands(colorScheme));
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
+        }
+
+        enum HierarchicalCommandOptions
+        {
+            Trend,
+            Work,
+        }
+        HierarchicalDataCommands GetDefaultCommands(ColorScheme colorScheme)
+        {
+            var commands = new HierarchicalDataCommands();
+            commands.Register("Trend", OnShowTrend);
+            commands.Register("Work", data => OnShowWork(data, colorScheme));
+
+            return commands;
         }
 
         private async void KnowledgeClick()
         {
-            //var directory = _dialogs.GetDirectory(_project.ProjectBase);
-            //if (string.IsNullOrEmpty(directory))
-            //{
-            //    return;
-            //}
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());            
+            var colorScheme = context.ColorScheme;
 
-            //if (!directory.StartsWith(_project.ProjectBase, StringComparison.OrdinalIgnoreCase))
-            //{
-            //    _dialogs.ShowError(Strings.ErrorDirectoryNotInProjectBase);
-            //    return;
-            //}
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands(colorScheme));       
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands(colorScheme));
+        }
 
-            var data = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());
-            _tabBuilder.ShowHierarchicalData(data, "Knowledge");
+        private async void KnowledgeLossClick()
+        {
+            var mainDevelopers = _analyzer.GetMainDevelopers();
+            var forDeveloper = _viewController.SelectDeveloper(mainDevelopers);
+            if (forDeveloper == null)
+                return;
+
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper));
+            var colorScheme = context.ColorScheme;
+
+            _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands(colorScheme));
         }
 
         private async void FragmentationClick()
         {
-
-            var data = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
-            _tabBuilder.ShowHierarchicalData(data, "Fragmentation");
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
+            var colorScheme = context.ColorScheme;
+        
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands(colorScheme));
             //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }
 
         private async void CodeAgeClick()
         {
             // Analyze hotspots from summary and code metrics
-            var dataContext = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
-
-            _tabBuilder.ShowHierarchicalData(dataContext, "Code Age");
+            var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
+            var colorScheme = context.ColorScheme;
+      
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands(colorScheme));
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
@@ -265,7 +292,8 @@ namespace Insight
                     }
 
                     var context = new HierarchicalDataContext(data, colorScheme);
-                    _tabBuilder.ShowHierarchicalData(context, "Loaded");
+                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), GetDefaultCommands(colorScheme));
+                    _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Loaded", context, GetDefaultCommands(colorScheme));
                 }
             }
             catch (Exception ex)

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 
 using Insight.Shared.Model;
@@ -52,6 +54,20 @@ namespace Insight
             details.Owner = _mainWindow;
             details.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             details.ShowDialog();
+        }
+
+        internal string SelectDeveloper(List<string> mainDevelopers)
+        {
+            if (!mainDevelopers.Any())
+                return null;
+
+            var view = new SelectDeveloperView();
+            view.SetDevelopers(mainDevelopers);
+            if (view.ShowDialog() == false)
+            {
+                return null;
+            }
+            return view.GetSelectedDeveloper();
         }
     }
 }
