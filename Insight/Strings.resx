@@ -247,4 +247,10 @@ Do you want to proceed?</value>
   <data name="SelectDeveloperTitle" xml:space="preserve">
     <value>Select developer</value>
   </data>
+  <data name="Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="ToClipboard" xml:space="preserve">
+    <value>To clipboard</value>
+  </data>
 </root>

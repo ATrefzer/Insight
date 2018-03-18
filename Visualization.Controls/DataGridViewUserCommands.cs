@@ -51,6 +51,8 @@ namespace Visualization.Controls
             var action = _menuItemToAction[item];
 
             // To list of object works, so the action can be of type Action<List<object>>
+            // This is because the HierarchicalDataViewBase calls OfType<T>
+            // So any base type is accepted.
             action.Invoke(selectedItems);
         }
     }

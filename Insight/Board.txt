@@ -9,22 +9,16 @@ In Progress
     - Code Age base
     => Coupling 20 Commits AND 50% degree!!!!
 
-- Try on different git projects
-- Warning if changed filters!
-- TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
-  after the filters are changed. More restrictive is ok!
-
-- If the contribution is available show them in the sumary csv.
-
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+
+- Try on different git projects
+
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 - Check why git history is deeper for some files.
 
 ---------------------------------------
 Features and improvements
 ---------------------------------------
-- Predict future => Save and compare summary files ( 2 Month)
-    - How to calculate hotspots (normalized multiplication?)
 - Commits pro line statt absolute 
 - Return when zooming
 - maybe PieChart
@@ -78,3 +72,7 @@ Low prio, fun
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
 - Use WritableBitmap?
+
+- Warning if changed filters!
+- TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
+  after the filters are changed. More restrictive is ok!

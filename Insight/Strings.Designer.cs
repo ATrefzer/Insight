@@ -380,6 +380,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to To clipboard.
+        /// </summary>
+        public static string ToClipboard {
+            get {
+                return ResourceManager.GetString("ToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tools.
         /// </summary>
         public static string Tools {
@@ -412,6 +421,15 @@ namespace Insight {
         public static string Visualize {
             get {
                 return ResourceManager.GetString("Visualize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        public static string Warning {
+            get {
+                return ResourceManager.GetString("Warning", resourceCulture);
             }
         }
         

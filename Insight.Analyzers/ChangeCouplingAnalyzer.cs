@@ -54,14 +54,14 @@ namespace Insight.Analyzers
             CalculateDegree();
 
             return _couplings.Values
-                             .Where(coupling => coupling.Couplings > Thresholds.MinCouplingForChangeCoupling)
+                             .Where(coupling => coupling.Couplings >= Thresholds.MinCouplingForChangeCoupling && coupling.Degree >= Thresholds.MinDegreeForChangeCoupling)
                              .OrderByDescending(coupling => coupling.Degree).ToList();
         }
 
         /// <summary>
         ///     If the classifier returns string.EMPTY the according file is not used.
         /// </summary>
-        public List<Coupling> CalculateChangeCouplings(ChangeSetHistory history, Func<string, string> classifier)
+        public List<Coupling> CalculateClassifiedChangeCouplings(ChangeSetHistory history, Func<string, string> classifier)
         {
             _couplings.Clear();
             _count.Clear();
@@ -87,7 +87,7 @@ namespace Insight.Analyzers
             CalculateDegree();
 
             return _couplings.Values
-                             .Where(coupling => coupling.Couplings > Thresholds.MinCouplingForChangeCoupling)
+                             .Where(coupling => coupling.Couplings >= Thresholds.MinCouplingForChangeCoupling && coupling.Degree >= Thresholds.MinDegreeForChangeCoupling)
                              .OrderByDescending(coupling => coupling.Degree).ToList();
         }
 
