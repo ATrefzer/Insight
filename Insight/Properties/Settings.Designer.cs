@@ -12,7 +12,7 @@ namespace Insight.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.5.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.6.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -106,5 +106,71 @@ namespace Insight.Properties {
                 this["PathsToInclude"] = value;
             }
         }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("200")]
+        public int MaxWorkItemsPerCommitForSummary
+        {
+            get
+            {
+                return ((int)(this["MaxWorkItemsPerCommitForSummary"]));
+            }
+        }
+
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int MinCommitsForHotspots
+        {
+            get
+            {
+                return ((int)(this["MinCommitsForHotspots"]));
+            }
+        }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int MinLinesOfCodeForHotspot
+        {
+            get
+            {
+                return ((int)(this["MinLinesOfCodeForHotspot"]));
+            }
+        }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
+        public int MaxItemsInChangesetForChangeCoupling
+        {
+            get
+            {
+                return ((int)(this["MaxItemsInChangesetForChangeCoupling"]));
+            }
+        }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        public int MinCouplingForChangeCoupling {
+            get {
+                return ((int)(this["MinCouplingForChangeCoupling"]));
+            }
+        }
+        
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public double MinDegreeForChangeCoupling {
+            get {
+                return ((double)(this["MinDegreeForChangeCoupling"]));
+            }
+        }
+        
+      
     }
 }
