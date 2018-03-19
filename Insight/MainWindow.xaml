@@ -10,8 +10,8 @@
               mc:Ignorable="d"
               Icon="Resources/Lightswitch.ico"
               Title="Insight"
-              Height="350"
-              Width="580"
+              Height="450"
+              Width="800"
               Closing="MainWindow_OnClosing">
     <DockPanel>
 
@@ -51,21 +51,21 @@
                     <RibbonButton LargeImageSource="Resources/settings_64.png"
                                   SmallImageSource="Resources/settings_16.png"
                                   Label="{x:Static local:Strings.Settings}"
-                                  Command="{Binding SetupCommand}" />
+                                  Command="{Binding SetupCommand}"/>
                     <RibbonButton LargeImageSource="Resources/sync_64.png"
                                   SmallImageSource="Resources/sync_16.png"
                                   Label="{x:Static local:Strings.UpdateCache}"
-                                  Command="{Binding UpdateCommand}" 
+                                  Command="{Binding UpdateCommand}"
                                   IsEnabled="{Binding IsProjectValid}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.Analysis}"
                              IsEnabled="{Binding IsProjectValid}">
-                 
+
                     <RibbonButton LargeImageSource="Resources/fire_64.png"
                                   SmallImageSource="Resources/fire_16.png"
                                   Label="{x:Static local:Strings.Hotspots}"
-                                  Command="{Binding HotspotsCommand}" />
+                                  Command="{Binding HotspotsCommand}"/>
                     <RibbonButton LargeImageSource="Resources/birds-in-love_64.png"
                                   SmallImageSource="Resources/birds-in-love_16.png"
                                   Label="{x:Static local:Strings.Coupling}"
@@ -88,7 +88,16 @@
                                   Command="{Binding CodeAgeCommand}"/>
                 </RibbonGroup>
 
-                <RibbonGroup Header="{x:Static local:Strings.Export}">
+                <RibbonGroup Header="{x:Static local:Strings.Predictions}"
+                             IsEnabled="{Binding IsProjectValid}">
+                    <RibbonButton LargeImageSource="Resources/crystal-ball_64.png"
+                                  SmallImageSource="Resources/crystal-ball_64.png"
+                                  Label="{x:Static local:Strings.FutureHotspots}"
+                                  Command="{Binding PredictHotspotsCommand}"/>
+                </RibbonGroup>
+
+                <RibbonGroup Header="{x:Static local:Strings.Export}"
+                             IsEnabled="{Binding IsProjectValid}">
                     <RibbonButton LargeImageSource="Resources/csv-file-format-extension_64.png"
                                   SmallImageSource="Resources/csv-file-format-extension_16.png"
                                   Label="{x:Static local:Strings.Summary}"
@@ -99,6 +108,7 @@
                                   Label="{x:Static local:Strings.Comments}"
                                   Command="{Binding CommentsCommand}"/>
                 </RibbonGroup>
+
             </RibbonTab>
         </Ribbon>
 
@@ -117,12 +127,13 @@
                     <!-- DataContext of parent (ContentPresenter) is ViewDescription. This is where CirclePackagingView DataContext binds to
                     As soon as we set the DataContext of the CirclePackagingView control UserCommands will use CirclePackagingView.DataContext. -->
                     <controls:CirclePackingView DataContext="{Binding Data}"
-                                                  UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                                                UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
                              Path=DataContext.Commands}"/>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type ViewModels:TableViewModel}">
-                    <controls:DataGridView DataContext="{Binding Data}" UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                    <controls:DataGridView DataContext="{Binding Data}"
+                                           UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
                              Path=DataContext.Commands}"/>
                 </DataTemplate>
 
