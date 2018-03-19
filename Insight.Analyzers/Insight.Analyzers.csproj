@@ -42,6 +42,8 @@
     <Compile Include="Contribution.cs" />
     <Compile Include="FractalValue.cs" />
     <Compile Include="HotspotCalculator.cs" />
+    <Compile Include="HotspotDelta.cs" />
+    <Compile Include="HotspotPredictor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TeamCommunicationAnalyzer.cs" />
     <Compile Include="ChangeCouplingAnalyzer.cs" />

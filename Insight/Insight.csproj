@@ -314,5 +314,9 @@
   <ItemGroup>
     <Resource Include="Resources\chat-comment_16.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\crystal-ball_16.png" />
+    <Resource Include="Resources\crystal-ball_64.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

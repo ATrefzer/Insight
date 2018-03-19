@@ -24,10 +24,14 @@ namespace Insight
             return dlg.FileName;
         }
 
-        public string GetLoadFile(string extension, string initDirectory = null)
+        /// <summary>
+        /// The extension is just the extension without any . or *
+        /// </summary>
+        public string GetLoadFile(string extension, string title, string initDirectory)
         {
             var dlg = new CommonOpenFileDialog();
             dlg.Multiselect = false;
+            dlg.Title = title;
 
             if (!string.IsNullOrEmpty(extension))
             {
@@ -50,7 +54,7 @@ namespace Insight
         /// <summary>
         /// I.e. xml, no .*!
         /// </summary>
-        public string GetSaveFile(string extension, string initDirectory = null)
+        public string GetSaveFile(string extension, string title, string initDirectory)
         {
             var dlg = new CommonSaveFileDialog();
 
@@ -63,6 +67,8 @@ namespace Insight
             {
                 dlg.InitialDirectory = initDirectory;
             }
+
+            dlg.Title = title;
 
             if (dlg.ShowDialog() != CommonFileDialogResult.Ok)
             {
