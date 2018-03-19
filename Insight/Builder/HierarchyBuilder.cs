@@ -36,7 +36,7 @@ namespace Insight.Builder
             var found = parent.Children.FirstOrDefault(child => child.Name == branch);
             if (found == null)
             {
-                var newBranch = new HierarchicalData(branch);
+                var newBranch = new HierarchicalData(branch, GetWeightIsAlreadyNormalized());
                 parent.AddChild(newBranch);
 
                 // Call when parent relation is set.
@@ -59,6 +59,15 @@ namespace Insight.Builder
             return 0.0;
         }
 
+        /// <summary>
+        /// Returns if the weight metric is already normalized or not. (For example fractal value)
+        /// Override only if the weight is normalized.
+        /// </summary>
+        protected virtual bool GetWeightIsAlreadyNormalized()
+        {
+            return false;
+        }
+
         protected virtual bool IsAccepted(Artifact item)
         {
             return true;
@@ -73,7 +82,7 @@ namespace Insight.Builder
         {
             // Later removed if not needed.
             // Note that the empty root node takes care that the / appears in front of every path.
-            var artificialRoot = new HierarchicalData("");
+            var artificialRoot = new HierarchicalData("", GetWeightIsAlreadyNormalized());
 
             foreach (var artifact in items)
             {
@@ -125,7 +134,7 @@ namespace Insight.Builder
                 return;
             }
 
-            var leaf = new HierarchicalData(leafName, GetArea(item), GetWeight(item));
+            var leaf = new HierarchicalData(leafName, GetArea(item), GetWeight(item), GetWeightIsAlreadyNormalized());
             leaf.Description = GetDescription(item);
             leaf.ColorKey = GetColorKey(item);
             leaf.Tag = item.LocalPath;

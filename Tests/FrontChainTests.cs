@@ -1,7 +1,6 @@
 ﻿using NUnit.Framework;
 
-using Visualization.Controls;
-using Visualization.Controls.CirclePackaging;
+using Visualization.Controls.CirclePacking;
 
 namespace Tests
 {

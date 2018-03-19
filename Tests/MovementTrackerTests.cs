@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 
@@ -10,60 +10,57 @@ namespace Tests
 {
     /// <summary>
     /// All tests read like this:
-    /// Commits happened from bottom to top, but process top down from the newest to the oldest commit.
+    /// Commits in the log happened from bottom to top, but are processed
+    /// top down from the newest to the oldest commit.
     /// </summary>
     [TestFixture]
     internal sealed class MovementTrackerTests
     {
         private MovementTracker _tracker;
+        private ChangeSet _currentChangeSet;
 
         [Test]
         public void CreateFileOnLocationOfDeletedFile()
         {
             // Act
             StartChangeSet();
-            var cs2 = Track_Add("location");
+            var ci2 = Track_Add(null, "location");
             EndChangeSet();
 
             StartChangeSet();
-            var cs1 = Track_Delete("location");
+            var ci1 = Track_Delete("location");
             EndChangeSet();
 
             StartChangeSet();
-            var cs0 = Track_Edit("location");
+            var ci0 = Track_Edit("location");
             EndChangeSet();
 
             // Assert
-            var id = cs2.Id.ToString();
-            Assert.AreNotEqual(id, cs1.Id.ToString());
-            var newIdd = cs1.Id.ToString();
+            var id = ci2.Id;
+            Assert.AreNotEqual(id, ci1.Id);
+            var oldId = ci1.Id;
 
-            Assert.AreEqual(newIdd, cs0.Id.ToString());
+            Assert.AreEqual(oldId, ci0.Id);
         }
-
-        // TODO 
-        // add as copy
-        // multiple copies as add
-
 
         [Test]
         public void CyclicRenaming_KeepsId()
         {
             StartChangeSet();
-            var cs2 = Track_Rename("location_yesterday", "location_now");
+            var ci2 = Track_Rename("location_yesterday", "location_now");
             EndChangeSet();
 
             StartChangeSet();
-            var cs1 = Track_Rename("location_now", "location_yesterday");
+            var ci1 = Track_Rename("location_now", "location_yesterday");
             EndChangeSet();
 
             StartChangeSet();
-            var cs0 = Track_Rename("location_yesterday", "location_now");
+            var ci0 = Track_Rename("location_yesterday", "location_now");
             EndChangeSet();
 
-            var id = cs2.Id.ToString();
-            Assert.AreEqual(id, cs1.Id.ToString());
-            Assert.AreEqual(id, cs0.Id.ToString());
+            var id = ci2.Id;
+            Assert.AreEqual(id, ci1.Id);
+            Assert.AreEqual(id, ci0.Id);
         }
 
 
@@ -71,15 +68,15 @@ namespace Tests
         public void DeletedItemIsTracked()
         {
             StartChangeSet();
-            var cs2 = Track_Delete("location");
+            var ci1 = Track_Delete("location");
             EndChangeSet();
 
             StartChangeSet();
-            var cs0 = Track_Edit("location");
+            var ci0 = Track_Edit("location");
             EndChangeSet();
 
-            var id = cs2.Id.ToString();
-            Assert.AreEqual(id, cs0.Id.ToString());
+            var id = ci1.Id;
+            Assert.AreEqual(id, ci0.Id);
         }
 
         [Test]
@@ -93,9 +90,12 @@ namespace Tests
                              FromServerPath = "unexpected"
                      };
 
+            StartChangeSet();
             Assert.Throws<ArgumentException>(() => tracker.TrackId(ci));
+            EndChangeSet();
         }
 
+        [Test]
         public void InvalidArguments_RenameHasNoPreviousServerPath()
         {
             var tracker = new MovementTracker();
@@ -105,7 +105,9 @@ namespace Tests
                              Kind = KindOfChange.Rename
                      };
 
+            StartChangeSet();
             Assert.Throws<ArgumentException>(() => tracker.TrackId(ci));
+            EndChangeSet();
         }
 
 
@@ -134,36 +136,37 @@ namespace Tests
             tracker.TrackId(ci);
             tracker.ApplyChangeSet(new List<ChangeItem>());
 
-            var id = ci.Id.ToString();
-            Assert.IsFalse(string.IsNullOrEmpty(id));
-            Assert.IsTrue(Guid.TryParse(id, out var uuid));
+            var id = ci.Id;
+            Assert.NotNull(id);
+            Assert.IsTrue(Guid.TryParse(id.ToString(), out var uuid)); // Is a uuid
         }
 
 
         [Test]
         public void Regression_DuplicatedKey()
         {
+            // Rename a file and add it again at the same location.
+
             StartChangeSet();
-            var cs3 = Track_Delete("bmp");
+            var ci3 = Track_Delete("bmp");
             EndChangeSet();
 
             StartChangeSet();
-            var cs2 = Track_Add("bmp");
+            var ci2 = Track_Add(null, "bmp");
             EndChangeSet();
 
             StartChangeSet();
-            var cs1 = Track_Rename("bmp", "ico");
+            var ci1 = Track_Rename("bmp", "ico");
             EndChangeSet();
 
             StartChangeSet();
-            var cs0 = Track_Add("bmp");
+            var ci0 = Track_Add(null, "bmp");
             EndChangeSet();
 
-            var id = cs3.Id.ToString();
-            Assert.AreEqual(id, cs2.Id.ToString());
-            Assert.AreNotEqual(id, cs1.Id.ToString());
-            var newIdd = cs1.Id.ToString();
-            Assert.AreEqual(newIdd, cs0.Id.ToString());
+            var id = ci3.Id;
+            Assert.AreEqual(id, ci2.Id);
+            Assert.AreNotEqual(id, ci1.Id);
+            Assert.AreEqual(ci1.Id, ci0.Id);
         }
 
         [Test]
@@ -171,45 +174,43 @@ namespace Tests
         {
             // Act
             StartChangeSet();
-            var cs3 = Track_Add("file");
+            var ci2 = Track_Add(null, "file");
             EndChangeSet();
 
             StartChangeSet();
-
-            // Move file away so we can create a new version at this location in c3.
-            var cs2 = Track_Rename("file", "somewhere_else");
+            // Move file away so we can create a new version at this location in ci2.
+            var ci1 = Track_Rename("file", "somewhere_else");
             EndChangeSet();
 
             StartChangeSet();
-            var cs1 = Track_Add("file");
+            var ci0 = Track_Add(null, "file");
             EndChangeSet();
 
             // Assert
-            var id = cs3.Id.ToString();
-            Assert.AreNotEqual(id, cs2.Id.ToString());
-            var newId = cs2.Id.ToString();
-            Assert.AreEqual(newId, cs1.Id.ToString());
+            var id = ci2.Id;
+            Assert.AreNotEqual(id, ci1.Id);
+            Assert.AreEqual(ci1.Id, ci0.Id);
         }
 
         [Test]
         public void RenamedItemIsTracked()
         {
             StartChangeSet();
-            var cs2 = Track_Rename("location_yesterday", "location_now");
+            var ci2 = Track_Rename("location_yesterday", "location_now");
             EndChangeSet();
 
             StartChangeSet();
-            var cs1 = Track_Edit("location_yesterday");
+            var ci1 = Track_Edit("location_yesterday");
             EndChangeSet();
 
             StartChangeSet();
-            var cs0 = Track_Rename("location_very_old", "location_yesterday");
+            var ci0 = Track_Rename("location_very_old", "location_yesterday");
             EndChangeSet();
 
             // Assert
-            var id = cs2.Id.ToString();
-            Assert.AreEqual(id, cs1.Id.ToString());
-            Assert.AreEqual(id, cs0.Id.ToString());
+            var id = ci2.Id;
+            Assert.AreEqual(id, ci1.Id);
+            Assert.AreEqual(id, ci0.Id);
         }
 
 
@@ -219,30 +220,112 @@ namespace Tests
             _tracker = new MovementTracker();
         }
 
-        // TODO
+        
         [Test]
-        public void Svn_AddDelete_IsReplaceByMove1()
+        public void Svn_AddDelete_IsReplacedByMove()
         {
             StartChangeSet();
-            var cs2 = Track_Delete("location_yesterday");
-            var cs1 = Track_Add("location_yesterday", "location_now");
+            var ci2 = Track_Delete("location_yesterday");
+            var ci1 = Track_Add("location_yesterday", "location_now");
             var cs = EndChangeSet();
+
+            Assert.AreEqual(1, cs.Count);
+            Assert.AreEqual(1, _tracker.Warnings.Count);
+            Assert.AreEqual(KindOfChange.Rename, cs.Single().Kind);
         }
 
-        //    var cs0 = Track_Edit("location_yesterday");
-        //    _tracker.ApplyChangeSet(result);
+        [Test]
+        public void Svn_AddDelete_IsReplacedByMove_Distinguishes()
+        {
+            // Recognises this case also if it occurs multiple times in the change set
+            StartChangeSet();
+            var ci3 = Track_Delete("from_location2");
+            var ci2 = Track_Add("from_location2", "now_location2" ); 
+            var ci1 = Track_Delete("from_location1");
+            var ci0 = Track_Add("from_location1", "now_location1"); 
+            var cs = EndChangeSet();
 
-        //    var id = cs2.Id.ToString();
+            Assert.AreEqual(2, cs.Count);
+            Assert.AreEqual(2, _tracker.Warnings.Count);
+            Assert.AreEqual(2, cs.Count(x => x.Kind == KindOfChange.Rename));
+        }
 
-        //    var cs1 = TrackCommit_Rename("location_now", "location_yesterday");
+        [Test]
+        public void Svn_AddDelete_IsNotReplacedByMove_BecauseNoDelete()
+        {
+            StartChangeSet();
+            var ci1 = Track_Add("location_yesterday", "location_now" );
+            var cs = EndChangeSet();
 
-        //    Assert.AreEqual(id, cs1.Id.ToString());
+            Assert.AreEqual(1, cs.Count);
+            Assert.AreEqual(0, _tracker.Warnings.Count);
+            Assert.AreEqual(KindOfChange.Add, cs.Single().Kind);
+        }
 
-        //    var cs0 = TrackCommit_Rename("location_yesterday", "location_now");
+        [Test]
+        public void Svn_ConvertMultipleCopiesToAdd_BasedOnAdd()
+        {
+            StartChangeSet();
+            var ci2 = Track_Delete("from_location");
+            var ci1 = Track_Add("from_location", "to_location1"); 
+            var ci0 = Track_Add("from_location", "to_location2");
+            var cs = EndChangeSet();
 
-        //    Assert.AreEqual(id, cs0.Id.ToString());
-        //}
+            Assert.AreEqual(3, cs.Count);
+            Assert.AreEqual(2, _tracker.Warnings.Count);
+            Assert.AreEqual(2, cs.Count(x => x.Kind == KindOfChange.Add));
+            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Delete));
+        }
 
+        [Test]
+        public void Svn_ConvertMultipleCopiesToAdd_BasedOnRename()
+        {
+            StartChangeSet();
+            var ci2 = Track_Delete("from_location");
+            var ci1 = Track_Rename("from_location", "to_location1"); // note the order!
+            var ci0 = Track_Rename("from_location", "to_location2"); // note the order!
+            var cs = EndChangeSet();
+
+            Assert.AreEqual(3, cs.Count);
+            Assert.AreEqual(2, _tracker.Warnings.Count);
+            Assert.AreEqual(2, cs.Count(x => x.Kind == KindOfChange.Add));
+            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Delete));
+        }
+
+        [Test]
+        public void Svn_ConvertRenameToAddIfSourceIsModified()
+        {
+            // Very special case found only once!
+            StartChangeSet();
+            var ci2 = Track_Edit("from_location");
+            var ci1 = Track_Rename("from_location", "to_location1"); // note the order!
+            
+            var cs = EndChangeSet();
+
+            Assert.AreEqual(2, cs.Count);
+            Assert.AreEqual(1, _tracker.Warnings.Count);
+            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Add)); // Converted
+            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Edit));
+        }
+
+        [Test]
+        public void Git_TreatRenameAsAdd_IfFileIsEditedLater()
+        {
+            StartChangeSet();
+            var ci2 = Track_Edit("the_file");
+            var cs = EndChangeSet();
+
+            StartChangeSet();
+            var ci1 = Track_Rename("the_file", "to_somwhere_else");
+            cs = EndChangeSet();
+
+            Assert.AreEqual(1, cs.Count);
+            Assert.AreEqual(1, _tracker.Warnings.Count);
+            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Add)); // Converted
+        }
+
+
+    
         private List<ChangeItem> EndChangeSet()
         {
             var result = new List<ChangeItem>();
@@ -252,10 +335,12 @@ namespace Tests
 
         private void StartChangeSet()
         {
-            _tracker.BeginChangeSet(new ChangeSet());
+            _currentChangeSet = new ChangeSet();
+            _currentChangeSet.Id = new StringId(Guid.NewGuid().ToString());
+            _tracker.BeginChangeSet(_currentChangeSet);
         }
 
-        private ChangeItem Track_Add(string currentServerPath, string previousServerPath = null)
+        private ChangeItem Track_Add(string previousServerPath, string currentServerPath)
         {
             return TrackOperation(KindOfChange.Add, currentServerPath, previousServerPath);
         }
@@ -285,9 +370,7 @@ namespace Tests
                              Kind = kind
                      };
 
-            var cs = new ChangeSet();
-            cs.Id = new StringId(Guid.NewGuid().ToString());
-            cs.Items.Add(ci);
+            _currentChangeSet.Items.Add(ci);
 
             _tracker.TrackId(ci);
             return ci;

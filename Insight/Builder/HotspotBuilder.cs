@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
-
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using Insight.Analyzers;
+using Insight.Shared;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;
@@ -9,36 +12,34 @@ namespace Insight.Builder
     public sealed class HotspotBuilder : HierarchyBuilder
     {
         private Dictionary<string, LinesOfCode> _metrics;
+        private HotspotCalculator _hotspotCalculator;
 
-        public HierarchicalData Build(List<Artifact> reduced, Dictionary<string, LinesOfCode> metrics)
+        public HierarchicalData Build(List<Artifact> artifacts, Dictionary<string, LinesOfCode> metrics)
         {
             _metrics = metrics;
-            return Build(reduced);
+            _hotspotCalculator = new HotspotCalculator(artifacts, metrics);
+         
+            return Build(artifacts);
         }
 
         protected override double GetArea(Artifact item)
         {
-            var area = 0.0;
-            var key = item.LocalPath.ToLowerInvariant();
-
-            if (_metrics.ContainsKey(key))
-            {
-                // Lines of code
-                area = _metrics[key].Code;
-            }
-
-            return area;
+            return _hotspotCalculator.GetArea(item);
         }
 
         protected override string GetDescription(Artifact item)
         {
-            return item.ServerPath + "\nCommits: " + item.Commits + "\nLOC: " + GetArea(item);
+            var hotspot = _hotspotCalculator.GetHotspot(item);
+            return item.ServerPath 
+                + "\nCommits: " 
+                + item.Commits + "\nLOC: " 
+                + _hotspotCalculator.GetArea(item) + "\nHotspot: " 
+                + hotspot.ToString("F5", CultureInfo.InvariantCulture);
         }
 
         protected override double GetWeight(Artifact item)
         {
-            var weight = item.Commits;
-            return weight;
+            return _hotspotCalculator.GetWeight(item);
         }
 
         protected override bool IsAccepted(Artifact item)
@@ -48,7 +49,7 @@ namespace Insight.Builder
             var weight = GetWeight(item);
 
             // File must have a size (lines of code) and must have been at least 2 times committed.
-            return area > 0 && weight > 2;
+            return area > Thresholds.MinLinesOfCodeForHotspot && weight > Thresholds.MinCommitsForHotspots;
         }
     }
 }

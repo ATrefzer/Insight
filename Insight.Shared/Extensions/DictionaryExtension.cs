@@ -8,7 +8,7 @@ namespace Insight.Shared.Extensions
     public static class DictionaryExtension
     {
         public static void AddToValue<TKey>(
-                this Dictionary<TKey, int> dict, TKey key, int work)
+                this Dictionary<TKey, uint> dict, TKey key, uint work)
         {
             if (dict.TryGetValue(key, out var currentValue))
             {

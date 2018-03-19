@@ -1,182 +1,193 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 using Insight.Analyzers;
 using Insight.Builder;
+using Insight.Dto;
 using Insight.Metrics;
-using Insight.Shared;
 using Insight.Shared.Model;
-using Insight.Shared.System;
 using Insight.Shared.VersionControl;
+
+using Newtonsoft.Json;
 
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
-using Visualization.Controls.Data;
 
 namespace Insight
 {
-    internal sealed class Analyzer
+    public sealed class Analyzer
     {
+        /// <summary>
+        /// Local path to contribution
+        /// </summary>
+        private Dictionary<string, Contribution> _contributions;
+
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
-
-        public List<WarningMessage> Warnings { get; private set; }
 
         public Analyzer(Project project)
         {
             Project = project;
-            Project.ProjectLoaded += (sender, arg) => { Clear(); };
         }
 
-        public Project Project { get; }
+        public List<WarningMessage> Warnings { get; private set; }
+
+        private Project Project { get; }
+
+
+        public List<Coupling> AnalyzeChangeCoupling()
+        {
+            LoadHistory();
+
+            // Pair wise couplings
+            var tmp = new ChangeCouplingAnalyzer();
+            var couplings = tmp.CalculateChangeCouplings(_history, Project.Filter);
+            var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
+            Csv.Write(Path.Combine(Project.Cache, "change_couplings.csv"), sortedCouplings);
+
+            // Same with classified folders
+            var classifiedCouplings = tmp.CalculateClassifiedChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
+            Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
+
+            return sortedCouplings;
+        }
+
+        public HierarchicalDataContext AnalyzeCodeAge()
+        {
+            LoadHistory();
+            LoadMetrics();
+
+            // Get summary of all files
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+
+            var builder = new CodeAgeBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics);
+            return new HierarchicalDataContext(hierarchicalData);
+        }
 
         /// <summary>
-        /// Work for a single file. Developer -> lines of work
+        /// Analyzes the fragmentation per file.
         /// </summary>
-        public static MainDeveloper GetMainDeveloper(Dictionary<string, int> workByDevelopers)
+        public HierarchicalDataContext AnalyzeFragmentation()
         {
-            // Find main developer
-            string mainDeveloper = null;
-            double linesOfWork = 0;
+            LoadHistory();
+            LoadMetrics();
+            LoadContributions();
 
-            double lineCount = workByDevelopers.Values.Sum();
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var fileToFractalValue = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
 
-            foreach (var pair in workByDevelopers)
+            var builder = new FragmentationBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics, fileToFractalValue);
+
+            return new HierarchicalDataContext(hierarchicalData);
+        }
+
+        public HierarchicalDataContext AnalyzeHotspots()
+        {
+            LoadHistory();
+            LoadMetrics();
+
+            // Get summary of all files
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+
+            var builder = new HotspotBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics);
+            return new HierarchicalDataContext(hierarchicalData);
+        }
+
+        public HierarchicalDataContext AnalyzeKnowledge()
+        {
+            LoadHistory();
+            LoadMetrics();
+            LoadContributions();
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
+
+            // Assign a color to each developer
+            var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
+            var scheme = new ColorScheme(mainDevelopers.ToArray());
+
+            // Build the knowledge data
+            var builder = new KnowledgeBuilder();
+            var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
+
+            return new HierarchicalDataContext(hierarchicalData, scheme);
+        }
+
+        /// <summary>
+        /// Same as knowledge but uses a different color scheme
+        /// </summary>
+        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer)
+        {
+            LoadHistory();
+            LoadMetrics();
+            LoadContributions();
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
+
+            // Assign a color to each developer
+            // Include all other developers. So we have a more consistent coloring.
+            var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
+            var scheme = new ColorScheme(mainDevelopers.ToArray());
+
+            // Build the knowledge data
+            var builder = new KnowledgeBuilder(developer);
+            var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
+
+            return new HierarchicalDataContext(hierarchicalData, scheme);
+        }
+
+        public List<TrendData> AnalyzeTrend(string localFile)
+        {
+            var trend = new List<TrendData>();
+
+            var svnProvider = Project.CreateProvider();
+
+            // Svn log on this file to get all revisions
+            var fileHistory = svnProvider.ExportFileHistory(localFile);
+
+            // For each file we need to calculate the metrics
+            var provider = new CodeMetrics();
+
+            foreach (var file in fileHistory)
             {
-                if (pair.Value > linesOfWork)
-                {
-                    mainDeveloper = pair.Key;
-                    linesOfWork = pair.Value;
-                }
+                var fileInfo = new FileInfo(file.CachePath);
+                var loc = provider.CalculateLinesOfCode(fileInfo);
+                var invertedSpace = provider.CalculateInvertedSpaceMetric(fileInfo);
+                trend.Add(new TrendData { Date = file.Date, Loc = loc, InvertedSpace = invertedSpace });
             }
 
-            return new MainDeveloper(mainDeveloper, 100.0 * linesOfWork / lineCount);
+            return trend;
         }
 
-        public Task<HierarchicalData> AnalyzeHotspotsAsync()
+        public string AnalyzeWorkOnSingleFile(string fileName, ColorScheme colorScheme)
         {
-            return Task.Run(() =>
-                            {
-                                LoadHistory();
-                                LoadMetrics();
+            Debug.Assert(colorScheme != null);
+            var provider = Project.CreateProvider();
+            var workByDeveloper = provider.CalculateDeveloperWork(new Artifact { LocalPath = fileName });
 
-                                // Get summary of all files
-                                var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var bitmap = new FractionBitmap();
 
-                                var builder = new HotspotBuilder();
-                                var hierarchicalData = builder.Build(summary, _metrics);
-                                return hierarchicalData;
-                            });
+            var fi = new FileInfo(fileName);
+            var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
+
+            AppendColorMappingForWork(colorScheme, workByDeveloper);
+
+            bitmap.Create(path, workByDeveloper, colorScheme, true);
+
+            return path;
         }
 
-        public Task<HierarchicalData> AnalyzeKnowledgeAsync(string directory)
-        {
-            return Task.Run(() =>
-                            {
-                                var scanner = new DirectoryScanner();
-                                var filesToAnalyze = scanner.GetFilesRecursive(directory);
-
-                                // With git we have all files locally. But think first before requesting many thousand files from the Svn server.
-                                if (MessageBox.Show($"The folder contains {filesToAnalyze.Count} files to analyze. Really?", "Really?", MessageBoxButton.YesNo) == MessageBoxResult.No)
-                                {
-                                    return null;
-                                }
-
-                                // Get summary of all files within the selected direcory
-                                LoadHistory();
-                                LoadMetrics();
-
-                                // TODO check if metrics exist and history exist => Sync first!
-
-                                // Extend the default filter to only accept files from the given directory.
-                                // This is faster than summary.Where() because we skip a lot of File.Exist() calls.
-                                var newFilter = new Filter(Project.Filter, new FileFilter(filesToAnalyze));
-                                var summary = _history.GetArtifactSummary(newFilter, new HashSet<string>(_metrics.Keys));
-
-                                // We have a summary of just a sub directory with a limited amount of files.
-                                // I don't want to download that many files from the server.
-
-                                // Calculate main developer for each file
-                                var mainDeveloperPerFile = new ConcurrentDictionary<string, MainDeveloper>();
-
-                                // //Single core processing
-                                //foreach (var artifact in summary)
-                                //{
-                                //    var svnProvider = Project.CreateProvider();
-
-                                //    var work = svnProvider.CalculateDeveloperWork(artifact);
-                                //    var mainDeveloper = GetMainDeveloper(work);
-                                //    mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                //}
-
-                                Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                                                 artifact =>
-                                                 {
-                                                     var provider = Project.CreateProvider();
-
-                                                     var work = provider.CalculateDeveloperWork(artifact);
-                                                     var mainDeveloper = GetMainDeveloper(work);
-                                                     mainDeveloperPerFile.TryAdd(artifact.LocalPath, mainDeveloper);
-                                                 });
-
-                                // Assign a color to each developer
-                                var developers = mainDeveloperPerFile.Select(pair => pair.Value.Developer).Distinct();
-                                var mapper = new NameToColorMapper(developers.ToArray());
-                                ColorScheme.SetColorMapping(mapper);
-
-                                // Build the knowledge data
-                                var builder = new KnowledgeBuilder();
-                                var hierarchicalData = builder.Build(summary, _metrics, mainDeveloperPerFile
-                                                                             .ToDictionary(pair => pair.Key, pair => pair.Value));
-                                return hierarchicalData;
-                            });
-        }
-
-        public Task<List<Coupling>> AnalyzeTemporalCouplingsAsync()
-        {
-            return Task.Run(() =>
-                            {
-                                LoadHistory();
-
-                                // Pair wise couplings
-                                var tmp = new ChangeCouplingAnalyzer();
-                                var couplings = tmp.CalculateChangeCouplings(_history, Project.Filter);
-                                var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
-                                Csv.Write(Path.Combine(Project.Cache, "couplings.csv"), sortedCouplings);
-
-                                // Same with classified folders
-                                var classifiedCouplings = tmp.CalculateChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
-                                Csv.Write(Path.Combine(Project.Cache, "classified_couplings.csv"), classifiedCouplings);
-
-                                return sortedCouplings;
-                            });
-        }
-
-        public Task<string> AnalyzeWorkOnSingleFileAsync(string fileName)
-        {
-            return Task.Run(() =>
-                            {
-                                var svnProvider = Project.CreateProvider();
-                                var workByDeveloper = svnProvider.CalculateDeveloperWork(new Artifact { LocalPath = fileName });
-
-                                var bitmap = new FractionBitmap();
-
-                                var fi = new FileInfo(fileName);
-                                var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
-
-                                // Let determine colors automatically 
-                                var colorMapping = new NameToColorMapper(workByDeveloper.Keys.ToArray());
-                                bitmap.Create(path, workByDeveloper, colorMapping, true);
-
-                                return path;
-                            });
-        }
-
-        public Task ExportComments()
+        public List<DataGridFriendlyComment> ExportComments()
         {
             /*
               R Code
@@ -198,71 +209,76 @@ namespace Insight
               wordcloud(colnames(all), colSums(all))
           */
 
-            return Task.Run(() =>
-                            {
-                                LoadHistory();
-
-                                var fileName = Path.Combine(Project.Cache, "comments.csv");
-                                using (var file = File.CreateText(fileName))
-                                {
-                                    foreach (var cs in _history.ChangeSets)
-                                    {
-                                        file.WriteLine("\"" + cs.Comment + "\"");
-                                    }
-                                }
-                            });
-        }
-
-        public Task<List<DataGridFriendlyArtifact>> ExportSummary()
-        {
-            return Task.Run(() =>
-                            {
-                                LoadHistory();
-                                LoadMetrics();
-
-                                var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
-
-                                var gridData = new List<DataGridFriendlyArtifact>();
-                                foreach (var artifact in summary)
-                                {
-                                    var metricKey = artifact.LocalPath.ToLowerInvariant();
-                                    var loc = _metrics.ContainsKey(metricKey) ? _metrics[metricKey].Code : 0;
-                                    gridData.Add(
-                                                 new DataGridFriendlyArtifact
-                                                 {
-                                                         LocalPath = artifact.LocalPath,
-                                                         Revision = artifact.Revision,
-                                                         Commits = artifact.Commits,
-                                                         Committers = artifact.Committers.Count,
-                                                         LOC = loc,
-                                                         WorkItems = artifact.WorkItems.Count
-                                                 });
-                                }
-
-                                Csv.Write(Path.Combine(Project.Cache, "Export.csv"), gridData);
-                                return gridData;
-                            });
-        }
-
-        public async Task UpdateCacheAsyc()
-        {
-            await Task.Run(() =>
+            LoadHistory();
+            var result = new List<DataGridFriendlyComment>();
+            foreach (var cs in _history.ChangeSets)
+            {
+                result.Add(new DataGridFriendlyComment
                            {
-                               // Note: You should have the latest code locally such that history and metrics match!
-                               // Update svn history
-                               var svnProvider = Project.CreateProvider();
-                               svnProvider.UpdateCache();
-
-                               // Update code metrics (after source was updated)
-                               var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
-                               metricProvider.UpdateCache();
+                                   Committer = cs.Committer,
+                                   Comment = cs.Comment
                            });
+            }
+
+            Csv.Write(Path.Combine(Project.Cache, "comments.csv"), result);
+            return result;
+        }
+
+        public List<object> ExportSummary()
+        {
+            LoadHistory();
+            LoadMetrics();
+            LoadContributions(true); // silent
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            HotspotCalculator hotspotCalculator = new HotspotCalculator(summary, _metrics);
+
+            var gridData = new List<object>();
+            foreach (var artifact in summary)
+            {
+                var metricKey = artifact.LocalPath.ToLowerInvariant();
+                var loc = _metrics.ContainsKey(metricKey) ? _metrics[metricKey].Code : 0;
+                gridData.Add(CreateDataGridFriendlyArtifact(artifact, hotspotCalculator));
+            }
+
+            Csv.Write(Path.Combine(Project.Cache, "summary.csv"), gridData);
+            return gridData;
+        }
+
+        public void UpdateCache(Progress progress, bool includeContributions)
+        {
+            progress.Message("Updating source control history.");
+
+            // Note: You should have the latest code locally such that history and metrics match!
+            // Update svn history
+            var svnProvider = Project.CreateProvider();
+            svnProvider.UpdateCache();
+
+            progress.Message("Updating code metrics.");
+
+            // Update code metrics
+            var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
+            metricProvider.UpdateCache();
+
+            File.Delete(GetPathToContributionFile());
+            if (includeContributions)
+            {
+                // Update contributions. This takes a long time. Not useful for svn.
+                UpdateContributions(progress);
+            }
         }
 
         internal void Clear()
         {
             _history = null;
             _metrics = null;
+            _contributions = null;
+        }
+
+        internal List<string> GetMainDevelopers()
+        {
+            LoadContributions();
+            return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
 
         private static string ClassifyDirectory(string localPath)
@@ -288,9 +304,109 @@ namespace Insight
             return string.Empty;
         }
 
+        private void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
+        {
+            // order such that same developers get same colors regardless of order.
+            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
+            {
+                colorMapping.AddColorKey(developer);
+            }
+        }
+
+        private Dictionary<string, Contribution> CalculateContributionsParallel(Progress progress, List<Artifact> summary)
+        {
+            // Calculate main developer for each file
+            var fileToContribution = new ConcurrentDictionary<string, Contribution>();
+
+            var all = summary.Count;
+            Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                             artifact =>
+                             {
+                                 var provider = Project.CreateProvider();
+                                 var work = provider.CalculateDeveloperWork(artifact);
+                                 var contribution = new Contribution(work);
+
+                                 var result = fileToContribution.TryAdd(artifact.LocalPath, contribution);
+                                 Debug.Assert(result);
+
+                                 // Progress
+                                 var count = fileToContribution.Count;
+
+                                 // if (count % 10 == 0)
+                                 {
+                                     progress.Message($"Calculating work {count}/{all}");
+                                 }
+                             });
+
+            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
+        }
+
+        private object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
+        {
+            int linesOfCode = (int)hotspotCalculator.GetArea(artifact);
+            if (_contributions != null)
+            {
+                var result = new DataGridFriendlyArtifact();
+                var artifactContribution = _contributions[artifact.LocalPath.ToLowerInvariant()];
+                var mainDev = artifactContribution.GetMainDeveloper();
+
+                result.LocalPath = artifact.LocalPath;
+                result.Revision = artifact.Revision;
+                result.Commits = artifact.Commits;
+                result.Committers = artifact.Committers.Count;
+                result.LOC = linesOfCode;
+                result.WorkItems = artifact.WorkItems.Count;
+                result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
+                result.Hotspot = hotspotCalculator.GetHotspot(artifact);
+
+                // Work related information
+                result.FractalValue = artifactContribution.CalculateFractalValue();
+                result.MainDev = mainDev.Developer;
+                result.MainDevPercent = mainDev.Percent;
+                return result;
+            }
+            else
+            {
+                var result = new DataGridFriendlyArtifactBasic();
+                result.LocalPath = artifact.LocalPath;
+                result.Revision = artifact.Revision;
+                result.Commits = artifact.Commits;
+                result.Committers = artifact.Committers.Count;
+                result.LOC = linesOfCode;
+                result.WorkItems = artifact.WorkItems.Count;
+                result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
+                result.Hotspot = hotspotCalculator.GetHotspot(artifact);
+                return result;
+            }
+        }
+
+        private string GetPathToContributionFile()
+        {
+            return Path.Combine(Project.Cache, "contribution_analysis.json");
+        }
+
+        private void LoadContributions(bool silent = false)
+        {
+            if (_contributions == null)
+            {
+                if (File.Exists(GetPathToContributionFile()) == false)
+                {
+                    if (silent)
+                    {
+                        return;
+                    }
+
+                    throw new Exception($"The file '{GetPathToContributionFile()}' was not found. Please click Sync to create it.");
+                }
+
+                var input = File.ReadAllText(GetPathToContributionFile(), Encoding.UTF8);
+                _contributions = JsonConvert.DeserializeObject<Dictionary<string, Contribution>>(input);
+            }
+        }
+
         private void LoadHistory()
         {
-            // if (_history == null) Allow see warnings every time
+            if (_history == null)
             {
                 var provider = Project.CreateProvider();
                 _history = provider.QueryChangeSetHistory();
@@ -309,6 +425,19 @@ namespace Insight
                 var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
                 _metrics = metricProvider.QueryCodeMetrics();
             }
+        }
+
+        private void UpdateContributions(Progress progress)
+        {
+            LoadHistory();
+            LoadMetrics();
+
+            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            _contributions = CalculateContributionsParallel(progress, summary);
+
+            var json = JsonConvert.SerializeObject(_contributions);
+            var path = GetPathToContributionFile();
+            File.WriteAllText(path, json, Encoding.UTF8);
         }
     }
 }

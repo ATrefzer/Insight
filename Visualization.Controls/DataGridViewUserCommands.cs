@@ -27,6 +27,9 @@ namespace Visualization.Controls
             foreach (var item in _menuItemToAction)
             {
                 var menuItem = item.Key;
+                // Detach context menu items from previous shown context menu (if any)
+                var parent = menuItem.Parent as ContextMenu;
+                parent?.Items.Clear();
                 menuItem.IsEnabled = selection.Any();
                 menuItem.Command = new DelegateCommand(() => OnMenuClick(menuItem, selection));
                 contextMenu.Items.Add(item.Key);
@@ -35,6 +38,7 @@ namespace Visualization.Controls
             return true;
         }
 
+        // Note: Action<List<object>> is accepted
         public void Register(string label, Action<List<T>> action)
         {
             var menuItem = new MenuItem();
@@ -45,6 +49,10 @@ namespace Visualization.Controls
         private void OnMenuClick(MenuItem item, List<T> selectedItems)
         {
             var action = _menuItemToAction[item];
+
+            // To list of object works, so the action can be of type Action<List<object>>
+            // This is because the HierarchicalDataViewBase calls OfType<T>
+            // So any base type is accepted.
             action.Invoke(selectedItems);
         }
     }

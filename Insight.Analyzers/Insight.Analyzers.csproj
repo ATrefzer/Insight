@@ -39,7 +39,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComplexityTrendAnalyzer.cs" />
+    <Compile Include="Contribution.cs" />
+    <Compile Include="FractalValue.cs" />
+    <Compile Include="HotspotCalculator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TeamCommunicationAnalyzer.cs" />
     <Compile Include="ChangeCouplingAnalyzer.cs" />

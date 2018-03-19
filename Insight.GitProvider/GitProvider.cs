@@ -37,7 +37,7 @@ namespace Insight.GitProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-        public Dictionary<string, int> CalculateDeveloperWork(Artifact artifact)
+        public Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact)
         {
             var annotate = _gitCli.Annotate(artifact.LocalPath);
 
@@ -45,7 +45,7 @@ namespace Insight.GitProvider
             //s = whitespace
 
             // Parse annotated file
-            var workByDevelopers = new Dictionary<string, int>();
+            var workByDevelopers = new Dictionary<string, uint>();
             var changeSetRegex = new Regex(@"^\S+\t\(\s*(?<developerName>[^\t]+).*", RegexOptions.Multiline | RegexOptions.Compiled);
 
             // Work by changesets (line by line)
@@ -157,7 +157,7 @@ namespace Insight.GitProvider
             }
         }
 
-        private ChangeItem CreateChangeItem(string changeItem, MovementTracker tracker)
+        private void CreateChangeItem(string changeItem, MovementTracker tracker)
         {
             var ci = new ChangeItem();
 
@@ -186,7 +186,6 @@ namespace Insight.GitProvider
             }
 
             ci.LocalPath = MapToLocalFile(ci.ServerPath);
-            return ci;
         }
 
 
@@ -371,7 +370,15 @@ namespace Insight.GitProvider
         {
             if (kind.StartsWith("R"))
             {
+                // Followed by the similarity
                 return KindOfChange.Rename;
+            }
+            if (kind.StartsWith("C"))
+            {
+                // Followed by the similarity. 
+                // I tread a copy of a file as a new start.
+                Trace.WriteLine("Found copy operation for git!");
+                return KindOfChange.Add;
             }
             else if (kind == "A")
             {
@@ -387,6 +394,7 @@ namespace Insight.GitProvider
             }
             else
             {
+                Debug.Assert(false);
                 return KindOfChange.None;
             }
         }

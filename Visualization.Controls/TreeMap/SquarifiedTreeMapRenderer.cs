@@ -14,6 +14,12 @@ namespace Visualization.Controls.TreeMap
 
         // ReSharper disable once NotAccessedField.Local
         private int _level = -1;
+        private IColorScheme _colorScheme;
+
+        public SquarifiedTreeMapRenderer(IColorScheme colorScheme)
+        {
+            _colorScheme = colorScheme;
+        }
 
 
         //private void DrawRectangle(Rect itemRect, object tag)
@@ -111,20 +117,20 @@ namespace Visualization.Controls.TreeMap
         {
             if (Highlighing != null && Highlighing.IsHighlighted(data))
             {
-                return ColorScheme.Highlight;
+                return DefaultDrawingPrimitives.HighlightBrush;
             }
 
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {
-                brush = ColorScheme.GetBrush(data.ColorKey);
+                brush = _colorScheme.GetMediaBrush(data.ColorKey);
             }
             else
             {
                 // For non leaf nodes the weight is 0. We only can merge area metrics.
                 // See HiearchyBuilder.InsertLeaf.
 
-                var color = ColorScheme.WhiteToRedGradient.GradientStops.GetRelativeColor(data.NormalizedWeightMetric);
+                var color = DefaultDrawingPrimitives.WhiteToRedGradient.GradientStops.GetRelativeColor(data.NormalizedWeightMetric);
                 brush = new SolidColorBrush(color);
                 brush.Freeze();
             }
@@ -142,7 +148,7 @@ namespace Visualization.Controls.TreeMap
 
                 //dc.DrawRectangle(_gradient, _pen, data.Layout.Rect);
                 var layout = GetLayout(data);
-                dc.DrawRectangle(brush, ColorScheme.BlackPen, layout.Rect);
+                dc.DrawRectangle(brush, DefaultDrawingPrimitives.BlackPen, layout.Rect);
             }
 
             foreach (var child in data.Children)

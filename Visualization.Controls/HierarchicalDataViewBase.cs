@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,7 +16,11 @@ namespace Visualization.Controls
 {
     public abstract class HierarchicalDataViewBase : UserControl
     {
+        public static readonly DependencyProperty UserCommandsProperty = DependencyProperty.Register(
+                                                                                                     "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase), new PropertyMetadata(null));
+
         protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
+        protected ColorScheme _colorScheme;
 
         /// <summary>
         /// Filtered data
@@ -40,8 +46,11 @@ namespace Visualization.Controls
         /// <summary>
         /// Commands that apply to leaf nodes of a hierarchical data.
         /// </summary>
-        public HierarchicalDataCommands UserCommands { get; set; }
-
+        public HierarchicalDataCommands UserCommands
+        {
+            get => (HierarchicalDataCommands)GetValue(UserCommandsProperty);
+            set => SetValue(UserCommandsProperty, value);
+        }
 
         protected void ChangeSearchHighlightingCommand(object sender, EventArgs args)
         {
@@ -66,7 +75,10 @@ namespace Visualization.Controls
         protected void FilterLevelChanged(object sender, EventArgs args)
         {
             _filtered = _root.Clone();
-            _filtered.RemoveLeafNodes(leaf => !_toolViewModel.IsAreaValid(leaf.AreaMetric) || !_toolViewModel.IsWeightValid(leaf.WeightMetric));
+            _filtered.RemoveLeafNodes(leaf =>
+                !_toolViewModel.IsAreaValid(leaf.AreaMetric) ||
+                !_toolViewModel.IsWeightValid(leaf.WeightMetric));
+
             try
             {
                 _filtered.RemoveLeafNodesWithoutArea();
@@ -96,10 +108,24 @@ namespace Visualization.Controls
 
         protected void InitializeTools()
         {
-            var areaRange = _root.GetMinMaxArea();
-            var weightRange = _root.GetMinMaxWeight();
+            var area = new HashSet<double>();
+            var weight = new HashSet<double>();
 
-            _toolViewModel = new ToolViewModel(areaRange, weightRange);
+            // Distinct areas and weights. Each slider tick goes to the next value.
+            // This allows smooth naviation even if there are large outliers.
+            _root.TraverseTopDown(data =>
+            {
+                if (data.IsLeafNode)
+                {
+                    area.Add(data.AreaMetric);
+                    weight.Add(data.WeightMetric);
+                }
+            });
+
+            var areaList = area.OrderBy(x => x).ToList();
+            var weightList = weight.OrderBy(x => x).ToList();
+
+            _toolViewModel = new ToolViewModel(areaList, weightList);
             _toolViewModel.FilterChanged += FilterLevelChanged;
             _toolViewModel.SearchPatternChanged += ChangeSearchHighlightingCommand;
         }
@@ -135,15 +161,23 @@ namespace Visualization.Controls
 
         protected void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            _root = DataContext as HierarchicalData;
-            if (_root != null)
-            {
-                InitializeTools();
+            _root = null;
+            _colorScheme = null;
 
-                // Initially no filtering so skip removing nodes.
-                _filtered = _root;
-                ZoomLevelChanged(_filtered);
+            if (!(DataContext is HierarchicalDataContext context) || context.Data == null)
+            {
+                // This is called once with the wrong context.
+                return;
             }
+
+            _colorScheme = context.ColorScheme;
+            _root = context.Data;
+
+            InitializeTools();
+
+            // Initially no filtering so skip removing nodes.
+            _filtered = _root;
+            ZoomLevelChanged(_filtered);
         }
 
 

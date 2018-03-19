@@ -1,12 +1,11 @@
-# Insight
-Analyzes the commit history of your version control.
+﻿# Insight - An commit history analyzer.
 
 This utility implements some of the ideas presented in Adam Tornhill's great book "Your Code as a Crime Scene".
 
-Currently, it only supports Subversion and C# projects.
+Currently, it supports Subversion. Git may not work reliably at this moment.
+Supported file types (for counting lines of code) are cs, cpp, c, h, java, xaml and xml
 
 Work is in progress ...
-
 
 ## Screenshots
 
@@ -61,6 +60,7 @@ Again, a rectangle or inner most circle represents a file in the repository. Add
 This visualization allows you to see how the knowledge is distributed over the project.
 
 ![Knowledge_TreeMap](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Knowledge_TreeMap.PNG) 
+
 ![Knowledge_Circles](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Knowledge_Circles.PNG)
 
 # How to build
@@ -70,9 +70,31 @@ This visualization allows you to see how the knowledge is distributed over the p
 
 # How to use
 
-Note: If you use SVN, it has to be found in the search path. If you use TortoiseSVN take care that the "Command line client tools" are also installed.
+Note: svn.exe or git.exe have to be found in the search path. 
+If you use TortoiseSVN take care that the "Command line client tools" are installed.
 
 * Start Binaries\Insight.exe
 * Click Setup and select the root folder of the project you want to analyze. Also, specify a cache directory. Create an empty directory for each project you want to analyze. The application uses this directory to cache files downloaded from the version control and uses it as output directory for CSV exports.
-* Click Sync to update the working copy of your project and calculate some metrics of the files in the project directory.
+* Click Sync to obtain the history from the version control and calculate some metrics for the files in the project directory. All collected information is stored in the Cache directory and is used later.
+Before you click Sync your working copy should be up to date.
 * Now the functions in the Analysis group are available.
+
+# Resources
+
+## Icons
+
+Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+
+Icons made by <a href="https://www.flaticon.com/authors/gregor-cresnar" title="Gregor Cresnar">Gregor Cresnar</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+
+## Libraries
+
+<a href="https://github.com/AlDanial/cloc">Cloc - Count lines of code</a>
+You have to download it from <a href="https://github.com/AlDanial/cloc/releases/tag/v1.76">GitHub</a>
+
+<a href="http://code.msdn.microsoft.com/WindowsAPICodePack">Windows® API Code Pack</a>
+
+<a href="https://github.com/EricOuellet2/ConvexHull">Eric Ouellet's Convex Hull</a>
+See also <a href="https://www.codeproject.com/Articles/1210225/Fast-and-improved-D-Convex-Hull-algorithm-and-its">Fast and improved 2D Convex Hull algorithm and its implementation</a>
+
+<a href="http://www.oxyplot.org/">OxyPlot</a>

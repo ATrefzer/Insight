@@ -12,17 +12,9 @@ namespace Insight.Analyzers
     ///     Change coupling based on commits! Alternative would be logical work items.
     /// </summary>
     public sealed class ChangeCouplingAnalyzer
-    {
-        /// <summary>
-        ///     Changesets with more modifications are ignored.
-        /// </summary>
-        private const int MaxChangesInChangeset = 300;
+    {      
 
-        // Reduce output
-        private const int MinCoupling = 2;
-
-
-        private readonly Dictionary<string, int> _count = new Dictionary<string, int>();
+        private readonly Dictionary<string, uint> _count = new Dictionary<string, uint>();
 
 
         private readonly Dictionary<string, Coupling> _couplings = new Dictionary<string, Coupling>();
@@ -34,7 +26,7 @@ namespace Insight.Analyzers
 
             foreach (var cs in history.ChangeSets)
             {
-                if (cs.Items.Count > MaxChangesInChangeset)
+                if (cs.Items.Count > Thresholds.MaxItemsInChangesetForChangeCoupling)
                 {
                     continue;
                 }
@@ -62,14 +54,14 @@ namespace Insight.Analyzers
             CalculateDegree();
 
             return _couplings.Values
-                             .Where(coupling => coupling.Couplings > MinCoupling)
+                             .Where(coupling => coupling.Couplings >= Thresholds.MinCouplingForChangeCoupling && coupling.Degree >= Thresholds.MinDegreeForChangeCoupling)
                              .OrderByDescending(coupling => coupling.Degree).ToList();
         }
 
         /// <summary>
         ///     If the classifier returns string.EMPTY the according file is not used.
         /// </summary>
-        public List<Coupling> CalculateChangeCouplings(ChangeSetHistory history, Func<string, string> classifier)
+        public List<Coupling> CalculateClassifiedChangeCouplings(ChangeSetHistory history, Func<string, string> classifier)
         {
             _couplings.Clear();
             _count.Clear();
@@ -95,7 +87,7 @@ namespace Insight.Analyzers
             CalculateDegree();
 
             return _couplings.Values
-                             .Where(coupling => coupling.Couplings > MinCoupling)
+                             .Where(coupling => coupling.Couplings >= Thresholds.MinCouplingForChangeCoupling && coupling.Degree >= Thresholds.MinDegreeForChangeCoupling)
                              .OrderByDescending(coupling => coupling.Degree).ToList();
         }
 
@@ -129,9 +121,9 @@ namespace Insight.Analyzers
         /// <summary>
         /// Returns number of commits on this item
         /// </summary>
-        private int GetCount(string artifact)
+        private uint GetCount(string artifact)
         {
-            int value;
+            uint value;
             _count.TryGetValue(artifact, out value);
             return value;
         }

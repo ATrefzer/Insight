@@ -22,6 +22,11 @@ namespace Visualization.Controls
         private List<EdgeData> _edgeData;
         private List<Edge> _edgeViewModels;
 
+        /// <summary>
+        /// Click on vertex allows to keep the highlighting stable.
+        /// </summary>
+        private bool _isSelctedByClickOnVertex;
+
         private List<Label> _labelViewModels;
         private MainCircle _mainCircleViewModel;
         private double _maxLabelWidth = double.NaN;
@@ -55,11 +60,11 @@ namespace Visualization.Controls
         {
             Clear();
 
-            var distinctLabels = new HashSet<string>();
+            var idToLabel = new Dictionary<string, string>();
             var labelToSize = new Dictionary<string, Size>();
-            InitializeLabels(distinctLabels, labelToSize);
+            InitializeLabels(idToLabel, labelToSize);
 
-            CreateVertexAndLabelViewModels(distinctLabels, labelToSize);
+            CreateVertexAndLabelViewModels(idToLabel, labelToSize);
             CreateEdgeViewModels();
             CreateMainCircleViewModel();
             CreateItemSource();
@@ -73,7 +78,7 @@ namespace Visualization.Controls
             var size = lbl.DesiredSize;
 
             // Limit the size
-            size.Width = Math.Min(Constants.MaxLabelWidth, size.Width);            
+            size.Width = Math.Min(Constants.MaxLabelWidth, size.Width);
             return size;
         }
 
@@ -90,8 +95,8 @@ namespace Visualization.Controls
             var edgeViewModel = new Edge();
 
             edgeViewModel.IsSelected = false;
-            edgeViewModel.Node1 = edge.Node1;
-            edgeViewModel.Node2 = edge.Node2;
+            edgeViewModel.Node1Id = edge.Node1Id;
+            edgeViewModel.Node2Id = edge.Node2Id;
 
             _edgeViewModels.Add(edgeViewModel);
         }
@@ -117,19 +122,12 @@ namespace Visualization.Controls
             _shapes.ItemsSource = chordViewModels;
         }
 
-        private void CreateLabelViewModel(string label, double angle, Size size)
+        private void CreateLabelViewModel(string vertexId, string label, double angle, Size size)
         {
-            var labelViewModel = new Label(label, angle, size);
+            var labelViewModel = new Label(vertexId, label, angle, size);
             labelViewModel.MouseEnterCommand = new DelegateCommand(() => Select(labelViewModel));
-            labelViewModel.MouseLeaveCommand = new DelegateCommand(() => Select((Vertex)null));
+            labelViewModel.MouseLeaveCommand = new DelegateCommand(() => Select((Vertex) null));
             _labelViewModels.Add(labelViewModel);
-        }
-
-        private void Select(Label labelViewModel)
-        {
-            // Finde vertex
-            var vertex = _vertexLookup[labelViewModel.Text];
-            Select(vertex);
         }
 
         private void CreateMainCircleViewModel()
@@ -137,49 +135,39 @@ namespace Visualization.Controls
             _mainCircleViewModel = new MainCircle();
         }
 
-        private void CreateVertexAndLabelViewModels(HashSet<string> distinctLabels, Dictionary<string, Size> labelToSize)
+        private void CreateVertexAndLabelViewModels(Dictionary<string, string> idToLabel, Dictionary<string, Size> labelToSize)
         {
-            var angleStep = 2 * Math.PI / distinctLabels.Count;
+            var angleStep = 2 * Math.PI / idToLabel.Keys.Count;
             var angle = 0.0;
 
             // Calculate initial location of verticies and labels
-            foreach (var label in distinctLabels)
+            foreach (var vertexInfo in idToLabel)
             {
-                CreateVertexViewModel(label, angle);
-                CreateLabelViewModel(label, angle, labelToSize[label]);
+                var label = vertexInfo.Value;
+                var id = vertexInfo.Key;
+                CreateVertexViewModel(id, label, angle);
+                CreateLabelViewModel(id, label, angle, labelToSize[label]);
 
                 angle += angleStep;
             }
 
-            _vertexLookup = _vertexViewModels.ToDictionary(x => x.Name, x => x);
+            _vertexLookup = _vertexViewModels.ToDictionary(x => x.NodeId, x => x);
         }
 
-        /// <summary>
-        /// Click on vertex allows to keep the highlighting stable.
-        /// </summary>
-        bool _isSelctedByClickOnVertex;
-
-        private void CreateVertexViewModel(string nodeName, double angle)
+        private void CreateVertexViewModel(string nodeId, string label, double angle)
         {
-            var vertexViewModel = new Vertex(nodeName);
-            vertexViewModel.SelectCommand = new DelegateCommand(() => 
-            {
-                _isSelctedByClickOnVertex = false;
-                Select(vertexViewModel);
-                _isSelctedByClickOnVertex = true;
-            });
-         
+            var vertexViewModel = new Vertex(nodeId, label);
+            vertexViewModel.SelectCommand = new DelegateCommand(() =>
+                                                                {
+                                                                    _isSelctedByClickOnVertex = false;
+                                                                    Select(vertexViewModel);
+                                                                    _isSelctedByClickOnVertex = true;
+                                                                });
 
             vertexViewModel.Radius = 4;
             vertexViewModel.Angle = angle;
             _vertexViewModels.Add(vertexViewModel);
-
-        }
-
-        private string GetNodeLabel(string nodeName)
-        {
-            return nodeName;
-        }
+        }       
 
         private double GetRadiusOfMainCircle(double longestLabelWidth)
         {
@@ -211,14 +199,23 @@ namespace Visualization.Controls
             }
         }
 
-        private void InitializeLabels(HashSet<string> distinctLabels, Dictionary<string, Size> labelToSize)
+        private void InitializeLabels(Dictionary<string, string> distinctLabels, Dictionary<string, Size> labelToSize)
         {
             foreach (var edge in _edgeData)
             {
-                var label1 = GetNodeLabel(edge.Node1);
-                var label2 = GetNodeLabel(edge.Node2);
-                distinctLabels.Add(label1);
-                distinctLabels.Add(label2);
+                var label1 = edge.Node1DisplayName;
+                var label2 = edge.Node2DisplayName;
+
+                // I asssume that for same ids the same display name is given!
+                if (!distinctLabels.ContainsKey(edge.Node1Id))
+                {
+                    distinctLabels.Add(edge.Node1Id, label1);
+                }
+
+                if (!distinctLabels.ContainsKey(edge.Node2Id))
+                {
+                    distinctLabels.Add(edge.Node2Id, label2);
+                }
 
                 // Measure all labels in advance such that we can calculate the radius.
                 MeasureLabel(label1, labelToSize);
@@ -253,7 +250,14 @@ namespace Visualization.Controls
         {
             // Click on any free space in the window releases the held selection.
             _isSelctedByClickOnVertex = false;
-            Select((Vertex)null);
+            Select((Vertex) null);
+        }
+
+        private void Select(Label labelViewModel)
+        {
+            // Finde vertex
+            var vertex = _vertexLookup[labelViewModel.VertexId];
+            Select(vertex);
         }
 
         private void Select(Vertex vertex)
@@ -270,15 +274,14 @@ namespace Visualization.Controls
                 vertexViewModel.IsSelected = false;
             }
 
-
             foreach (var edge in _edgeViewModels)
             {
-                if (vertex != null && (edge.Node1 == vertex.Name || edge.Node2 == vertex.Name))
+                if (vertex != null && (edge.Node1Id == vertex.NodeId || edge.Node2Id == vertex.NodeId))
                 {
                     edge.IsSelected = true;
 
-                    _vertexLookup[edge.Node1].IsSelected = true;
-                    _vertexLookup[edge.Node2].IsSelected = true;
+                    _vertexLookup[edge.Node1Id].IsSelected = true;
+                    _vertexLookup[edge.Node2Id].IsSelected = true;
                 }
                 else
                 {
@@ -289,7 +292,7 @@ namespace Visualization.Controls
             // Select label if node is selected and vice versa
             foreach (var labelViewModel in _labelViewModels)
             {
-                labelViewModel.IsSelected = _vertexLookup[labelViewModel.Text].IsSelected;
+                labelViewModel.IsSelected = _vertexLookup[labelViewModel.VertexId].IsSelected;
             }
         }
 

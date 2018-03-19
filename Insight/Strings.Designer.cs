@@ -97,11 +97,29 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Code Age.
+        /// </summary>
+        public static string CodeAge {
+            get {
+                return ResourceManager.GetString("CodeAge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Comments {
             get {
                 return ResourceManager.GetString("Comments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm.
+        /// </summary>
+        public static string Confirm {
+            get {
+                return ResourceManager.GetString("Confirm", resourceCulture);
             }
         }
         
@@ -129,6 +147,15 @@ namespace Insight {
         public static string Error {
             get {
                 return ResourceManager.GetString("Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The directory is not contained in the project base. This is not allowed!.
+        /// </summary>
+        public static string ErrorDirectoryNotInProjectBase {
+            get {
+                return ResourceManager.GetString("ErrorDirectoryNotInProjectBase", resourceCulture);
             }
         }
         
@@ -188,6 +215,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Knowledge Loss.
+        /// </summary>
+        public static string KnowledgeLoss {
+            get {
+                return ResourceManager.GetString("KnowledgeLoss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lines of Code.
         /// </summary>
         public static string LinesOfCode {
@@ -218,9 +254,19 @@ namespace Insight {
         ///   Looks up a localized string similar to Paths
         ///(Exclude).
         /// </summary>
-        public static string Paths {
+        public static string PathsExclude {
             get {
-                return ResourceManager.GetString("Paths", resourceCulture);
+                return ResourceManager.GetString("PathsExclude", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paths
+        ///(Include).
+        /// </summary>
+        public static string PathsInclude {
+            get {
+                return ResourceManager.GetString("PathsInclude", resourceCulture);
             }
         }
         
@@ -261,6 +307,24 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select the developer for knowledge loss.
+        /// </summary>
+        public static string SelectDeveloper {
+            get {
+                return ResourceManager.GetString("SelectDeveloper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select developer.
+        /// </summary>
+        public static string SelectDeveloperTitle {
+            get {
+                return ResourceManager.GetString("SelectDeveloperTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Setup.
         /// </summary>
         public static string Settings {
@@ -293,6 +357,34 @@ namespace Insight {
         public static string Summary {
             get {
                 return ResourceManager.GetString("Summary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to include the work related information?.
+        /// </summary>
+        public static string SyncIncludeContributions {
+            get {
+                return ResourceManager.GetString("SyncIncludeContributions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sync reads the version control&apos;s log and calculates metrics for all supported files. This takes time. The data is persistently cached and used when doing the various analyses. If you synced before all cached data is deleted and rebuild. Best your repository is up to date and has no local changes.
+        ///Do you want to proceed?.
+        /// </summary>
+        public static string SyncInstructions {
+            get {
+                return ResourceManager.GetString("SyncInstructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To clipboard.
+        /// </summary>
+        public static string ToClipboard {
+            get {
+                return ResourceManager.GetString("ToClipboard", resourceCulture);
             }
         }
         
@@ -333,7 +425,16 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Work on single file.
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        public static string Warning {
+            get {
+                return ResourceManager.GetString("Warning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragmentation.
         /// </summary>
         public static string Work {
             get {

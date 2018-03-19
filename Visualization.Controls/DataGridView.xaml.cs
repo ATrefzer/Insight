@@ -9,7 +9,7 @@ namespace Visualization.Controls
     /// <summary>
     /// Interaction logic for DataGridView.xaml
     /// </summary>
-    public partial class DataGridView : UserControl
+    public partial class DataGridView
     {
         public DataGridView()
         {
@@ -22,7 +22,19 @@ namespace Visualization.Controls
             _dataGrid.ItemsSource = DataContext as IEnumerable;
         }
 
-        public IDataGridViewUserCommands UserCommands { get; set; }
+        /// <summary>
+        /// Commands that apply to a selection of the data grid.
+        /// </summary>
+        public IDataGridViewUserCommands UserCommands
+        {
+            get => (IDataGridViewUserCommands)GetValue(UserCommandsProperty);
+            set => SetValue(UserCommandsProperty, value);
+        }
+
+
+        public static readonly DependencyProperty UserCommandsProperty = DependencyProperty.Register(
+                                                                                                     "UserCommands", typeof(IDataGridViewUserCommands), typeof(DataGridView), new PropertyMetadata(null));
+
 
         private void _dataGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {

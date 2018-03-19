@@ -2,27 +2,30 @@
 In Progress
 ---------------------------------------
 
-- Unit Tests MovementTracker wenn add und remove ein rename darstellen
-    - Testfälle für die drei Korrekturfunktionen
-- bug assemblyinfo.cs
+- Global limits and constants (App config)
+    - change coupling
+    - Min Commits
+    - Max Workitems etc
+    - Code Age base
+    => Coupling 20 Commits AND 50% degree!!!!
 
-
-- rename circle packaging
-- Parallel Processing of knowledge (svn?)
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
-- Rename Circle Packaging
+
+- Try on different git projects
+
+- state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
+- Check why git history is deeper for some files.
+
 ---------------------------------------
-Features
+Features and improvements
 ---------------------------------------
-- specify path to svn.exe or git.exe
+- Commits pro line statt absolute 
 - Return when zooming
-- Developer knowledge for a single developer
 - maybe PieChart
 ---------------------------------------
 Bugs
 ---------------------------------------
-- AssemblyInfo duplicates are not distinguished in chord view.
-- Check if renamings in svn case are handled correctly if we read history incrementially.
+- GDI+ Error when showing work fraction
 ---------------------------------------
 User interface
 ---------------------------------------
@@ -39,6 +42,7 @@ Svn
 Controls
 ---------------------------------------
 
+- Overlay texts
 - Profile both algorithms.
 
 ---------------------------------------
@@ -65,20 +69,10 @@ Chord
 Low prio, fun
 ---------------------------------------
 
-- Global limits and constants (App config)
-    - change coupling
-    - Min Commits
-    - Max Workitems etc
-  
-- get rid of ConvexHull due to x86
-- Dynamic tabs!
 - Decoder for comment characters (multi characters?)
 - Refactor Svn Parser
-- Refactor Project. Create a new one instead of registering for changes.
-- Use WritableBitmap
-- Alternative to the CLOC because of GPL. Maybe something like this:
-  https://github.com/jjrdk/ArchiMetrics/blob/master/src/ArchiMetrics.Analysis/Metrics/LinesOfCodeCalculator.cs
-- Find code similarities
-- Log scaling for filter, or coloring or exclude outliers
-- Write all input / output of the command line tools
+- Use WritableBitmap?
 
+- Warning if changed filters!
+- TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
+  after the filters are changed. More restrictive is ok!

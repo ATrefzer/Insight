@@ -94,5 +94,17 @@ namespace Insight.Properties {
                 this["WorkItemRegEx"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PathsToInclude {
+            get {
+                return ((string)(this["PathsToInclude"]));
+            }
+            set {
+                this["PathsToInclude"] = value;
+            }
+        }
     }
 }

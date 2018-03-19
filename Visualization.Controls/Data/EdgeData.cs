@@ -1,16 +1,24 @@
 ﻿namespace Visualization.Controls.Data
 {
-    public class EdgeData
+    public sealed class EdgeData
     {
-        public string Node1;
-        public string Node2;
         public double Strength; // [0...1]
 
-        public EdgeData(string node1, string node2, double strength)
+        /// <summary>
+        /// If no display name is set for the node, the id is used.
+        /// </summary>
+        public EdgeData(string node1Id, string node2Id, double strength)
         {
-            Node1 = node1;
-            Node2 = node2;
+            Node1Id = node1Id;
+            Node1DisplayName = node1Id;
+            Node2Id = node2Id;
+            Node2DisplayName = node2Id;
             Strength = strength;
         }
+
+        public string Node1DisplayName { get; set; }
+        public string Node1Id { get; }
+        public string Node2DisplayName { get; set; }
+        public string Node2Id { get; }
     }
 }

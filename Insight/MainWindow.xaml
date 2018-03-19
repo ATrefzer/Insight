@@ -5,11 +5,13 @@
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
               xmlns:controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
               xmlns:local="clr-namespace:Insight"
+              xmlns:ViewModels="clr-namespace:Insight.ViewModels"
+              xmlns:Dialogs="clr-namespace:Insight.Dialogs"
               mc:Ignorable="d"
               Icon="Resources/Lightswitch.ico"
               Title="Insight"
               Height="350"
-              Width="525"
+              Width="580"
               Closing="MainWindow_OnClosing">
     <DockPanel>
 
@@ -33,52 +35,124 @@
                         <RibbonButton Label="{x:Static local:Strings.Save}"
                                       SmallImageSource="Resources/export_16.png"
                                       Margin="5,0,0,0"
-                                      Click="Save_Click"/>
+                                      Command="{Binding SaveDataCommand}"/>
                         <RibbonButton Label="{x:Static local:Strings.Load}"
                                       SmallImageSource="Resources/import_16.png"
                                       Margin="5,0,0,0"
-                                      Click="Load_Click"/>
+                                      Command="{Binding LoadDataCommand}"/>
                         <RibbonButton Label="{x:Static local:Strings.About}"
                                       SmallImageSource="Lightswitch.ico"
                                       Margin="5,0,0,0"
-                                      Click="About_Click"/>
+                                      Command="{Binding AboutCommand}"/>
                     </StackPanel>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.SourceControl}">
                     <RibbonButton LargeImageSource="Resources/settings_64.png"
+                                  SmallImageSource="Resources/settings_16.png"
                                   Label="{x:Static local:Strings.Settings}"
-                                  Click="Setup_Click"/>
+                                  Command="{Binding SetupCommand}" />
                     <RibbonButton LargeImageSource="Resources/sync_64.png"
+                                  SmallImageSource="Resources/sync_16.png"
                                   Label="{x:Static local:Strings.UpdateCache}"
-                                  Click="Update_Click"
+                                  Command="{Binding UpdateCommand}" 
                                   IsEnabled="{Binding IsProjectValid}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.Analysis}"
                              IsEnabled="{Binding IsProjectValid}">
-                    <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
-                                  Label="{x:Static local:Strings.Knowledge}"
-                                  Click="AnalyzeKnowledge_Click"/>
+                 
                     <RibbonButton LargeImageSource="Resources/fire_64.png"
+                                  SmallImageSource="Resources/fire_16.png"
                                   Label="{x:Static local:Strings.Hotspots}"
-                                  Click="AnalyzeHotspots_Click"/>
+                                  Command="{Binding HotspotsCommand}" />
                     <RibbonButton LargeImageSource="Resources/birds-in-love_64.png"
+                                  SmallImageSource="Resources/birds-in-love_16.png"
                                   Label="{x:Static local:Strings.Coupling}"
-                                  Click="AnalyzeChangeCouplings_Click"/>
+                                  Command="{Binding ChangeCouplingCommand}"/>
+                    <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
+                                  SmallImageSource="Resources/knowledge-transfer_16.png"
+                                  Label="{x:Static local:Strings.Knowledge}"
+                                  Command="{Binding KnowledgeCommand}"/>
+                    <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
+                                  SmallImageSource="Resources/knowledge-transfer_16.png"
+                                  Label="{x:Static local:Strings.KnowledgeLoss}"
+                                  Command="{Binding KnowledgeLossCommand}"/>
                     <RibbonButton LargeImageSource="Resources/pie-graph-split_64.png"
+                                  SmallImageSource="Resources/pie-graph-split_16.png"
                                   Label="{x:Static local:Strings.Work}"
-                                  Click="ShowWorkOnSingleFile_Click"/>
+                                  Command="{Binding FragmentationCommand}"/>
+                    <RibbonButton LargeImageSource="Resources/sands-of-time-64.png"
+                                  SmallImageSource="Resources/sands-of-time-16.png"
+                                  Label="{x:Static local:Strings.CodeAge}"
+                                  Command="{Binding CodeAgeCommand}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.Export}">
                     <RibbonButton LargeImageSource="Resources/csv-file-format-extension_64.png"
+                                  SmallImageSource="Resources/csv-file-format-extension_16.png"
                                   Label="{x:Static local:Strings.Summary}"
-                                  Click="ExportCsv_Click"/>
+                                  Command="{Binding SummaryCommand}"/>
+
+                    <RibbonButton LargeImageSource="Resources/chat-comment_64.png"
+                                  SmallImageSource="Resources/chat-comment_16.png"
+                                  Label="{x:Static local:Strings.Comments}"
+                                  Command="{Binding CommentsCommand}"/>
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>
 
+        <TabControl Name="_tabControl"
+                    ItemsSource="{Binding Tabs, Mode=TwoWay}"
+                    SelectedIndex="{Binding SelectedIndex}">
+
+            <TabControl.Resources>
+                <DataTemplate DataType="{x:Type ViewModels:TreeMapViewModel}">
+                    <controls:TreeMapView DataContext="{Binding Data}"
+                                          UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                             Path=DataContext.Commands}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type ViewModels:CirclePackingViewModel}">
+                    <!-- DataContext of parent (ContentPresenter) is ViewDescription. This is where CirclePackagingView DataContext binds to
+                    As soon as we set the DataContext of the CirclePackagingView control UserCommands will use CirclePackagingView.DataContext. -->
+                    <controls:CirclePackingView DataContext="{Binding Data}"
+                                                  UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                             Path=DataContext.Commands}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type ViewModels:TableViewModel}">
+                    <controls:DataGridView DataContext="{Binding Data}" UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                             Path=DataContext.Commands}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type ViewModels:ChordViewModel}">
+                    <controls:ChordView DataContext="{Binding Data}"/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type Dialogs:ImageViewModel}">
+                    <Image Source="{Binding Data}"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Top"
+                           Stretch="None"/>
+                </DataTemplate>
+
+            </TabControl.Resources>
+
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <HeaderedContentControl Header="{Binding Title}"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <ContentControl Content="{Binding}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+
+        </TabControl>
+        <!--
         <TabControl Name="_tabControl">
             <TabItem Header="Circle Packaging View">
                 <controls:CirclePackagingView Name="_circlePackaging"/>
@@ -99,6 +173,7 @@
                 <controls:ChordView Name="_chord"/>
             </TabItem>
         </TabControl>
+        -->
 
     </DockPanel>
 </RibbonWindow>

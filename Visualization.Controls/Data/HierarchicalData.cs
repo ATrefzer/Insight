@@ -14,7 +14,7 @@ namespace Visualization.Controls.Data
     /// For a leaf node:
     ///  - If a color key is set (not null) it is used for rendering
     ///  - If not the weight metric is used to derive a color
-    ///  - If the weight is 0 the default color (light gray is used)
+    ///  - If the weight is 0 the default color (light gray) is used
     /// For a non leaf node
     ///  - Typically the weight is 0 here, so we render hierarchy
     ///    with the default color. The weight is only set for leaf nodes.
@@ -23,6 +23,11 @@ namespace Visualization.Controls.Data
     /// If we remove leaf nodes and an inner node becomes a leaf now, its area is still NaN.
     /// Now we can call RemoveLeafNodesWithoutArea to remove these nodes (recursively).
     /// The AreaMeticSum however is initialized with 0.
+    /// 
+    /// Normally weight can be anything and it is normalized via NormalizeWeightMetrics.
+    /// If you want to provide an already normalized weight metric you have to tell via ctor.
+    /// This should be consistent with leaf and inner nodes, even if the inner nodes do not have a 
+    /// weight!
     /// </summary>
     [Serializable]
     public sealed class HierarchicalData
@@ -30,8 +35,9 @@ namespace Visualization.Controls.Data
         private const string PathSeparator = "/";
 
         private readonly List<HierarchicalData> _children = new List<HierarchicalData>();
+        private readonly bool _weightIsAleadyNormalized;
 
-        public HierarchicalData(string name)
+        public HierarchicalData(string name, bool weightIsAleadyNormalized = false)
         {
             Name = name;
             Description = Name;
@@ -39,12 +45,13 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
+            _weightIsAleadyNormalized = weightIsAleadyNormalized;
         }
 
         /// <summary>
         /// Leaf node must provide an area metric.
         /// </summary>
-        public HierarchicalData(string name, double areaMetric)
+        public HierarchicalData(string name, double areaMetric, bool weightIsAleadyNormalized = false)
         {
             Name = name;
             Description = Name;
@@ -52,9 +59,11 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
+            _weightIsAleadyNormalized = weightIsAleadyNormalized;
+
         }
 
-        public HierarchicalData(string name, double areaMetric, double weightMetric)
+        public HierarchicalData(string name, double areaMetric, double weightMetric, bool weightIsAleadyNormalized = false)
         {
             Name = name;
             Description = Name;
@@ -62,6 +71,16 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = weightMetric;
             NormalizedWeightMetric = 0.0;
+            _weightIsAleadyNormalized = weightIsAleadyNormalized;
+
+            if (_weightIsAleadyNormalized)
+            {
+                NormalizedWeightMetric = weightMetric;
+                if (WeightMetric < 0.0 || WeightMetric > 1)
+                {
+                    throw new ArgumentException("Normalized weight not in range [0,1]");
+                }
+            }
         }
 
         public double AreaMetric { get; }
@@ -83,23 +102,13 @@ namespace Visualization.Controls.Data
 
         public HierarchicalData Parent { get; set; }
 
-        public HierarchicalData Shrink()
-        {
-            if (Children.Count == 1)
-            {
-                return Children.First().Shrink();
-            }
-
-            // Leaf node or more than one children.
-            return this;
-        }
-
         /// <summary>
         /// Needs to be serializable
         /// </summary>
         public object Tag { get; set; }
 
         public double WeightMetric { get; }
+
 
         public static HierarchicalData NoData()
         {
@@ -233,6 +242,11 @@ namespace Visualization.Controls.Data
         /// </summary>
         public void NormalizeWeightMetrics()
         {
+            if (_weightIsAleadyNormalized)
+            {
+                return;
+            }
+
             // Get min and max of weight metric and map to range 0...1.
             var range = GetMinMaxWeight();
             var min = range.Min;
@@ -263,6 +277,17 @@ namespace Visualization.Controls.Data
             {
                 throw new Exception("Hierarchical data is not valid. Singular root node does not have an area.");
             }
+        }
+
+        public HierarchicalData Shrink()
+        {
+            if (Children.Count == 1)
+            {
+                return Children.First().Shrink();
+            }
+
+            // Leaf node or more than one children.
+            return this;
         }
 
         /// <summary>
@@ -334,7 +359,7 @@ namespace Visualization.Controls.Data
 
         private HierarchicalData Clone(HierarchicalData cloneThis)
         {
-            var newData = new HierarchicalData(cloneThis.Name, cloneThis.AreaMetric, cloneThis.WeightMetric);
+            var newData = new HierarchicalData(cloneThis.Name, cloneThis.AreaMetric, cloneThis.WeightMetric, _weightIsAleadyNormalized);
             newData.Description = cloneThis.Description;
             newData.ColorKey = cloneThis.ColorKey;
             newData.Tag = cloneThis.Tag;
@@ -356,7 +381,6 @@ namespace Visualization.Controls.Data
                 Dump(child, level + 1);
             }
         }
-
 
         private void GetMinMaxArea(ref double min, ref double max)
         {
@@ -386,16 +410,16 @@ namespace Visualization.Controls.Data
             }
         }
 
-        private void NormalizeWeightMetrics(double min, double scale)
+        private void NormalizeWeightMetrics(double min, double range)
         {
             if (IsLeafNode)
             {
-                NormalizedWeightMetric = (WeightMetric - min) / scale;
+                NormalizedWeightMetric = (WeightMetric - min) / range;
             }
 
             foreach (var child in Children)
             {
-                child.NormalizeWeightMetrics(min, scale);
+                child.NormalizeWeightMetrics(min, range);
             }
         }
 

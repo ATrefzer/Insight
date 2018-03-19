@@ -8,8 +8,6 @@ namespace Insight.Shared.Model
     [Serializable]
     public sealed class ChangeSetHistory
     {
-        private readonly int WORKITEM_LIMIT = 3;
-
         public ChangeSetHistory(List<ChangeSet> changeSets)
         {
             ChangeSets = changeSets;
@@ -37,9 +35,11 @@ namespace Insight.Shared.Model
 
             foreach (var changeset in ChangeSets)
             {
-                if (changeset.WorkItems.Count >= WORKITEM_LIMIT)
+                if (changeset.WorkItems.Count >= Thresholds.MaxWorkItemsPerCommitForSummary)
                 {
-                    // Ignore monster merges
+                    // Ignore monster merges.
+                    // Note: We may lose files for the summary when the last merge with many work items contains a final rename.
+                    // Maybe write a warning or make further analyses.
                     continue;
                 }
 
@@ -70,11 +70,20 @@ namespace Insight.Shared.Model
                             // Because I delete now no longer tracked files from the history we should never end up here!
                             // However in git it is possible because we may see a commit with a modify after a delete.
 
+                            // This may still happen because we skip large merges that may contain a final rename.
+                            // So we have a code metric but still believe that the file is at its former location
+
+                            Trace.WriteLine($"Ignored file: '{item.LocalPath}'. It should exist. Possible cause: Ignored commit with too much work items containing a final rename.");
                             ignore.Add(id);
                             continue;
                         }
 
-                        artifacts[id] = CreateArtifact(changeset.Id, item);
+                        artifacts[id] = CreateArtifact(changeset, item);
+                    }
+                    else
+                    {
+                        // Changesets seen first are expected so have newer dates.
+                        Debug.Assert(artifacts[id].Date >= changeset.Date);
                     }
 
                     var artifact = artifacts[id];
@@ -119,7 +128,7 @@ namespace Insight.Shared.Model
             }
         }
 
-        private static Artifact CreateArtifact(Id changeSetId, ChangeItem item)
+        private static Artifact CreateArtifact(ChangeSet cs, ChangeItem item)
         {
             Debug.Assert(item.LocalPath != null);
             var artifact = new Artifact
@@ -130,10 +139,12 @@ namespace Insight.Shared.Model
                                    Commits = 0,
 
                                    // Item used to create sets the revision (latest)
-                                   Revision = changeSetId,
+                                   Revision = cs.Id,
 
                                    // Assume first item is latest revision. If this is deleted the item should no longer be on hard disk.
-                                   IsDeleted = item.IsDelete()
+                                   IsDeleted = item.IsDelete(),
+
+                                   Date = cs.Date
                            };
 
             return artifact;

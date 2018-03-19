@@ -14,12 +14,12 @@
         <TextBlock Margin="0 10 0 0">
             <Run Text="{x:Static local:Strings.MinimumArea}"/>
             <Run Text=" ("/>
-            <Run Text="{Binding MinArea}"/>
+            <Run Text="{Binding MinArea, Mode=OneWay}"/>
             <Run Text=")"/>
         </TextBlock>
-        <Slider Minimum="{Binding AreaRange.Min}"
-                Maximum="{Binding AreaRange.Max}"
-                Value="{Binding MinArea}"
+        <Slider Minimum="{Binding AreaIndexLower}"
+                Maximum="{Binding AreaIndexUpper}"
+                Value="{Binding MinAreaIndex}"
                 Delay="200"
                 TickFrequency="1"
                 IsSnapToTickEnabled="True"/>
@@ -27,12 +27,12 @@
         <TextBlock Margin="0 10 0 0">
             <Run Text="{x:Static local:Strings.MaximumArea}"/>
             <Run Text=" ("/>
-            <Run Text="{Binding MaxArea}"/>
+            <Run Text="{Binding MaxArea, Mode=OneWay}"/>
             <Run Text=")"/>
         </TextBlock>
-        <Slider Minimum="{Binding AreaRange.Min}"
-                Maximum="{Binding AreaRange.Max}"
-                Value="{Binding MaxArea}"
+        <Slider Minimum="{Binding AreaIndexLower}"
+                Maximum="{Binding AreaIndexUpper}"
+                Value="{Binding MaxAreaIndex}"
                 Delay="200"
                 TickFrequency="1"
                 IsSnapToTickEnabled="True"/>
@@ -40,12 +40,12 @@
         <TextBlock Margin="0 10 0 0">
             <Run Text="{x:Static local:Strings.MinimumWeight}"/>
             <Run Text=" ("/>
-            <Run Text="{Binding MinWeight}"/>
+            <Run Text="{Binding MinWeight, Mode=OneWay}"/>
             <Run Text=")"/>
         </TextBlock>
-        <Slider Minimum="{Binding WeightRange.Min}"
-                Maximum="{Binding WeightRange.Max}"
-                Value="{Binding MinWeight}"
+        <Slider Minimum="{Binding WeightIndexLower}"
+                Maximum="{Binding WeightIndexUpper}"
+                Value="{Binding MinWeightIndex}"
                 Delay="200"
                 TickFrequency="1"
                 IsSnapToTickEnabled="True"/>
@@ -53,12 +53,12 @@
         <TextBlock Margin="0 10 0 0">
             <Run Text="{x:Static local:Strings.MaximumWeight}"/>
             <Run Text=" ("/>
-            <Run Text="{Binding MaxWeight}"/>
+            <Run Text="{Binding MaxWeight, Mode=OneWay}"/>
             <Run Text=")"/>
         </TextBlock>
-        <Slider Minimum="{Binding WeightRange.Min}" Name="_maxWeightSlider"
-                Maximum="{Binding WeightRange.Max}"
-                Value="{Binding MaxWeight}"
+        <Slider Minimum="{Binding WeightIndexLower}"
+                Maximum="{Binding WeightIndexUpper}"
+                Value="{Binding MaxWeightIndex}"
                 Delay="200"
                 TickFrequency="1"
                 IsSnapToTickEnabled="True"/>

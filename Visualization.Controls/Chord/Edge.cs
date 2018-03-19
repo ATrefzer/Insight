@@ -29,8 +29,8 @@ namespace Visualization.Controls.Chord
 
 
         public string Name { get; set; }
-        public string Node1 { get; set; }
-        public string Node2 { get; set; }
+        public string Node1Id { get; set; }
+        public string Node2Id { get; set; }
 
         public Point Point1
         {
@@ -78,8 +78,8 @@ namespace Visualization.Controls.Chord
 
         internal void UpdateLocation(Dictionary<string, Vertex> vertexLookup)
         {
-            var vertex1 = vertexLookup[Node1];
-            var vertex2 = vertexLookup[Node2];
+            var vertex1 = vertexLookup[Node1Id];
+            var vertex2 = vertexLookup[Node2Id];
 
             Point1 = vertex1.Center;
 

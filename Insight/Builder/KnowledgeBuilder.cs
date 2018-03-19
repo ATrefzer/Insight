@@ -13,6 +13,17 @@ namespace Insight.Builder
     {
         private Dictionary<string, MainDeveloper> _mainDeveloper;
         private Dictionary<string, LinesOfCode> _metrics;
+        private string _onlyThisDeveloper;
+
+        public KnowledgeBuilder()
+        {
+            _onlyThisDeveloper = null;
+        }
+
+        public KnowledgeBuilder(string developer)
+        {
+            _onlyThisDeveloper = developer;
+        }
 
         public HierarchicalData Build(List<Artifact> summary,
                                       Dictionary<string, LinesOfCode> metrics,
@@ -39,7 +50,14 @@ namespace Insight.Builder
 
         protected override string GetColorKey(Artifact item)
         {
-            return GetMainDeveloper(item).Developer;
+            var mainDev = GetMainDeveloper(item).Developer;
+
+            if (_onlyThisDeveloper != null && mainDev != _onlyThisDeveloper)
+            {
+                return null;
+            }
+
+            return mainDev;
         }
 
         protected override string GetDescription(Artifact item)
@@ -47,7 +65,7 @@ namespace Insight.Builder
             var mainDev = GetMainDeveloper(item);
             return item.ServerPath + "\nCommits: " + item.Commits
                    + "\nLOC: " + GetArea(item)
-                   + "\nMain developer: " + mainDev.Developer + " " + mainDev.Percent.ToString("F5") + "%";
+                   + "\nMain developer: " + mainDev.Developer + " " + mainDev.Percent.ToString("F2") + "%";
         }
 
         protected override bool IsAccepted(Artifact item)
@@ -60,7 +78,7 @@ namespace Insight.Builder
 
         private MainDeveloper GetMainDeveloper(Artifact item)
         {
-            var key = item.LocalPath;
+            var key = item.LocalPath.ToLowerInvariant();
             if (_mainDeveloper.ContainsKey(key))
             {
                 return _mainDeveloper[key];

@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SvnProvider")]
-[assembly: AssemblyCopyright("Copyright © Andreas Trefzer")]
+[assembly: AssemblyCopyright("Copyright © Andreas Trefzer 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
