@@ -11,7 +11,7 @@ namespace Insight.Shared.Extensions
 
         public static string ToIsoShort(this DateTime date)
         {
-            return string.Format(date.ToString("yyyy-MM-dd"));
+            return date.ToString("yyyy-MM-dd");
         }
     }
 }
