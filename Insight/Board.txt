@@ -2,13 +2,6 @@
 In Progress
 ---------------------------------------
 
-- Global limits and constants (App config)
-    - change coupling
-    - Min Commits
-    - Max Workitems etc
-    - Code Age base
-    => Coupling 20 Commits AND 50% degree!!!!
-
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 
 - Try on different git projects

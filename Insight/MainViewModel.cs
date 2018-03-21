@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Input;
 
+using Insight.Analyzers;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.ViewModels;
@@ -51,6 +52,7 @@ namespace Insight
             CodeAgeCommand = new DelegateCommand(CodeAgeClick);
             ChangeCouplingCommand = new DelegateCommand(ChangeCouplingClick);
             AboutCommand = new DelegateCommand(AboutClick);
+            PredictHotspotsCommand = new DelegateCommand(PredictHotspotsClick);
         }
 
         public ICommand AboutCommand { get; set; }
@@ -73,6 +75,8 @@ namespace Insight
         public ICommand KnowledgeLossCommand { get; set; }
 
         public ICommand LoadDataCommand { get; set; }
+
+        public ICommand PredictHotspotsCommand { get; set; }
 
         public ICommand SaveDataCommand { get; set; }
 
@@ -152,7 +156,6 @@ namespace Insight
         {
             _viewController.ShowAbout();
         }
-
 
         private async void ChangeCouplingClick()
         {
@@ -286,7 +289,7 @@ namespace Insight
         {
             try
             {
-                var fileName = _dialogs.GetLoadFile("bin", _project.Cache);
+                var fileName = _dialogs.GetLoadFile("bin", "Load data", _project.Cache);
                 if (fileName != null)
                 {
                     var file = new BinaryFile<HierarchicalData>();
@@ -324,6 +327,30 @@ namespace Insight
             }
         }
 
+        private void PredictHotspotsClick()
+        {
+            var oldFile = _dialogs.GetLoadFile("csv", "Load old summary", _project.Cache);
+            if (oldFile == null)
+            {
+                return;
+            }
+            var newFile = _dialogs.GetLoadFile("csv", "Load current summary", _project.Cache);
+            if (newFile == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var predictor = new HotspotPredictor(oldFile, newFile);
+                var deltas = predictor.GetHotspotDelta().OrderByDescending(x => x.Delta);
+                _tabBuilder.ShowText(deltas, "Future Hotspots");
+            }
+            catch (Exception ex)
+            {
+                _dialogs.ShowError(ex.Message);
+            }
+        }
 
         private void Save(string fileName, HierarchicalData data)
         {
@@ -344,7 +371,7 @@ namespace Insight
             // Saving hierarchical data
             if (descr.Data is HierarchicalDataContext context)
             {
-                var fileName = _dialogs.GetSaveFile("bin", _project.Cache);
+                var fileName = _dialogs.GetSaveFile("bin", "Save data", _project.Cache);
                 if (fileName != null)
                 {
                     Save(fileName, context.Data);
@@ -364,7 +391,6 @@ namespace Insight
             // Refresh state of ribbon
             Refresh();
         }
-
 
         private async void SummaryClick()
         {

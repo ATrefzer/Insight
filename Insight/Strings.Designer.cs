@@ -188,6 +188,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Future Hotspots.
+        /// </summary>
+        public static string FutureHotspots {
+            get {
+                return ResourceManager.GetString("FutureHotspots", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Home.
         /// </summary>
         public static string Home {
@@ -267,6 +276,15 @@ namespace Insight {
         public static string PathsInclude {
             get {
                 return ResourceManager.GetString("PathsInclude", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Predictions.
+        /// </summary>
+        public static string Predictions {
+            get {
+                return ResourceManager.GetString("Predictions", resourceCulture);
             }
         }
         

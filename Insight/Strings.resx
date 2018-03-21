@@ -253,4 +253,10 @@ Do you want to proceed?</value>
   <data name="ToClipboard" xml:space="preserve">
     <value>To clipboard</value>
   </data>
+  <data name="FutureHotspots" xml:space="preserve">
+    <value>Future Hotspots</value>
+  </data>
+  <data name="Predictions" xml:space="preserve">
+    <value>Predictions</value>
+  </data>
 </root>

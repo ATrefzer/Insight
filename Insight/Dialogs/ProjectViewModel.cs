@@ -128,7 +128,7 @@ namespace Insight.Dialogs
 
         private void Load()
         {
-            var file = _dialogs.GetLoadFile("xml");
+            var file = _dialogs.GetLoadFile("xml", "Load project", Cache);
             if (file != null)
             {
                 Changed = true;
@@ -140,7 +140,7 @@ namespace Insight.Dialogs
         private void Save()
         {
             Apply();
-            var file = _dialogs.GetSaveFile("xml");
+            var file = _dialogs.GetSaveFile("xml", "Save project", Cache);
             if (file != null)
             {
                 Model.SaveTo(file);

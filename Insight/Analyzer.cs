@@ -11,6 +11,7 @@ using Insight.Analyzers;
 using Insight.Builder;
 using Insight.Dto;
 using Insight.Metrics;
+using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 
@@ -231,17 +232,16 @@ namespace Insight
             LoadContributions(true); // silent
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
-            HotspotCalculator hotspotCalculator = new HotspotCalculator(summary, _metrics);
+            var hotspotCalculator = new HotspotCalculator(summary, _metrics);
 
             var gridData = new List<object>();
             foreach (var artifact in summary)
             {
-                var metricKey = artifact.LocalPath.ToLowerInvariant();
-                var loc = _metrics.ContainsKey(metricKey) ? _metrics[metricKey].Code : 0;
                 gridData.Add(CreateDataGridFriendlyArtifact(artifact, hotspotCalculator));
             }
 
-            Csv.Write(Path.Combine(Project.Cache, "summary.csv"), gridData);
+            var now = DateTime.Now.ToIsoShort();
+            Csv.Write(Path.Combine(Project.Cache, $"summary-{now}.csv"), gridData);
             return gridData;
         }
 
