@@ -19,6 +19,25 @@ namespace Tests
         private MovementTracker _tracker;
         private ChangeSet _currentChangeSet;
 
+
+
+        // Ok this test convinced me that my strategy does not apply to git :)
+        //[Test]
+        //public void GitHistoryMagic()
+        //{
+        //    StartChangeSet();
+        //    var ci2 = Track_Add(null, "location");
+        //    EndChangeSet();
+
+        //    StartChangeSet();
+        //    var ci1 = Track_Edit("location");
+        //    EndChangeSet();
+
+        //    StartChangeSet();
+        //    var ci0 = Track_Delete("location");
+        //    EndChangeSet();
+        //}
+
         [Test]
         public void CreateFileOnLocationOfDeletedFile()
         {

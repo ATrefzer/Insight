@@ -16,6 +16,7 @@ namespace Insight.GitProvider
         /// %ad  Author date (format respects --date= option)
         /// %cd  Committer date (format respects --date= option)
         /// %s   Subject (commit message)
+        /// %P   Parents (all sha1s in one line)
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
         private const string LogFormat = "START_HEADER%n%H%n%cN%n%cd%n%s%nEND_HEADER";
