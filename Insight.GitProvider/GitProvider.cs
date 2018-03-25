@@ -119,12 +119,23 @@ namespace Insight.GitProvider
                 var msg = $"Log export file '{_gitHistoryExportFile}' not found. You have to 'Sync' first.";
                 throw new FileNotFoundException(msg);
             }
+            var binFile = new BinaryFile<List<ChangeSet>>();
+            var list = binFile.Read(_gitHistoryExportFile);
+            return new ChangeSetHistory(list);
 
-            return ParseLogFile(_gitHistoryExportFile);
+            //return ParseLogFile(_gitHistoryExportFile);
+        }
+
+
+        class Graph
+        {
+            public Id Commit { get; set; }
+            List<Id> Parents { get; } = new List<Id>();
         }
 
         public void UpdateCache()
         {
+
             if (!Directory.Exists(Path.Combine(_startDirectory, ".git")))
             {
                 // We need the root (containing .git) because of the function MapToLocalFile.
@@ -133,11 +144,97 @@ namespace Insight.GitProvider
                 throw new ArgumentException("The given start directory is not the root of a git repository.");
             }
 
+
+            // TODO
+            // Build a virtual commit history
+            var trackedServerPaths = GetAllTrackedFiles();
+            var localPaths = trackedServerPaths.Select(sp => MapToLocalFile(sp)).ToList();
+
+            var graph = new Dictionary<>();
+
+            // sha1 -> commit
+            var commits = new Dictionary<Id, ChangeSet>();
+            foreach (var localPath in localPaths)
+            {
+                var id = new StringId(Guid.NewGuid().ToString());
+
+                var fileLog = _gitCli.Log(localPath);
+                var fileHistory = ParseLogString(fileLog);
+
+                foreach (var cs in fileHistory.ChangeSets)
+                {                   
+                    if (!commits.ContainsKey(cs.Id))
+                    {
+                        cs.Items.Single().Id = id;
+                        commits.Add(cs.Id, cs);
+                    }
+                    else
+                    {
+                        var changeSet = commits[cs.Id];
+                        changeSet.Items.Add(cs.Items.Single());
+
+                        // Is the id already in the changeset (from another file)
+                        // we have to reassign a new one for the common ancestor and beyond!
+                    }
+                }
+            }
+
+
+            var builder = new StringBuilder(1000);
+            var ordered = commits.Values.OrderByDescending(x => x.Date).ToList();
+            foreach (var cs in ordered)
+            {
+                builder.AppendLine("START_HEADER");
+                builder.AppendLine(cs.Id.ToString());
+                builder.AppendLine(cs.Committer);
+                builder.AppendLine(cs.Date.ToIsoShort());
+                builder.AppendLine(cs.Comment);
+                builder.AppendLine("END_HEADER");
+
+                foreach (var file in cs.Items)
+                {
+                    if (file.FromServerPath != null)
+                        builder.AppendLine(ToString(file.Kind) + "\t" + file.FromServerPath + "\t" + file.ServerPath);
+                    else
+                    builder.AppendLine(ToString(file.Kind) + "\t" +  file.ServerPath);
+                }
+
+              
+
+                builder.AppendLine();
+
+            }
+
+            var log = builder.ToString();
+
             // Git has the complete history locally anyway.
 
-            var log = _gitCli.Log();
-            File.WriteAllText(_gitHistoryExportFile, log);
+          //  var log = _gitCli.Log();
+
+            // Keep old output!
+            File.WriteAllText(_gitHistoryExportFile + ".log", log);
+            BinaryFile<List<ChangeSet>> binFile = new BinaryFile<List<ChangeSet>>();
+            ;
+            binFile.Write("_gitHistoryExportFile", ordered);
         }
+
+        string ToString(KindOfChange kind)
+        {
+            switch (kind)
+            {
+                case KindOfChange.Add:
+                    return "A";
+                case KindOfChange.Rename:
+                    return "R100";
+                case KindOfChange.Delete:
+                    return "D";
+                case KindOfChange.Edit:
+                    return "M";
+                default:
+                    return "M";
+            }
+        }
+       
 
         /// <summary>
         /// I don't want to run into merge conflicts.
@@ -157,7 +254,7 @@ namespace Insight.GitProvider
             }
         }
 
-        private void CreateChangeItem(string changeItem, MovementTracker tracker)
+        private void CreateChangeItem(ChangeSet cs, string changeItem)
         {
             var ci = new ChangeItem();
 
@@ -169,6 +266,8 @@ namespace Insight.GitProvider
             var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
             var changeKind = ToKindOfChange(parts[0]);
             ci.Kind = changeKind;
+
+            // Note: copy is treatet as add.
             if (changeKind == KindOfChange.Rename)
             {
                 Debug.Assert(parts.Length == 3);
@@ -176,13 +275,13 @@ namespace Insight.GitProvider
                 var newName = parts[2];
                 ci.ServerPath = Decoder(newName);
                 ci.FromServerPath = oldName;
-                tracker.TrackId(ci);
+                cs.Items.Add(ci);
             }
             else
             {
                 Debug.Assert(parts.Length == 2 || parts.Length == 3);
                 ci.ServerPath = Decoder(parts[1]);
-                tracker.TrackId(ci);
+                cs.Items.Add(ci);
             }
 
             ci.LocalPath = MapToLocalFile(ci.ServerPath);
@@ -305,6 +404,7 @@ namespace Insight.GitProvider
             var hash = ReadLine(reader);
             var committer = ReadLine(reader);
             var date = ReadLine(reader);
+            //var parents = ReadLine(reader);
 
             var commentBuilder = new StringBuilder();
             string commentLine;
@@ -328,9 +428,7 @@ namespace Insight.GitProvider
 
             Debug.Assert(commentLine == endHeaderMarker);
 
-            tracker.BeginChangeSet(cs);
-            ReadChangeItems(reader, tracker);
-            tracker.ApplyChangeSet(cs.Items);
+            ReadChangeItems(cs, reader);
             return cs;
         }
 
@@ -344,7 +442,7 @@ namespace Insight.GitProvider
         }
 
 
-        private void ReadChangeItems(StreamReader reader, MovementTracker tracker)
+        private void ReadChangeItems(ChangeSet cs, StreamReader reader)
         {
             // Now parse the files!
             var changeItem = ReadLine(reader);
@@ -352,7 +450,7 @@ namespace Insight.GitProvider
             {
                 if (!string.IsNullOrEmpty(changeItem))
                 {
-                    CreateChangeItem(changeItem, tracker);
+                    CreateChangeItem(cs, changeItem);
                 }
 
                 changeItem = ReadLine(reader);
