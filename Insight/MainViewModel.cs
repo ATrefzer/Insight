@@ -192,6 +192,11 @@ namespace Insight
         private async void FragmentationClick()
         {
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
+            if (context == null)
+            {
+                return;
+            }
+
             var colorScheme = context.ColorScheme;
 
             _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands(colorScheme));

@@ -14,6 +14,9 @@ namespace Insight.Shared.Model
         Merge = 256,
         None = 1,
         Rename = 16,
+
+        // Added for git file history
+        Copy
     }
 
     [Serializable]

@@ -34,7 +34,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.Metrics", "Insight.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{8851FE38-AD8D-428D-B328-1F76860F2B51}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.GitProvider", "Insight.GitProvider\Insight.GitProvider.csproj", "{D3F60D96-D873-4225-B398-EEFD68A3C5EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.GitProviderLinear", "Insight.GitProviderLinear\Insight.GitProviderLinear.csproj", "{D3F60D96-D873-4225-B398-EEFD68A3C5EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.GitProvider", "Insight.GitProvider\Insight.GitProvider.csproj", "{D98FEFF9-2478-4B2A-9E25-51B0D9647874}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,6 +76,10 @@ Global
 		{D3F60D96-D873-4225-B398-EEFD68A3C5EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3F60D96-D873-4225-B398-EEFD68A3C5EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3F60D96-D873-4225-B398-EEFD68A3C5EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D98FEFF9-2478-4B2A-9E25-51B0D9647874}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D98FEFF9-2478-4B2A-9E25-51B0D9647874}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D98FEFF9-2478-4B2A-9E25-51B0D9647874}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D98FEFF9-2478-4B2A-9E25-51B0D9647874}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
