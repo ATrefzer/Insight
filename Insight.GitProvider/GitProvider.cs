@@ -148,6 +148,9 @@ namespace Insight.GitProvider
                 throw new ArgumentException("The given start directory is not the root of a git repository.");
             }
 
+            var fullLog = _gitCli.Log();
+            File.WriteAllText(_gitHistoryExportFile + ".full.txt", fullLog);
+
             // TODO atr
             var filter = new ExtensionIncludeFilter(".cs");
 
@@ -159,6 +162,7 @@ namespace Insight.GitProvider
             var localPaths = trackedServerPaths.Select(sp => MapToLocalFile(sp)).Where(lp => filter.IsAccepted(lp)).ToList();
 
             // Git graph
+            var debug = new Dictionary<Id, ChangeItem>();
             _graph = new Dictionary<Id, GraphNode>();
 
             /// Rules: Find a copy? stop there and treat it like an add.
@@ -175,6 +179,10 @@ namespace Insight.GitProvider
                 foreach (var cs in fileHistory.ChangeSets)
                 {
                     var singleFile = cs.Items.Single();
+                    if (!debug.ContainsKey(id))
+                        debug.Add(id, singleFile); // which id belonged to which item?
+
+
                     if (!commits.ContainsKey(cs.Id))
                     {
                         singleFile.Id = id;
@@ -186,12 +194,17 @@ namespace Insight.GitProvider
                         var changeSet = commits[cs.Id];
 
                         singleFile.Id = id;
+
+                        // Shared history?
+                        Debug.Assert(changeSet.Items.Any(x => x.ServerPath == singleFile.ServerPath) == false);
                         changeSet.Items.Add(singleFile);
+
+
                     }
 
                     if (singleFile.Kind == KindOfChange.Copy)
                     {
-                        // Stop tracking this file.
+                        // Stop tracking this file. Consider copy as a new start.
                         singleFile.Kind = KindOfChange.Add;
                         break;
                     }
@@ -208,7 +221,7 @@ namespace Insight.GitProvider
                 var lp = new HashSet<string>();
                 foreach (var a in cs.Items)
                 {
-                    //    Debug.Assert(sp.Add(a.ServerPath));
+                        Debug.Assert(sp.Add(a.ServerPath));
 
                     //  follow change set id in graph and remove both Ids!
                     // starting in this change set!
@@ -398,7 +411,7 @@ namespace Insight.GitProvider
 
             // Git graph
             var parents = ReadLine(reader);
-            UpdateGraphh(hash, parents);
+            UpdateGraph(hash, parents);
 
             var commentBuilder = new StringBuilder();
             string commentLine;
@@ -426,7 +439,7 @@ namespace Insight.GitProvider
             return cs;
         }
 
-        private void UpdateGraphh(string hash, string parents)
+        private void UpdateGraph(string hash, string parents)
         {
             var allParents = parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                                                 .Select(p => new StringId(p) as Id)

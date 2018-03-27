@@ -1,10 +1,13 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-
+- Try on different git projects
+    Nunit provokes some problems. DataPointsAttribute and DataPointSourceAttribute
+    look like they share a same history. Seems my command line gives too much results.
+    The comment of the shared changeset does not appear in the history of DataPointSourceAttribute
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 
-- Try on different git projects
+
 
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 - Check why git history is deeper for some files.
