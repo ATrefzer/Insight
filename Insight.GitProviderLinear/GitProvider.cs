@@ -6,33 +6,32 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 
 using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 
-using Newtonsoft.Json;
-
-namespace Insight.GitProvider
+namespace Insight.GitProviderLinear
 {
     /// <summary>
     /// Provides higher level funtions and queries on a git repository.
     /// </summary>
     public sealed class GitProvider : ISourceControlProvider
     {
-        private static readonly Regex _regex = new Regex(@"\\(?<Value>[a-zA-Z0-9]{3})", RegexOptions.Compiled);
-        private readonly string endHeaderMarker = "END_HEADER";
+        static readonly Regex _regex = new Regex(@"\\(?<Value>[a-zA-Z0-9]{3})", RegexOptions.Compiled);
+        readonly string endHeaderMarker = "END_HEADER";
 
-        private readonly string recordMarker = "START_HEADER";
-        private string _cachePath;
-        private GitCommandLine _gitCli;
-        private string _gitHistoryExportFile;
+        readonly string recordMarker = "START_HEADER";
+        string _cachePath;
+        GitCommandLine _gitCli;
+        string _gitHistoryExportFile;
 
-        private string _lastLine;
-        private string _startDirectory;
-        private string _workItemRegex;
+        string _lastLine;
+        string _startDirectory;
+        string _workItemRegex;
+
+        public List<WarningMessage> Warnings { get; private set; }
 
         public static string GetClass()
         {
@@ -68,7 +67,7 @@ namespace Insight.GitProvider
         {
             var replace = _regex.Replace(
                                          value,
-                                         m => ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
+                                         m => ((char) int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
                                         );
             return replace.Trim('"');
         }
@@ -100,6 +99,13 @@ namespace Insight.GitProvider
             return result;
         }
 
+        public HashSet<string> GetAllTrackedFiles()
+        {
+            var serverPaths = _gitCli.GetAllTrackedFiles();
+            var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            return new HashSet<string>(all);
+        }
+
         public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
             _startDirectory = projectBase;
@@ -109,8 +115,6 @@ namespace Insight.GitProvider
             _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.log");
             _gitCli = new GitCommandLine(_startDirectory);
         }
-
-        public List<WarningMessage> Warnings { get; private set; }
 
         /// <summary>
         /// You need to call UpdateCache before.
@@ -122,24 +126,12 @@ namespace Insight.GitProvider
                 var msg = $"Log export file '{_gitHistoryExportFile}' not found. You have to 'Sync' first.";
                 throw new FileNotFoundException(msg);
             }
-         
-            // Read pre parsed history
-            var file = new BinaryFile<List<ChangeSet>>();
-            var list = file.Read(_gitHistoryExportFile);
-            return new ChangeSetHistory(list);
+
+            return ParseLogFile(_gitHistoryExportFile);
         }
-
-
-        class GraphNode
-        {
-            public Id Commit { get; set; }
-            public List<Id> Parents { get; set; }
-        }
-
 
         public void UpdateCache()
         {
-
             if (!Directory.Exists(Path.Combine(_startDirectory, ".git")))
             {
                 // We need the root (containing .git) because of the function MapToLocalFile.
@@ -148,81 +140,10 @@ namespace Insight.GitProvider
                 throw new ArgumentException("The given start directory is not the root of a git repository.");
             }
 
-            // TODO atr
-            var filter = new ExtensionIncludeFilter(".cs");
+            // Git has the complete history locally anyway.
 
-            // TODO
-            // Build a virtual commit history
-            var trackedServerPaths = GetAllTrackedFiles();
-
-            // Filtered local paths
-            var localPaths = trackedServerPaths.Select(sp => MapToLocalFile(sp)).Where(lp => filter.IsAccepted(lp)).ToList();
-
-            // Git graph
-            _graph = new Dictionary<Id, GraphNode>();
-
-            /// Rules: Find a copy? stop there and treat it like an add.
-
-            // sha1 -> commit
-            var commits = new Dictionary<Id, ChangeSet>();
-            foreach (var localPath in localPaths)
-            {
-                var id = new StringId(Guid.NewGuid().ToString());
-
-                var fileLog = _gitCli.Log(localPath);
-                var fileHistory = ParseLogString(fileLog);
-
-                foreach (var cs in fileHistory.ChangeSets)
-                {
-                    var singleFile = cs.Items.Single();
-                    if (!commits.ContainsKey(cs.Id))
-                    {
-                        singleFile.Id = id;
-                        commits.Add(cs.Id, cs);
-                    }
-                    else
-                    {
-                        // Seen this changeset before. Add the file.
-                        var changeSet = commits[cs.Id];
-
-                        singleFile.Id = id;
-                        changeSet.Items.Add(singleFile);
-                    }
-
-                    if (singleFile.Kind == KindOfChange.Copy)
-                    {
-                        // Stop tracking this file.
-                        singleFile.Kind = KindOfChange.Add;
-                        break;
-                    }
-                }
-            }
-
-            var ordered = commits.Values.OrderByDescending(x => x.Date).ToList();
-
-            // Cleanup the history
-            foreach (var cs in ordered)
-            {
-
-                var sp = new HashSet<string>();
-                var lp = new HashSet<string>();
-                foreach (var a in cs.Items)
-                {
-                    //    Debug.Assert(sp.Add(a.ServerPath));
-
-                    //  follow change set id in graph and remove both Ids!
-                    // starting in this change set!
-
-
-                    // In same change set we have a copy of another file!
-                    // Add in change set this but remove both ids in all older changesets
-                    //if (a.FromServerPath != null)
-                    //    Debug.Assert(lp.Add(a.FromServerPath));
-                }
-
-                var file = new BinaryFile<List<ChangeSet>>();
-                file.Write(_gitHistoryExportFile, ordered);
-            }
+            var log = _gitCli.Log();
+            File.WriteAllText(_gitHistoryExportFile, log);
         }
 
         /// <summary>
@@ -230,7 +151,7 @@ namespace Insight.GitProvider
         /// Abort if there are local changes to the working or staging area.
         /// Abort if there are local commits not pushed to the remote.
         /// </summary>
-        private void AbortOnPotentialMergeConflicts()
+        void AbortOnPotentialMergeConflicts()
         {
             if (_gitCli.HasLocalChanges())
             {
@@ -243,7 +164,7 @@ namespace Insight.GitProvider
             }
         }
 
-        private void CreateChangeItem(ChangeSet cs, string changeItem)
+        void CreateChangeItem(string changeItem, MovementTracker tracker)
         {
             var ci = new ChangeItem();
 
@@ -255,28 +176,27 @@ namespace Insight.GitProvider
             var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
             var changeKind = ToKindOfChange(parts[0]);
             ci.Kind = changeKind;
-
-            if (changeKind == KindOfChange.Rename || changeKind == KindOfChange.Copy)
+            if (changeKind == KindOfChange.Rename)
             {
                 Debug.Assert(parts.Length == 3);
                 var oldName = parts[1];
                 var newName = parts[2];
                 ci.ServerPath = Decoder(newName);
                 ci.FromServerPath = oldName;
-                cs.Items.Add(ci);
+                tracker.TrackId(ci);
             }
             else
             {
                 Debug.Assert(parts.Length == 2 || parts.Length == 3);
                 ci.ServerPath = Decoder(parts[1]);
-                cs.Items.Add(ci);
+                tracker.TrackId(ci);
             }
 
             ci.LocalPath = MapToLocalFile(ci.ServerPath);
         }
 
 
-        private string GetHistoryCache()
+        string GetHistoryCache()
         {
             var path = Path.Combine(_cachePath, "History");
             if (!Directory.Exists(path))
@@ -287,7 +207,7 @@ namespace Insight.GitProvider
             return path;
         }
 
-        private string GetPathToExportedFile(FileInfo localFile, Id revision)
+        string GetPathToExportedFile(FileInfo localFile, Id revision)
         {
             var name = new StringBuilder();
 
@@ -300,7 +220,7 @@ namespace Insight.GitProvider
             return Path.Combine(GetHistoryCache(), name.ToString());
         }
 
-        private bool GoToNextRecord(StreamReader reader)
+        bool GoToNextRecord(StreamReader reader)
         {
             if (_lastLine == recordMarker)
             {
@@ -320,7 +240,7 @@ namespace Insight.GitProvider
             return false;
         }
 
-        private string MapToLocalFile(string serverPath)
+        string MapToLocalFile(string serverPath)
         {
             // In git we have the restriction 
             // that we cannot choose any sub directory.
@@ -338,7 +258,7 @@ namespace Insight.GitProvider
         /// <summary>
         /// Log file has format specified in GitCommandLine class
         /// </summary>
-        private ChangeSetHistory ParseLog(Stream log)
+        ChangeSetHistory ParseLog(Stream log)
         {
             var changeSets = new List<ChangeSet>();
             var tracker = new MovementTracker();
@@ -353,52 +273,38 @@ namespace Insight.GitProvider
 
                 while (proceed)
                 {
-                    var changeSet = ParseRecord(reader);
+                    var changeSet = ParseRecord(reader, tracker);
                     changeSets.Add(changeSet);
                     proceed = GoToNextRecord(reader);
                 }
             }
 
             Warnings = tracker.Warnings;
-            var history = new ChangeSetHistory(changeSets.OrderByDescending(x => x.Date).ToList());
+            var history = new ChangeSetHistory(changeSets);
             return history;
         }
 
-        public HashSet<string> GetAllTrackedFiles()
-        {
-            var serverPaths = _gitCli.GetAllTrackedFiles();
-            var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            return new HashSet<string>(all);
-        }
-
-        private ChangeSetHistory ParseLogFile(string logFile)
+        ChangeSetHistory ParseLogFile(string logFile)
         {
             using (var stream = new FileStream(logFile, FileMode.Open))
             {
-                var history = ParseLog(stream);           
+                var history = ParseLog(stream);
                 return history;
             }
         }
 
-        private ChangeSetHistory ParseLogString(string logString)
+        ChangeSetHistory ParseLogString(string logString)
         {
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(logString));
             return ParseLog(stream);
         }
 
-
-        Dictionary<Id, GraphNode> _graph = new Dictionary<Id, GraphNode>();
-
-        private ChangeSet ParseRecord(StreamReader reader)
+        ChangeSet ParseRecord(StreamReader reader, MovementTracker tracker)
         {
             // We are located on the first data item of the record
             var hash = ReadLine(reader);
             var committer = ReadLine(reader);
             var date = ReadLine(reader);
-
-            // Git graph
-            var parents = ReadLine(reader);
-            UpdateGraphh(hash, parents);
 
             var commentBuilder = new StringBuilder();
             string commentLine;
@@ -422,23 +328,13 @@ namespace Insight.GitProvider
 
             Debug.Assert(commentLine == endHeaderMarker);
 
-            ReadChangeItems(cs, reader);
+            tracker.BeginChangeSet(cs);
+            ReadChangeItems(reader, tracker);
+            tracker.ApplyChangeSet(cs.Items);
             return cs;
         }
 
-        private void UpdateGraphh(string hash, string parents)
-        {
-            var allParents = parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                                                .Select(p => new StringId(p) as Id)
-                                                .ToList();
-            var node = new GraphNode { Commit = new StringId(hash), Parents = allParents };
-
-            if (!_graph.ContainsKey(node.Commit))
-                _graph.Add(node.Commit, node);
-            
-        }
-
-        private void ParseWorkItemsFromComment(List<WorkItem> workItems, string comment)
+        void ParseWorkItemsFromComment(List<WorkItem> workItems, string comment)
         {
             if (!string.IsNullOrEmpty(_workItemRegex))
             {
@@ -448,7 +344,7 @@ namespace Insight.GitProvider
         }
 
 
-        private void ReadChangeItems(ChangeSet cs, StreamReader reader)
+        void ReadChangeItems(StreamReader reader, MovementTracker tracker)
         {
             // Now parse the files!
             var changeItem = ReadLine(reader);
@@ -456,31 +352,34 @@ namespace Insight.GitProvider
             {
                 if (!string.IsNullOrEmpty(changeItem))
                 {
-                    CreateChangeItem(cs, changeItem);
+                    CreateChangeItem(changeItem, tracker);
                 }
 
                 changeItem = ReadLine(reader);
             }
         }
 
-        private string ReadLine(StreamReader reader)
+        string ReadLine(StreamReader reader)
         {
             // The only place where we read
             _lastLine = reader.ReadLine()?.Trim();
             return _lastLine;
         }
 
-        private KindOfChange ToKindOfChange(string kind)
+        KindOfChange ToKindOfChange(string kind)
         {
             if (kind.StartsWith("R"))
             {
                 // Followed by the similarity
                 return KindOfChange.Rename;
             }
+
             if (kind.StartsWith("C"))
             {
-                // Followed by the similarity.              
-                return KindOfChange.Copy;
+                // Followed by the similarity. 
+                // I tread a copy of a file as a new start.
+                Trace.WriteLine("Found copy operation for git!");
+                return KindOfChange.Add;
             }
             else if (kind == "A")
             {

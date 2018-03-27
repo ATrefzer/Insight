@@ -2,7 +2,6 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
-
 using Insight.WpfCore;
 
 using Prism.Commands;
@@ -31,16 +30,23 @@ namespace Insight.Dialogs
                                   Name = "Svn"
                           };
 
-                var git = new ProviderDescription
+                var gitLinear = new ProviderDescription
                 {
-                    Class = GitProvider.GitProvider.GetClass(),
+                    Class = GitProviderLinear.GitProvider.GetClass(),
                     Name = "Git - (Caution! Assumes a linear history.)"
                 };
+
+                var git = new ProviderDescription
+                          {
+                                  Class = GitProvider.GitProvider.GetClass(),
+                                  Name = "Git (Recover history file by file)"
+                          };
 
                 return new List<ProviderDescription>
                        {
                                svn
-                               ,git
+                               ,gitLinear,
+                               git
                        };
             }
         }
