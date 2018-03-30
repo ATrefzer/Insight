@@ -27,10 +27,10 @@ namespace Insight
         /// <summary>
         /// Local path to contribution
         /// </summary>
-        private Dictionary<string, Contribution> _contributions;
+        Dictionary<string, Contribution> _contributions;
 
-        private ChangeSetHistory _history;
-        private Dictionary<string, LinesOfCode> _metrics;
+        ChangeSetHistory _history;
+        Dictionary<string, LinesOfCode> _metrics;
 
         public Analyzer(Project project)
         {
@@ -39,7 +39,7 @@ namespace Insight
 
         public List<WarningMessage> Warnings { get; private set; }
 
-        private Project Project { get; }
+        Project Project { get; }
 
 
         public List<Coupling> AnalyzeChangeCoupling()
@@ -252,7 +252,7 @@ namespace Insight
             // Note: You should have the latest code locally such that history and metrics match!
             // Update svn history
             var svnProvider = Project.CreateProvider();
-            svnProvider.UpdateCache();
+            svnProvider.UpdateCache(progress);
 
             progress.Message("Updating code metrics.");
 
@@ -281,7 +281,7 @@ namespace Insight
             return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
 
-        private static string ClassifyDirectory(string localPath)
+        static string ClassifyDirectory(string localPath)
         {
             // Classify different source code folders
 
@@ -304,7 +304,7 @@ namespace Insight
             return string.Empty;
         }
 
-        private void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
+        void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
         {
             // order such that same developers get same colors regardless of order.
             foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
@@ -313,7 +313,7 @@ namespace Insight
             }
         }
 
-        private Dictionary<string, Contribution> CalculateContributionsParallel(Progress progress, List<Artifact> summary)
+        Dictionary<string, Contribution> CalculateContributionsParallel(Progress progress, List<Artifact> summary)
         {
             // Calculate main developer for each file
             var fileToContribution = new ConcurrentDictionary<string, Contribution>();
@@ -341,9 +341,9 @@ namespace Insight
             return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
         }
 
-        private object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
+        object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
         {
-            int linesOfCode = (int)hotspotCalculator.GetArea(artifact);
+            var linesOfCode = (int) hotspotCalculator.GetArea(artifact);
             if (_contributions != null)
             {
                 var result = new DataGridFriendlyArtifact();
@@ -380,12 +380,12 @@ namespace Insight
             }
         }
 
-        private string GetPathToContributionFile()
+        string GetPathToContributionFile()
         {
             return Path.Combine(Project.Cache, "contribution_analysis.json");
         }
 
-        private void LoadContributions(bool silent = false)
+        void LoadContributions(bool silent = false)
         {
             if (_contributions == null)
             {
@@ -404,7 +404,7 @@ namespace Insight
             }
         }
 
-        private void LoadHistory()
+        void LoadHistory()
         {
             if (_history == null)
             {
@@ -417,7 +417,7 @@ namespace Insight
             }
         }
 
-        private void LoadMetrics()
+        void LoadMetrics()
         {
             // Get code metrics (all files from the cache!)
             if (_metrics == null)
@@ -427,7 +427,7 @@ namespace Insight
             }
         }
 
-        private void UpdateContributions(Progress progress)
+        void UpdateContributions(Progress progress)
         {
             LoadHistory();
             LoadMetrics();

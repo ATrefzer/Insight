@@ -1,12 +1,11 @@
 ﻿using System.IO;
 
 using Insight.Shared.Exceptions;
-using Insight.Shared.Model;
 using Insight.Shared.System;
 
 namespace Insight.GitProvider
 {
-    internal sealed class GitCommandLine
+    sealed class GitCommandLine
     {
         /// <summary>
         /// %H   Hash (abbrebiated is %h)
@@ -19,9 +18,9 @@ namespace Insight.GitProvider
         /// %P   Parents (all sha1s in one line) First commit does not have a parent!
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
-        private const string LogFormat = "START_HEADER%n%H%n%cN%n%cd%n%P%n%s%nEND_HEADER";
+        const string LogFormat = "START_HEADER%n%H%n%cN%n%cd%n%P%n%s%nEND_HEADER";
 
-        private readonly string _workingDirectory;
+        readonly string _workingDirectory;
 
         public GitCommandLine(string workingDirectory)
         {
@@ -36,7 +35,7 @@ namespace Insight.GitProvider
             return ExecuteCommandLine(program, args).StdOut;
         }
 
-        public void ExportFileRevision(string serverPath, Id revision, string exportFile)
+        public void ExportFileRevision(string serverPath, string revision, string exportFile)
         {
             var program = "git";
 
@@ -44,6 +43,17 @@ namespace Insight.GitProvider
 
             var result = ExecuteCommandLine(program, args);
             File.WriteAllText(exportFile, result.StdOut);
+        }
+
+        public string GetAllTrackedFiles()
+        {
+            var program = "git";
+
+            // Optional HEAD
+            var args = $"ls-tree -r master --name-only";
+
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut;
         }
 
         /// <summary>
@@ -103,7 +113,7 @@ namespace Insight.GitProvider
             return result.StdOut;
         }
 
-        private ProcessResult ExecuteCommandLine(string program, string args)
+        ProcessResult ExecuteCommandLine(string program, string args)
         {
             var result = ProcessRunner.RunProcess(program, args, _workingDirectory);
 
@@ -113,17 +123,6 @@ namespace Insight.GitProvider
             }
 
             return result;
-        }
-
-        public string GetAllTrackedFiles()
-        {
-            var program = "git";
-
-            // Optional HEAD
-            var args = $"ls-tree -r master --name-only";
-
-            var result = ExecuteCommandLine(program, args);
-            return result.StdOut;
         }
     }
 }

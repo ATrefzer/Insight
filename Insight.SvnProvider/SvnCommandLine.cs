@@ -23,7 +23,7 @@ namespace Insight.SvnProvider
             return ExecuteCommandLine(program, args);
         }
 
-        public void ExportFileRevision(string localFile, Id revision, string exportFile)
+        public void ExportFileRevision(string localFile, string revision, string exportFile)
         {
             var program = "svn";
             var args = $"export -r {revision} \"{localFile}\" \"{exportFile}\"";

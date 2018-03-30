@@ -22,7 +22,7 @@ namespace Insight.Shared.Model
     [Serializable]
     public sealed class ChangeItem
     {
-        public Id Id { get; set; }
+        public string Id { get; set; }
 
         public KindOfChange Kind { get; set; }
         public string LocalPath { get; set; }

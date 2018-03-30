@@ -18,8 +18,8 @@ namespace Insight.Analyzers
         /// </summary>
         public Dictionary<OrderedPair, uint> AnalyzeTeamCommunication(ChangeSetHistory history, ITeamClassifier teamClassifier)
         {
-            // file -> dictionary{team, #commits}
-            var fileToCommitsPerTeam = new Dictionary<Id, Dictionary<string, uint>>();
+            // file id -> dictionary{team, #commits}
+            var fileToCommitsPerTeam = new Dictionary<string, Dictionary<string, uint>>();
 
             foreach (var cs in history.ChangeSets)
             {
