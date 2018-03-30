@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="GitCommandLine.cs" />
     <Compile Include="GitProvider.cs" />
+    <Compile Include="GitProviderBase.cs" />
     <Compile Include="GitProviderLinear.cs" />
     <Compile Include="GraphNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

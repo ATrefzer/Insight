@@ -80,14 +80,6 @@ namespace Insight.GitProvider
             return !result.StdOut.ToLowerInvariant().Contains(hint);
         }
 
-        public ProcessResult PullMasterFromOrigin()
-        {
-            // git pull origin master
-            var program = "git";
-            var args = $"pull origin master";
-            return ExecuteCommandLine(program, args);
-        }
-
         public string Log()
         {
             // --num_stat Shows added and removed lines
@@ -111,6 +103,14 @@ namespace Insight.GitProvider
 
             var result = ExecuteCommandLine(program, args);
             return result.StdOut;
+        }
+
+        public ProcessResult PullMasterFromOrigin()
+        {
+            // git pull origin master
+            var program = "git";
+            var args = $"pull origin master";
+            return ExecuteCommandLine(program, args);
         }
 
         ProcessResult ExecuteCommandLine(string program, string args)
