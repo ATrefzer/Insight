@@ -98,8 +98,7 @@ namespace Insight.SvnProvider
                     continue;
                 }
 
-                var value = ulong.Parse(entry.Attributes["revision"].Value);
-                var revision =  new NumberId(value);
+                var revision = entry.Attributes["revision"].Value;
                 var date = entry.SelectSingleNode("./date")?.InnerText;
                 var dateTime = DateTime.Parse(date);
 
@@ -120,7 +119,7 @@ namespace Insight.SvnProvider
             return result;
         }
 
-        public void Initialize(string projectBase, string cachePath, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
@@ -145,7 +144,7 @@ namespace Insight.SvnProvider
 
         public List<WarningMessage> Warnings { get; private set; }
 
-        public void UpdateCache()
+        public void UpdateCache(IProgress progress)
         {
             // Important: svn log returns the revisions in a different order 
             // than the {revision:HEAD} version.
@@ -209,7 +208,7 @@ namespace Insight.SvnProvider
             return path;
         }
 
-        private string GetPathToExportedFile(FileInfo localFile, Id revision)
+        private string GetPathToExportedFile(FileInfo localFile, string revision)
         {
             var name = new StringBuilder();
 
@@ -400,7 +399,7 @@ namespace Insight.SvnProvider
             return new ChangeSetHistory(result);
         }
 
-        private NumberId ReadRevision(XmlReader reader)
+        private string ReadRevision(XmlReader reader)
         {
             var revision = reader.GetAttribute("revision");
             if (revision == null)
@@ -408,8 +407,7 @@ namespace Insight.SvnProvider
                 throw new InvalidDataException();
             }
 
-            var value = ulong.Parse(revision);
-            return new NumberId(value);
+            return revision;
         }
 
         private KindOfChange SvnActionToKindOfChange(string action)

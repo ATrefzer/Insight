@@ -13,16 +13,15 @@ namespace Insight
     {
     }
 
-  
 
     [Serializable]
     public sealed class Project
     {
-        private string _extensionsToInclude = "";
-        private string _pathToExclude = "";
-        private string _pathToInclude;
+        string _extensionsToInclude = "";
+        string _pathToExclude = "";
+        string _pathToInclude;
 
-        private string _projectBase;
+        string _projectBase;
 
         public event EventHandler ProjectLoaded;
         public string Cache { get; set; }
@@ -102,7 +101,7 @@ namespace Insight
                 throw new Exception($"Failed creating '{type}'");
             }
 
-            provider.Initialize(ProjectBase, Cache, WorkItemRegEx);
+            provider.Initialize(ProjectBase, Cache, Filter, WorkItemRegEx);
             return provider;
         }
 
@@ -195,7 +194,7 @@ namespace Insight
             file.Write(path, this);
         }
 
-        private void OnProjectLoaded()
+        void OnProjectLoaded()
         {
             ProjectLoaded?.Invoke(this, EventArgs.Empty);
         }
@@ -203,7 +202,7 @@ namespace Insight
         /// <summary>
         /// Split, Trim, and ToLower
         /// </summary>
-        private IEnumerable<string> SplitTrimAndToLower(string splitThis)
+        IEnumerable<string> SplitTrimAndToLower(string splitThis)
         {
             if (string.IsNullOrEmpty(splitThis))
             {
@@ -217,7 +216,7 @@ namespace Insight
             return parts;
         }
 
-        private void UpdateFilter()
+        void UpdateFilter()
         {
             // Filters to make the file summary
 

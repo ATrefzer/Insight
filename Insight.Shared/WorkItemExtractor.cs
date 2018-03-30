@@ -28,7 +28,7 @@ namespace Insight.Shared
             foreach (Match match in matches)
             {
                 var name = match.Value.ToUpper();
-                var workItem = new WorkItem(new StringId(name));
+                var workItem = new WorkItem(name);
                 workItem.Title = name;
                 workItems.Add(workItem);
             }

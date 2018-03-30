@@ -5,10 +5,7 @@ namespace Insight.Shared.Model
     [Serializable]
     public sealed class FileRevision
     {
-
-      
-
-        public FileRevision(string localFile, Id changesetId, DateTime date, string cachePath)
+        public FileRevision(string localFile, string changesetId, DateTime date, string cachePath)
         {
             ChangesetId = changesetId;
             Date = date;
@@ -21,7 +18,7 @@ namespace Insight.Shared.Model
         /// </summary>
         public string CachePath { get; set; }
 
-        public Id ChangesetId { get; }
+        public string ChangesetId { get; }
         public DateTime Date { get; }
         public string LocalFile { get; }
     }

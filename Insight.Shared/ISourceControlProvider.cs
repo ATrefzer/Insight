@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
@@ -19,7 +20,8 @@ namespace Insight.Shared
         /// </summary>
         HashSet<string> GetAllTrackedFiles();
 
-        void Initialize(string projectBase, string cachePath, string workItemRegex);
+        // TODO use in the other two!
+        void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex);
         ChangeSetHistory QueryChangeSetHistory();
 
         List<WarningMessage> Warnings { get; }
@@ -27,6 +29,6 @@ namespace Insight.Shared
         /// <summary>
         /// Read the history from the source control provider and store it offline in the file system.
         /// </summary>
-        void UpdateCache();
+        void UpdateCache(IProgress progress);
     }
 }

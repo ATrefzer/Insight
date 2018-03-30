@@ -28,13 +28,13 @@ The utility helps you to find these hotspots.
 In the visualizations, the area of a rectangle or innermost circle corresponds to the size of a file (lines of code). The color corresponds to the change frequency. 
 
 
-![Hotspots_TreeMap](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Hotspots_TreeMap.PNG)
+![Hotspots_TreeMap](Screenshots/Hotspots_TreeMap.PNG)
 
-![Hotspots_Circles](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Hotspots_Circles.PNG)
+![Hotspots_Circles](Screenshots/Hotspots_Circles.PNG)
 
 ### Show file trends
 
-![Trend](https://github.com/ATrefzer/Insight/blob/master/Screenshots/LOC.PNG)
+![Trend](Screenshots/LOC.PNG)
 
 ### Show change couplings
 
@@ -45,23 +45,22 @@ There are many cases when modifying a file leads to modification in another one.
 However, making this commit pattern visible can give interesting insights into the code.
 
 When two files are often changed at the same time, it can also mean that abstraction is missing - causing duplicated work. Or maybe it is just because of copied and pasted code that needs to be maintained twice now. This is dangerous because it is easy to introduce bugs by missing code to update.
- 
+
 This kind of analysis can also make dependencies visible that no static code checker can find. Think of an encryption/decryption pair of functions. If you change one, you need to update the other one, too.
 
 Change coupling analysis can raise interesting questions because it takes a different look at the source code.
 
-
-![Change Coupling](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Change_Coupling.PNG)
+![Change Coupling](Screenshots/Change_Coupling.PNG)
 
 ### Show knowledge
 
 Again, a rectangle or inner most circle represents a file in the repository. Additionally, a unique color is assigned to each developer. The file is then drawn in the color of the developer who contributed most to its content.
 
-This visualization allows you to see how the knowledge is distributed over the project.
+This visualization allows you to see how the knowledge is distributed over the project. 
 
-![Knowledge_TreeMap](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Knowledge_TreeMap.PNG) 
+![Knowledge_TreeMap](Screenshots/Knowledge_TreeMap.PNG)
 
-![Knowledge_Circles](https://github.com/ATrefzer/Insight/blob/master/Screenshots/Knowledge_Circles.PNG)
+![Knowledge_Circles](Screenshots/Knowledge_Circles.PNG)
 
 # How to build
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 
@@ -14,11 +15,10 @@ namespace Tests
     /// top down from the newest to the oldest commit.
     /// </summary>
     [TestFixture]
-    internal sealed class MovementTrackerTests
+    sealed class MovementTrackerTests
     {
-        private MovementTracker _tracker;
-        private ChangeSet _currentChangeSet;
-
+        ChangeSet _currentChangeSet;
+        MovementTracker _tracker;
 
 
         // Ok this test convinced me that my strategy does not apply to git :)
@@ -99,6 +99,22 @@ namespace Tests
         }
 
         [Test]
+        public void Git_TreatRenameAsAdd_IfFileIsEditedLater()
+        {
+            StartChangeSet();
+            var ci2 = Track_Edit("the_file");
+            var cs = EndChangeSet();
+
+            StartChangeSet();
+            var ci1 = Track_Rename("the_file", "to_somwhere_else");
+            cs = EndChangeSet();
+
+            Assert.AreEqual(1, cs.Count);
+            Assert.AreEqual(1, _tracker.Warnings.Count);
+            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Add)); // Converted
+        }
+
+        [Test]
         public void InvalidArguments_NonRenameHasPreviousServerPath()
         {
             var tracker = new MovementTracker();
@@ -157,7 +173,7 @@ namespace Tests
 
             var id = ci.Id;
             Assert.NotNull(id);
-            Assert.IsTrue(Guid.TryParse(id.ToString(), out var uuid)); // Is a uuid
+            Assert.IsTrue(Guid.TryParse(id, out var uuid)); // Is a uuid
         }
 
 
@@ -197,6 +213,7 @@ namespace Tests
             EndChangeSet();
 
             StartChangeSet();
+
             // Move file away so we can create a new version at this location in ci2.
             var ci1 = Track_Rename("file", "somewhere_else");
             EndChangeSet();
@@ -239,7 +256,19 @@ namespace Tests
             _tracker = new MovementTracker();
         }
 
-        
+        [Test]
+        public void Svn_AddDelete_IsNotReplacedByMove_BecauseNoDelete()
+        {
+            StartChangeSet();
+            var ci1 = Track_Add("location_yesterday", "location_now");
+            var cs = EndChangeSet();
+
+            Assert.AreEqual(1, cs.Count);
+            Assert.AreEqual(0, _tracker.Warnings.Count);
+            Assert.AreEqual(KindOfChange.Add, cs.Single().Kind);
+        }
+
+
         [Test]
         public void Svn_AddDelete_IsReplacedByMove()
         {
@@ -259,9 +288,9 @@ namespace Tests
             // Recognises this case also if it occurs multiple times in the change set
             StartChangeSet();
             var ci3 = Track_Delete("from_location2");
-            var ci2 = Track_Add("from_location2", "now_location2" ); 
+            var ci2 = Track_Add("from_location2", "now_location2");
             var ci1 = Track_Delete("from_location1");
-            var ci0 = Track_Add("from_location1", "now_location1"); 
+            var ci0 = Track_Add("from_location1", "now_location1");
             var cs = EndChangeSet();
 
             Assert.AreEqual(2, cs.Count);
@@ -270,23 +299,11 @@ namespace Tests
         }
 
         [Test]
-        public void Svn_AddDelete_IsNotReplacedByMove_BecauseNoDelete()
-        {
-            StartChangeSet();
-            var ci1 = Track_Add("location_yesterday", "location_now" );
-            var cs = EndChangeSet();
-
-            Assert.AreEqual(1, cs.Count);
-            Assert.AreEqual(0, _tracker.Warnings.Count);
-            Assert.AreEqual(KindOfChange.Add, cs.Single().Kind);
-        }
-
-        [Test]
         public void Svn_ConvertMultipleCopiesToAdd_BasedOnAdd()
         {
             StartChangeSet();
             var ci2 = Track_Delete("from_location");
-            var ci1 = Track_Add("from_location", "to_location1"); 
+            var ci1 = Track_Add("from_location", "to_location1");
             var ci0 = Track_Add("from_location", "to_location2");
             var cs = EndChangeSet();
 
@@ -318,7 +335,7 @@ namespace Tests
             StartChangeSet();
             var ci2 = Track_Edit("from_location");
             var ci1 = Track_Rename("from_location", "to_location1"); // note the order!
-            
+
             var cs = EndChangeSet();
 
             Assert.AreEqual(2, cs.Count);
@@ -327,59 +344,42 @@ namespace Tests
             Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Edit));
         }
 
-        [Test]
-        public void Git_TreatRenameAsAdd_IfFileIsEditedLater()
-        {
-            StartChangeSet();
-            var ci2 = Track_Edit("the_file");
-            var cs = EndChangeSet();
 
-            StartChangeSet();
-            var ci1 = Track_Rename("the_file", "to_somwhere_else");
-            cs = EndChangeSet();
-
-            Assert.AreEqual(1, cs.Count);
-            Assert.AreEqual(1, _tracker.Warnings.Count);
-            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Add)); // Converted
-        }
-
-
-    
-        private List<ChangeItem> EndChangeSet()
+        List<ChangeItem> EndChangeSet()
         {
             var result = new List<ChangeItem>();
             _tracker.ApplyChangeSet(result);
             return result;
         }
 
-        private void StartChangeSet()
+        void StartChangeSet()
         {
             _currentChangeSet = new ChangeSet();
-            _currentChangeSet.Id = new StringId(Guid.NewGuid().ToString());
+            _currentChangeSet.Id = Guid.NewGuid().ToString();
             _tracker.BeginChangeSet(_currentChangeSet);
         }
 
-        private ChangeItem Track_Add(string previousServerPath, string currentServerPath)
+        ChangeItem Track_Add(string previousServerPath, string currentServerPath)
         {
             return TrackOperation(KindOfChange.Add, currentServerPath, previousServerPath);
         }
 
-        private ChangeItem Track_Delete(string currentServerPath)
+        ChangeItem Track_Delete(string currentServerPath)
         {
             return TrackOperation(KindOfChange.Delete, currentServerPath, null);
         }
 
-        private ChangeItem Track_Edit(string currentServerPath)
+        ChangeItem Track_Edit(string currentServerPath)
         {
             return TrackOperation(KindOfChange.Edit, currentServerPath, null);
         }
 
-        private ChangeItem Track_Rename(string fromServerPath, string toServerPath)
+        ChangeItem Track_Rename(string fromServerPath, string toServerPath)
         {
             return TrackOperation(KindOfChange.Rename, toServerPath, fromServerPath);
         }
 
-        private ChangeItem TrackOperation(KindOfChange kind, string currentServerPath, string previousServerPath)
+        ChangeItem TrackOperation(KindOfChange kind, string currentServerPath, string previousServerPath)
         {
             // Note arg order changed here!
             var ci = new ChangeItem

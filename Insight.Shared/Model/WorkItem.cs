@@ -12,11 +12,11 @@ namespace Insight.Shared.Model
     [Serializable]
     public sealed class WorkItem
     {
-        public readonly Id Id;
+        public readonly string Id;
         public string Title;
         public string WorkItemTypeName;
 
-        public WorkItem(Id id)
+        public WorkItem(string id)
         {
             Id = id;
         }
@@ -29,12 +29,12 @@ namespace Insight.Shared.Model
         public override bool Equals(object obj)
         {
             return obj is WorkItem item &&
-                   EqualityComparer<Id>.Default.Equals(Id, item.Id);
+                   EqualityComparer<string>.Default.Equals(Id, item.Id);
         }
 
         public override int GetHashCode()
         {
-            return 2108858624 + EqualityComparer<Id>.Default.GetHashCode(Id);
+            return 2108858624 + EqualityComparer<string>.Default.GetHashCode(Id);
         }
 
         public bool IsBug()

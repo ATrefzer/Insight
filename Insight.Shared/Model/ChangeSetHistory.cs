@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace Insight.Shared.Model
@@ -26,12 +27,12 @@ namespace Insight.Shared.Model
         public List<Artifact> GetArtifactSummary(IFilter filter, HashSet<string> metricFiles)
         {
             // Item id -> artifact
-            var artifacts = new Dictionary<Id, Artifact>();
+            var artifacts = new Dictionary<string, Artifact>();
 
-            var set = new HashSet<Id>();
+            var set = new HashSet<string>();
 
             // Files we already know we skip are not checked again!
-            var ignore = new HashSet<Id>();
+            var ignore = new HashSet<string>();
 
             foreach (var changeset in ChangeSets)
             {
@@ -160,7 +161,7 @@ namespace Insight.Shared.Model
                                     .Where(item => item.IsDelete())
                                     .Select(item => item.Id);
 
-            var deletedIdsHash = new HashSet<Id>(deletedIds);
+            var deletedIdsHash = new HashSet<string>(deletedIds);
 
             foreach (var set in history.ChangeSets)
             {
@@ -188,5 +189,6 @@ namespace Insight.Shared.Model
 
             return item.Exists();
         }
+
     }
 }

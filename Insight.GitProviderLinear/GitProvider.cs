@@ -12,6 +12,8 @@ using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 
+using Newtonsoft.Json;
+
 namespace Insight.GitProviderLinear
 {
     /// <summary>
@@ -24,6 +26,7 @@ namespace Insight.GitProviderLinear
 
         readonly string recordMarker = "START_HEADER";
         string _cachePath;
+        IFilter _fileFilter;
         GitCommandLine _gitCli;
         string _gitHistoryExportFile;
 
@@ -106,11 +109,12 @@ namespace Insight.GitProviderLinear
             return new HashSet<string>(all);
         }
 
-        public void Initialize(string projectBase, string cachePath, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
+            _fileFilter = fileFilter;
 
             _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.log");
             _gitCli = new GitCommandLine(_startDirectory);
@@ -127,10 +131,16 @@ namespace Insight.GitProviderLinear
                 throw new FileNotFoundException(msg);
             }
 
-            return ParseLogFile(_gitHistoryExportFile);
+            var history = ParseLogFile(_gitHistoryExportFile);
+
+            // For information
+            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
+            File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
+
+            return history;
         }
 
-        public void UpdateCache()
+        public void UpdateCache(IProgress progress)
         {
             if (!Directory.Exists(Path.Combine(_startDirectory, ".git")))
             {
@@ -138,9 +148,7 @@ namespace Insight.GitProviderLinear
                 // We could go upwards and find the git root ourself and use this root for the path mapping.
                 // But for the moment take everything. The user can set filters in the project settings.
                 throw new ArgumentException("The given start directory is not the root of a git repository.");
-            }
-
-            // Git has the complete history locally anyway.
+            }          
 
             var log = _gitCli.Log();
             File.WriteAllText(_gitHistoryExportFile, log);
@@ -207,7 +215,7 @@ namespace Insight.GitProviderLinear
             return path;
         }
 
-        string GetPathToExportedFile(FileInfo localFile, Id revision)
+        string GetPathToExportedFile(FileInfo localFile, string revision)
         {
             var name = new StringBuilder();
 
@@ -305,28 +313,17 @@ namespace Insight.GitProviderLinear
             var hash = ReadLine(reader);
             var committer = ReadLine(reader);
             var date = ReadLine(reader);
-
-            var commentBuilder = new StringBuilder();
-            string commentLine;
-
-            while ((commentLine = ReadLine(reader)) != endHeaderMarker)
-            {
-                if (!string.IsNullOrEmpty(commentLine))
-                {
-                    commentBuilder.AppendLine(commentLine);
-                }
-            }
+            var parents = ReadLine(reader);
+            var comment = ReadComment(reader);
 
             var cs = new ChangeSet();
-            cs.Id = new StringId(hash);
+            cs.Id = hash;
             cs.Committer = committer;
-            cs.Comment = commentBuilder.ToString().Trim('\r', '\n');
+            cs.Comment = comment;
 
             ParseWorkItemsFromComment(cs.WorkItems, cs.Comment);
 
             cs.Date = DateTime.Parse(date);
-
-            Debug.Assert(commentLine == endHeaderMarker);
 
             tracker.BeginChangeSet(cs);
             ReadChangeItems(reader, tracker);
@@ -359,6 +356,24 @@ namespace Insight.GitProviderLinear
             }
         }
 
+        string ReadComment(StreamReader reader)
+        {
+            string commentLine;
+
+            var commentBuilder = new StringBuilder();
+            while ((commentLine = ReadLine(reader)) != endHeaderMarker)
+            {
+                if (!string.IsNullOrEmpty(commentLine))
+                {
+                    commentBuilder.AppendLine(commentLine);
+                }
+            }
+
+            Debug.Assert(commentLine == endHeaderMarker);
+            return commentBuilder.ToString().Trim('\r', '\n');
+        }
+
+
         string ReadLine(StreamReader reader)
         {
             // The only place where we read
@@ -376,10 +391,8 @@ namespace Insight.GitProviderLinear
 
             if (kind.StartsWith("C"))
             {
-                // Followed by the similarity. 
-                // I tread a copy of a file as a new start.
-                Trace.WriteLine("Found copy operation for git!");
-                return KindOfChange.Add;
+                // Followed by the similarity.               
+                return KindOfChange.Copy;
             }
             else if (kind == "A")
             {

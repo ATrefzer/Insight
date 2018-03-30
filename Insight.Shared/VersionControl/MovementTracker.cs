@@ -19,7 +19,7 @@ namespace Insight.Shared.VersionControl
     public sealed class MovementTracker
     {
         private readonly List<ChangeItem> _changeItems = new List<ChangeItem>();
-        private readonly Dictionary<string, Id> _serverPathToId = new Dictionary<string, Id>();
+        private readonly Dictionary<string, string> _serverPathToId = new Dictionary<string, string>();
 
         private ChangeSet _cs;
 
@@ -213,17 +213,17 @@ namespace Insight.Shared.VersionControl
             }
         }
 
-        private Id CreateId(string serverPath)
+        private string CreateId(string serverPath)
         {
             var uuid = Guid.NewGuid();
-            var id = new StringId(uuid.ToString());
+            var id = uuid.ToString();
             _serverPathToId.Add(serverPath, id);
             return id;
         }      
 
-        private Id GetOrCreateId(string serverPath)
+        private string GetOrCreateId(string serverPath)
         {
-            Id id;
+            string id;
             if (!_serverPathToId.ContainsKey(serverPath))
             {
                 // Not seen this file before. Create a new identifier
