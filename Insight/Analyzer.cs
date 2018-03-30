@@ -234,13 +234,15 @@ namespace Insight
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var hotspotCalculator = new HotspotCalculator(summary, _metrics);
 
+            var orderedByLocalPath = summary.OrderBy(x => x.LocalPath).ToList();
             var gridData = new List<object>();
-            foreach (var artifact in summary)
+            foreach (var artifact in orderedByLocalPath)
             {
                 gridData.Add(CreateDataGridFriendlyArtifact(artifact, hotspotCalculator));
             }
 
             var now = DateTime.Now.ToIsoShort();
+            
             Csv.Write(Path.Combine(Project.Cache, $"summary-{now}.csv"), gridData);
             return gridData;
         }

@@ -14,7 +14,8 @@ namespace Insight.Builder
         public HierarchicalData Build(List<Artifact> reduced, Dictionary<string, LinesOfCode> metrics)
         {
             _metrics = metrics;
-            return Build(reduced);
+            var data = Build(reduced);            
+            return data;
         }
 
         protected override double GetArea(Artifact item)

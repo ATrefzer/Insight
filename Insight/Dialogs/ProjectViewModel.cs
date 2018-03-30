@@ -35,7 +35,7 @@ namespace Insight.Dialogs
                 var gitLinear = new ProviderDescription
                 {
                     Class = GitProviderLinear.GetClass(),
-                    Name = "Git (Caution! Assumes a linear history.)"
+                    Name = "Git (Caution! Assumes a linear history)"
                 };
 
                 var git = new ProviderDescription
