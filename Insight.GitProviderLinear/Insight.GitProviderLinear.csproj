@@ -43,11 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GitCommandLine.cs" />
-    <Compile Include="GitProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj">
+      <Project>{d98feff9-2478-4b2a-9e25-51b0d9647874}</Project>
+      <Name>Insight.GitProvider</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Insight.Shared\Insight.Shared.csproj">
       <Project>{8680feb7-5d8c-4d2b-9f8f-e1ec026c73f9}</Project>
       <Name>Insight.Shared</Name>
