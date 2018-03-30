@@ -5,7 +5,7 @@ using Insight.Shared.System;
 
 namespace Insight.GitProvider
 {
-    sealed class GitCommandLine
+    public sealed class GitCommandLine
     {
         /// <summary>
         /// %H   Hash (abbrebiated is %h)
@@ -88,7 +88,7 @@ namespace Insight.GitProvider
             return ExecuteCommandLine(program, args);
         }
 
-        internal string Log()
+        public string Log()
         {
             // --num_stat Shows added and removed lines
             var program = "git";
@@ -101,7 +101,7 @@ namespace Insight.GitProvider
             return result.StdOut;
         }
 
-        internal string Log(string localPath)
+        public string Log(string localPath)
         {
             localPath = localPath.Replace("\\", "/");
             var program = "git";

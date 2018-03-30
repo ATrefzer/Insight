@@ -14,12 +14,12 @@ using Insight.Shared.VersionControl;
 
 using Newtonsoft.Json;
 
-namespace Insight.GitProviderLinear
+namespace Insight.GitProvider
 {
     /// <summary>
     /// Provides higher level funtions and queries on a git repository.
     /// </summary>
-    public sealed class GitProvider : ISourceControlProvider
+    public sealed class GitProviderLinear : ISourceControlProvider
     {
         static readonly Regex _regex = new Regex(@"\\(?<Value>[a-zA-Z0-9]{3})", RegexOptions.Compiled);
         readonly string endHeaderMarker = "END_HEADER";
@@ -38,7 +38,7 @@ namespace Insight.GitProviderLinear
 
         public static string GetClass()
         {
-            var type = typeof(GitProvider);
+            var type = typeof(GitProviderLinear);
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
