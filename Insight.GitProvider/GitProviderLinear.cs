@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
+using System.Text;
 
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
+
+using Newtonsoft.Json;
 
 namespace Insight.GitProvider
 {
@@ -20,7 +20,6 @@ namespace Insight.GitProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-
         public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
         {
             _startDirectory = projectBase;
@@ -28,8 +27,9 @@ namespace Insight.GitProvider
             _workItemRegex = workItemRegex;
             _fileFilter = fileFilter;
 
-            _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.log");
+            _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.json");
             _gitCli = new GitCommandLine(_startDirectory);
+            _mapper = new FileMapper(_startDirectory);
         }
 
         /// <summary>
@@ -38,7 +38,8 @@ namespace Insight.GitProvider
         public ChangeSetHistory QueryChangeSetHistory()
         {
             VerifyHistoryIsCached();
-            return ParseLogFile(_gitHistoryExportFile);
+            var json = File.ReadAllText(_gitHistoryExportFile, Encoding.UTF8);
+            return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
         }
 
         public void UpdateCache(IProgress progress)
@@ -46,109 +47,33 @@ namespace Insight.GitProvider
             VerifyGitDirectory();
 
             var log = _gitCli.Log();
-            File.WriteAllText(_gitHistoryExportFile, log);
-        }
 
-        /// <summary>
-        /// Log file has format specified in GitCommandLine class
-        /// </summary>
-        protected override ChangeSetHistory ParseLog(Stream log)
-        {
-            var changeSets = new List<ChangeSet>();
+            var parser = new Parser(_mapper, null);
+            parser.WorkItemRegex = _workItemRegex;
+            var history = parser.ParseLogString(log);
+
+            // Update Ids for files
             var tracker = new MovementTracker();
-
-            using (var reader = new StreamReader(log))
+            foreach (var cs in history.ChangeSets)
             {
-                var proceed = GoToNextRecord(reader);
-                if (!proceed)
+                tracker.BeginChangeSet(cs);
+                foreach (var item in cs.Items)
                 {
-                    throw new FormatException("The file does not contain any change sets.");
+                    tracker.TrackId(item);
                 }
 
-                while (proceed)
-                {
-                    var changeSet = ParseRecord(reader, tracker);
-                    changeSets.Add(changeSet);
-                    proceed = GoToNextRecord(reader);
-                }
+                cs.Items.Clear();
+                tracker.ApplyChangeSet(cs.Items);
             }
 
             Warnings = tracker.Warnings;
-            var history = new ChangeSetHistory(changeSets);
-            return history;
-        }
 
+            // Write history file
+            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
+            File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
 
-        void CreateChangeItem(string changeItem, MovementTracker tracker)
-        {
-            var ci = new ChangeItem();
-
-            // Example
-            // M Visualization.Controls/Strings.resx
-            // A Visualization.Controls/Tools/IHighlighting.cs
-            // R083 Visualization.Controls/Filter/FilterView.xaml   Visualization.Controls/Tools/ToolView.xaml
-
-            var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            var changeKind = ToKindOfChange(parts[0]);
-            ci.Kind = changeKind;
-            if (changeKind == KindOfChange.Rename || changeKind == KindOfChange.Copy)
-            {
-                Debug.Assert(parts.Length == 3);
-                var oldName = parts[1];
-                var newName = parts[2];
-                ci.ServerPath = Decoder(newName);
-                ci.FromServerPath = Decoder(oldName);
-                tracker.TrackId(ci);
-            }
-            else
-            {
-                Debug.Assert(parts.Length == 2 || parts.Length == 3);
-                ci.ServerPath = Decoder(parts[1]);
-                tracker.TrackId(ci);
-            }
-
-            ci.LocalPath = MapToLocalFile(ci.ServerPath);
-        }
-
-
-        ChangeSet ParseRecord(StreamReader reader, MovementTracker tracker)
-        {
-            // We are located on the first data item of the record
-            var hash = ReadLine(reader);
-            var committer = ReadLine(reader);
-            var date = ReadLine(reader);
-            var parents = ReadLine(reader);
-            var comment = ReadComment(reader);
-
-            var cs = new ChangeSet();
-            cs.Id = hash;
-            cs.Committer = committer;
-            cs.Comment = comment;
-
-            ParseWorkItemsFromComment(cs.WorkItems, cs.Comment);
-
-            cs.Date = DateTime.Parse(date);
-
-            tracker.BeginChangeSet(cs);
-            ReadChangeItems(reader, tracker);
-            tracker.ApplyChangeSet(cs.Items);
-            return cs;
-        }
-
-
-        void ReadChangeItems(StreamReader reader, MovementTracker tracker)
-        {
-            // Now parse the files!
-            var changeItem = ReadLine(reader);
-            while (changeItem != null && changeItem != recordMarker)
-            {
-                if (!string.IsNullOrEmpty(changeItem))
-                {
-                    CreateChangeItem(changeItem, tracker);
-                }
-
-                changeItem = ReadLine(reader);
-            }
+            // For information
+            File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
         }
     }
 }

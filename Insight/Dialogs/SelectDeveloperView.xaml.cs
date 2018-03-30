@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 
 namespace Insight.Dialogs
@@ -20,7 +21,7 @@ namespace Insight.Dialogs
 
         internal void SetDevelopers(List<string> mainDevelopers)
         {
-            Developers.ItemsSource = mainDevelopers;
+            Developers.ItemsSource = mainDevelopers.OrderBy(x => x);
             Developers.SelectedIndex = 0;
         }
 

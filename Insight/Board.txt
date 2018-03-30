@@ -2,9 +2,12 @@
 In Progress
 ---------------------------------------
 - Try on different git projects
-    Nunit provokes some problems. DataPointsAttribute and DataPointSourceAttribute
-    look like they share a same history. Seems my command line gives too much results.
-    The comment of the shared changeset does not appear in the history of DataPointSourceAttribute
+    - MovementTrackerTests not found.
+- Bad color for Prouse
+- Outer circle not correct for nunit!
+- There is less work calculation than files???
+- Decoder for comment characters (multi characters?)
+
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 
 
@@ -65,7 +68,7 @@ Chord
 Low prio, fun
 ---------------------------------------
 
-- Decoder for comment characters (multi characters?)
+
 - Refactor Svn Parser
 - Use WritableBitmap?
 
