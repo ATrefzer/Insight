@@ -5,7 +5,7 @@ In Progress
     - MovementTrackerTests not found.
 - Bad color for Prouse
 - Outer circle not correct for nunit!
-- There is less work calculation than files???
+- There is less work calculation than files??? (wrong count not filtered shown when rebuild history?)
 - Decoder for comment characters (multi characters?)
 
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)

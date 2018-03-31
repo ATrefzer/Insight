@@ -131,6 +131,7 @@ namespace Insight.GitProvider
         {
             // We are located on the first data item of the record
             var hash = ReadLine(reader);
+            var encoding = ReadLine(reader);
 
             var committer = ReadLine(reader);
             var date = ReadLine(reader);
