@@ -16,13 +16,13 @@ namespace Insight.GitProvider
     /// </summary>
     public sealed class Parser
     {
-        readonly FileMapper _mapper;
+        readonly PathMapper _mapper;
         readonly Action<string, string> _updateGraph;
         readonly string endHeaderMarker = "END_HEADER";
         readonly string recordMarker = "START_HEADER";
         string _lastLine;
 
-        public Parser(FileMapper mapper, Action<string, string> updateGraph)
+        public Parser(PathMapper mapper, Action<string, string> updateGraph)
         {
             _mapper = mapper;
 
@@ -66,14 +66,14 @@ namespace Insight.GitProvider
                 Debug.Assert(parts.Length == 3);
                 var oldName = parts[1];
                 var newName = parts[2];
-                ci.ServerPath = newName;
-                ci.FromServerPath = oldName;
+                ci.ServerPath = Decoder.DecodeEscapedBytes(newName);
+                ci.FromServerPath = Decoder.DecodeEscapedBytes(oldName);
                 cs.Items.Add(ci);
             }
             else
             {
                 Debug.Assert(parts.Length == 2 || parts.Length == 3);
-                ci.ServerPath = parts[1];
+                ci.ServerPath = Decoder.DecodeEscapedBytes(parts[1]);
                 cs.Items.Add(ci);
             }
 
@@ -131,7 +131,6 @@ namespace Insight.GitProvider
         {
             // We are located on the first data item of the record
             var hash = ReadLine(reader);
-            var encoding = ReadLine(reader);
 
             var committer = ReadLine(reader);
             var date = ReadLine(reader);
@@ -199,7 +198,7 @@ namespace Insight.GitProvider
         {
             // The only place where we read
             var raw = reader.ReadLine()?.Trim();
-            _lastLine = Decoder.Decode(raw);
+            _lastLine = Decoder.DecodeUtf8(raw);
             return _lastLine;
         }
 

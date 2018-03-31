@@ -12,7 +12,7 @@ using Insight.Shared.System;
 
 namespace Insight.Metrics
 {
-    internal enum State
+    enum State
     {
         InsideBlockComment,
         InsideLineComment,
@@ -21,13 +21,13 @@ namespace Insight.Metrics
 
     public sealed class CodeMetrics
     {
-        private const string Cloc = "cloc-1.76.exe";
-        private const string ClocSubDir = "ExternalTools";
+        const string Cloc = "cloc-1.76.exe";
+        const string ClocSubDir = "ExternalTools";
 
         /// <summary>
         /// Normalized extension -> language (cloc). Not used yet.
         /// </summary>
-        private readonly Dictionary<string, string> _extensionToLanguage = new Dictionary<string, string>();
+        readonly Dictionary<string, string> _extensionToLanguage = new Dictionary<string, string>();
 
         public CodeMetrics()
         {
@@ -37,7 +37,7 @@ namespace Insight.Metrics
             _extensionToLanguage.Add(".cs", "C#,Smalltalk");
             _extensionToLanguage.Add(".xml", "XML");
             _extensionToLanguage.Add(".xaml", "XAML");
-            
+
             _extensionToLanguage.Add(".java", "Java");
             _extensionToLanguage.Add(".css", "CSS");
             _extensionToLanguage.Add(".cpp", "C++");
@@ -136,17 +136,17 @@ namespace Insight.Metrics
             return builder.ToString();
         }
 
-        private static string GetPathToCloc(DirectoryInfo basePath)
+        static string GetPathToCloc(DirectoryInfo basePath)
         {
             return Path.Combine(basePath.FullName, ClocSubDir, Cloc);
         }
 
-        private static char GetPeek(string fileContent, int index)
+        static char GetPeek(string fileContent, int index)
         {
             return index == fileContent.Length ? (char) 0 : fileContent[index + 1];
         }
 
-        private static void VerifyClocInstalled(DirectoryInfo basePath)
+        static void VerifyClocInstalled(DirectoryInfo basePath)
         {
             var pathToCloc = GetPathToCloc(basePath);
             if (!File.Exists(pathToCloc))
@@ -161,7 +161,7 @@ namespace Insight.Metrics
             }
         }
 
-        private InvertedSpace CalculateStatistics(IEnumerable<int> logicalSpacesByLine)
+        InvertedSpace CalculateStatistics(IEnumerable<int> logicalSpacesByLine)
         {
             var data = logicalSpacesByLine.ToArray();
 
@@ -182,7 +182,7 @@ namespace Insight.Metrics
         }
 
 
-        private string CallClocForDirectory(DirectoryInfo basePath, DirectoryInfo rootDir, IEnumerable<string> languagesToParse)
+        string CallClocForDirectory(DirectoryInfo basePath, DirectoryInfo rootDir, IEnumerable<string> languagesToParse)
         {
             if (basePath == null)
             {
@@ -198,7 +198,7 @@ namespace Insight.Metrics
             return result.StdOut;
         }
 
-        private string CallClocForSingleFile(DirectoryInfo basePath, FileInfo file)
+        string CallClocForSingleFile(DirectoryInfo basePath, FileInfo file)
         {
             VerifyClocInstalled(basePath);
 
@@ -208,7 +208,7 @@ namespace Insight.Metrics
             return result.StdOut;
         }
 
-        private LinesOfCode CreateMetric(string[] parts)
+        LinesOfCode CreateMetric(string[] parts)
         {
             var blank = parts[2].Trim();
             var comment = parts[3].Trim();
@@ -223,7 +223,7 @@ namespace Insight.Metrics
             return metric;
         }
 
-        private int GetLogicalSpaces(string line, int spacesPerLogicalSpace = 4)
+        int GetLogicalSpaces(string line, int spacesPerLogicalSpace = 4)
         {
             var spaces = 0;
             var tabs = 0;
@@ -250,13 +250,13 @@ namespace Insight.Metrics
             return tabs + spaces / spacesPerLogicalSpace;
         }
 
-        private bool IsCode(string line)
+        bool IsCode(string line)
         {
             // Regex for empty line
             return !Regex.IsMatch(line, @"^\s*$");
         }
 
-        private IEnumerable<string> MapFileExtensionToLanguage(List<string> normalizedFileExtensions)
+        IEnumerable<string> MapFileExtensionToLanguage(List<string> normalizedFileExtensions)
         {
             var unknownExtensions = normalizedFileExtensions.Where(ext => !_extensionToLanguage.ContainsKey(ext)).ToList();
             if (unknownExtensions.Any())
@@ -265,13 +265,11 @@ namespace Insight.Metrics
                 throw new ArgumentException($"Language not supported by cloc: {details} Please check the project settings.");
             }
 
-               
-                // Call ToArray such that the KeyNotFoundException is thrown now!
-                return normalizedFileExtensions.Select(x => _extensionToLanguage[x]).ToArray();
-           
+            // Call ToArray such that the KeyNotFoundException is thrown now!
+            return normalizedFileExtensions.Select(x => _extensionToLanguage[x]).ToArray();
         }
 
-        private Dictionary<string, LinesOfCode> ParseClocOutput(string clocOutput)
+        Dictionary<string, LinesOfCode> ParseClocOutput(string clocOutput)
         {
             var metrics = new Dictionary<string, LinesOfCode>();
             var lines = clocOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);

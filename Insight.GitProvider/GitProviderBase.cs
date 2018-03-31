@@ -20,7 +20,7 @@ namespace Insight.GitProvider
         protected string _gitHistoryExportFile;
 
         protected string _lastLine;
-        protected FileMapper _mapper;
+        protected PathMapper _mapper;
         protected string _startDirectory;
         protected string _workItemRegex;
 
@@ -42,7 +42,7 @@ namespace Insight.GitProvider
             foreach (Match match in matches)
             {
                 var developer = match.Groups["developerName"].Value;
-                developer = developer.Trim('\t');
+                developer = Decoder.DecodeUtf8(developer).Trim('\t');
                 workByDevelopers.AddToValue(developer, 1);
             }
 
