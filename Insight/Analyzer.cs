@@ -434,6 +434,11 @@ namespace Insight
             LoadHistory();
             LoadMetrics();
 
+            // TODO Use filtered tracked local files like it is done in git provider UpdateCache.
+            //var provider = Project.CreateProvider();
+            //var localFiles = provider.GetAllLocalTrackedFiles()
+
+            
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             _contributions = CalculateContributionsParallel(progress, summary);
 

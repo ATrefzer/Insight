@@ -77,11 +77,11 @@ namespace Insight.GitProvider
             File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
 
             // Save the original log for information 
-            SaveFullLogToDisk();
+            //SaveFullLogToDisk();
 
             // Save the constructed log for information
-            SaveRecoveredLogToDisk(commits);
-        }     
+            //SaveRecoveredLogToDisk(commits);
+        }
 
         static Dictionary<string, string> FindSharedHistory(List<ChangeSet> commits)
         {
@@ -241,6 +241,15 @@ namespace Insight.GitProvider
             {
                 var singleFile = cs.Items.Single();
 
+                if (singleFile.Kind == KindOfChange.Delete)
+                {
+                    // File was deleted and maybe added later again.
+                    // Stop following this file. Do not add current version to
+                    // history. Analyzer.LoadHistory will kill all deleted items
+                    // and the file will not be part of the summary
+                    break;
+                }
+
                 lock (_lockObj)
                 {
                     if (!commits.ContainsKey(cs.Id))
@@ -267,6 +276,8 @@ namespace Insight.GitProvider
                         singleFile.Kind = KindOfChange.Add;
                         break;
                     }
+
+                  
                 }
             }
         }

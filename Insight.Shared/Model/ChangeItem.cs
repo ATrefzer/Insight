@@ -46,7 +46,8 @@ namespace Insight.Shared.Model
 
         public bool IsDelete()
         {
-            return (Kind & KindOfChange.Delete) == KindOfChange.Delete;
+            var isDelete = (Kind & KindOfChange.Delete) == KindOfChange.Delete;
+            return isDelete;
         }
 
         public bool IsEdit()
