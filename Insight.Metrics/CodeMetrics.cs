@@ -68,7 +68,7 @@ namespace Insight.Metrics
             var location = new FileInfo(assembly.Location);
 
             // Map file extension to language name understood by cloc
-            var languagesToParse = MapFileExtensionToLanguage(normalizedFileExtensions);
+            var languagesToParse = MapFileExtensionToLanguage(normalizedFileExtensions.ToList());
             var stdOut = CallClocForDirectory(location.Directory, rootDir, languagesToParse);
 
             return ParseClocOutput(stdOut);
@@ -256,17 +256,19 @@ namespace Insight.Metrics
             return !Regex.IsMatch(line, @"^\s*$");
         }
 
-        private IEnumerable<string> MapFileExtensionToLanguage(IEnumerable<string> normalizedFileExtensions)
+        private IEnumerable<string> MapFileExtensionToLanguage(List<string> normalizedFileExtensions)
         {
-            try
+            var unknownExtensions = normalizedFileExtensions.Where(ext => !_extensionToLanguage.ContainsKey(ext)).ToList();
+            if (unknownExtensions.Any())
             {
+                var details = string.Join(",", unknownExtensions);
+                throw new ArgumentException($"Language not supported by cloc: {details} Please check the project settings.");
+            }
+
+               
                 // Call ToArray such that the KeyNotFoundException is thrown now!
                 return normalizedFileExtensions.Select(x => _extensionToLanguage[x]).ToArray();
-            }
-            catch (KeyNotFoundException e)
-            {
-                throw new ArgumentException("Language not supported by cloc. Please check the project settings.", e);
-            }
+           
         }
 
         private Dictionary<string, LinesOfCode> ParseClocOutput(string clocOutput)
