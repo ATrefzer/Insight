@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-
+using Insight.GitProvider;
+using Insight.Shared.System;
 using NUnit.Framework;
 
 using Decoder = Insight.GitProvider.Decoder;
@@ -33,22 +34,24 @@ namespace Tests
         }
 
         [Test]
+        [Ignore("Accesses file system")]
         public void FixEncoding2()
         {
+            // We have to tell about the process output encoding.
+            // Much more reasonable than starting to recode strings
+
+            var expected = "äöü";
+            var cmd = "git log Tests/Resources/file_with_umlauts_äöü.cs";
+            var cli = new GitCommandLine(@"d:\Git Repositories\Insight");
+            var result = cli.Log(@"d:\Git Repositories\Insight\Tests\Resources\file_with_umlauts_äöü.cs");
+
+            Assert.IsTrue(result.Contains(expected));
+
             var bytes = new Byte[] { 0xc3, 0xa4, 0xc3, 0xb6, 0xc3, 0xbc };
             var str = Encoding.UTF8.GetString(bytes);
+            Assert.AreEqual(expected, str);
 
-            // 1252
-            var encoded = @"Ã¤Ã¶Ã¼";
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(encoded));
-            var expected = "äöü";
 
-            // TODO Why?
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var decoded = reader.ReadLine();
-                Assert.AreEqual(expected, decoded);
-            }
         }
     }
 }

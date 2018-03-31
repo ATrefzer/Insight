@@ -20,7 +20,6 @@ namespace Insight.GitProvider
     {
         Dictionary<string, GraphNode> _graph = new Dictionary<string, GraphNode>();
         readonly object _lockObj = new object();
-        PathMapper _mapper;
 
         public static string GetClass()
         {

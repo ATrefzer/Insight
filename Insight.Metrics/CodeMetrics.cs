@@ -143,7 +143,7 @@ namespace Insight.Metrics
 
         static char GetPeek(string fileContent, int index)
         {
-            return index == fileContent.Length ? (char) 0 : fileContent[index + 1];
+            return index == fileContent.Length ? (char)0 : fileContent[index + 1];
         }
 
         static void VerifyClocInstalled(DirectoryInfo basePath)
@@ -172,15 +172,19 @@ namespace Insight.Metrics
             var total = data.Sum();
 
             return new InvertedSpace
-                   {
-                           Min = min,
-                           Max = max,
-                           Mean = mean,
-                           StandardDeviation = sd,
-                           Total = total
-                   };
+            {
+                Min = min,
+                Max = max,
+                Mean = mean,
+                StandardDeviation = sd,
+                Total = total
+            };
         }
 
+        ProcessRunner CreateRunner()
+        {
+            return new ProcessRunner();
+        }
 
         string CallClocForDirectory(DirectoryInfo basePath, DirectoryInfo rootDir, IEnumerable<string> languagesToParse)
         {
@@ -194,7 +198,9 @@ namespace Insight.Metrics
 
             // --skip-uniqueness If cloc finds duplicate files it skips the duplicates. We have to disable this behavior.
             var args = $"\"{rootDir.FullName}\" --by-file --csv --quiet --skip-uniqueness --include-lang=\"{languages}\"";
-            var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args, rootDir.FullName);
+
+            var runner = CreateRunner();
+            var result = runner.RunProcess(GetPathToCloc(basePath), args, rootDir.FullName);
             return result.StdOut;
         }
 
@@ -204,8 +210,10 @@ namespace Insight.Metrics
 
             var args = $"\"{file.FullName}\" --csv --quiet";
 
-            var result = ProcessRunner.RunProcess(GetPathToCloc(basePath), args);
+            var runner = CreateRunner();
+            var result = runner.RunProcess(GetPathToCloc(basePath), args);
             return result.StdOut;
+
         }
 
         LinesOfCode CreateMetric(string[] parts)
@@ -215,11 +223,11 @@ namespace Insight.Metrics
             var code = parts[4].Trim();
 
             var metric = new LinesOfCode
-                         {
-                                 Code = int.Parse(code),
-                                 Blanks = int.Parse(blank),
-                                 Comments = int.Parse(comment)
-                         };
+            {
+                Code = int.Parse(code),
+                Blanks = int.Parse(blank),
+                Comments = int.Parse(comment)
+            };
             return metric;
         }
 
