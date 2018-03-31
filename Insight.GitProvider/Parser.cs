@@ -198,10 +198,11 @@ namespace Insight.GitProvider
         {
             // The only place where we read
             var raw = reader.ReadLine()?.Trim();
-            _lastLine = Decoder.DecodeUtf8(raw);
+           
+            // Rely on reading from the process output is correct.
+            _lastLine = raw;
             return _lastLine;
         }
-
 
         public static KindOfChange ToKindOfChange(string kind)
         {

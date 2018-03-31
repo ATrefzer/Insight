@@ -1,5 +1,5 @@
 ﻿using System.IO;
-
+using System.Text;
 using Insight.Shared.Exceptions;
 using Insight.Shared.System;
 
@@ -21,10 +21,12 @@ namespace Insight.GitProvider
         const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
 
         readonly string _workingDirectory;
+        private readonly ProcessRunner _runner;
 
         public GitCommandLine(string workingDirectory)
         {
             _workingDirectory = workingDirectory;
+            _runner = new ProcessRunner { DefaultEncoding = Encoding.UTF8 };
         }
 
         public string Annotate(string localPath)
@@ -115,7 +117,7 @@ namespace Insight.GitProvider
 
         ProcessResult ExecuteCommandLine(string program, string args)
         {
-            var result = ProcessRunner.RunProcess(program, args, _workingDirectory);
+            var result = _runner.RunProcess(program, args, _workingDirectory);
 
             if (!string.IsNullOrEmpty(result.StdErr))
             {

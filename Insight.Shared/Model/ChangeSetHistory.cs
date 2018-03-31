@@ -74,6 +74,7 @@ namespace Insight.Shared.Model
                             // This may still happen because we skip large merges that may contain a final rename.
                             // So we have a code metric but still believe that the file is at its former location
 
+                            // TODO show as warning!
                             Trace.WriteLine($"Ignored file: '{item.LocalPath}'. It should exist. Possible cause: Ignored commit with too much work items containing a final rename.");
                             ignore.Add(id);
                             continue;

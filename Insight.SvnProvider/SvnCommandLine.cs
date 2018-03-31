@@ -10,10 +10,12 @@ namespace Insight.SvnProvider
     internal sealed class SvnCommandLine
     {
         private readonly string _workingDirectory;
+        private readonly ProcessRunner _runner;
 
         public SvnCommandLine(string workingDirectory)
         {
             _workingDirectory = workingDirectory;
+            _runner = new ProcessRunner();
         }
 
         public string BlameFile(string localFile)
@@ -87,7 +89,7 @@ namespace Insight.SvnProvider
 
         private string ExecuteCommandLine(string program, string args)
         {
-            var result = ProcessRunner.RunProcess(program, args, _workingDirectory);
+            var result = _runner.RunProcess(program, args, _workingDirectory);
 
             if (!string.IsNullOrEmpty(result.StdErr))
             {

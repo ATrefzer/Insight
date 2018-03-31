@@ -42,6 +42,7 @@ namespace Insight.GitProvider
         }
 
         /// <summary>
+        /// NOT USED FOR THE MOMENT. SET ENCODING FOR PROCESS STDOUT INSTEAD.
         /// From git manual: "Commit log messages are typically encoded in UTF-8, but other extended ASCII encodings are also
         /// supported"
         /// Same applies to autor name.
