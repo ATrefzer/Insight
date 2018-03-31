@@ -20,7 +20,7 @@ namespace Insight.GitProvider
     {
         Dictionary<string, GraphNode> _graph = new Dictionary<string, GraphNode>();
         readonly object _lockObj = new object();
-        FileMapper _mapper;
+        PathMapper _mapper;
 
         public static string GetClass()
         {
@@ -39,7 +39,7 @@ namespace Insight.GitProvider
             _gitHistoryExportFile = Path.Combine(cachePath, "git_history.json");
             _gitCli = new GitCommandLine(_startDirectory);
 
-            _mapper = new FileMapper(_startDirectory);
+            _mapper = new PathMapper(_startDirectory);
         }
 
         /// <summary>

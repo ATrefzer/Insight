@@ -2,18 +2,18 @@
 
 namespace Insight.GitProvider
 {
-    public class FileMapper
+    public sealed class PathMapper
     {
         readonly string _startDirectory;
 
-        public FileMapper(string startDirectory)
+        public PathMapper(string startDirectory)
         {
             _startDirectory = startDirectory;
         }
 
         public string MapToLocalFile(string serverPath)
         {
-            var decoded = Decoder.Decode(serverPath);
+            var decoded = Decoder.DecodeEscapedBytes(serverPath);
 
             // In git we have the restriction 
             // that we cannot choose any sub directory.

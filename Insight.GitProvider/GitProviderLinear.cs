@@ -29,7 +29,7 @@ namespace Insight.GitProvider
 
             _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.json");
             _gitCli = new GitCommandLine(_startDirectory);
-            _mapper = new FileMapper(_startDirectory);
+            _mapper = new PathMapper(_startDirectory);
         }
 
         /// <summary>

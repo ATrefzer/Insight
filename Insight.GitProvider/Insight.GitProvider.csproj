@@ -48,7 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Decoder.cs" />
-    <Compile Include="FileMapper.cs" />
+    <Compile Include="PathMapper.cs" />
     <Compile Include="GitCommandLine.cs" />
     <Compile Include="GitProvider.cs" />
     <Compile Include="Parser.cs" />
