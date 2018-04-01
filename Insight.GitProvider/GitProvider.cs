@@ -15,10 +15,19 @@ namespace Insight.GitProvider
 {
     /// <summary>
     /// Provides higher level funtions and queries on a git repository.
+    /// Strategy for getting a history
+    /// 1. Ask git for all tracked (local) files
+    /// 2. For each file request the history. Each commit record has a single file 
+    ///    in it. We can assign a unique id for the file.
+    /// 3. Rebuild a change set history. Because a file can have a common ancestor
+    ///    it is possible to have change sets containing more than one id for the same server path.
+    /// 4. Remove all entries for files that share the same part of the history.
+    /// So I track all renamings of a file until the file starts sharing history with another file.
+    /// This allows me to use unique file ids but not losing too much of the history.
+    /// The approach is easier to handle but is very slow for larger repositories.
     /// </summary>
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
-        Dictionary<string, GraphNode> _graph = new Dictionary<string, GraphNode>();
         readonly object _lockObj = new object();
 
         public static string GetClass()
@@ -26,7 +35,6 @@ namespace Insight.GitProvider
             var type = typeof(GitProvider);
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
-
 
         public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
         {
@@ -51,14 +59,14 @@ namespace Insight.GitProvider
             var json = File.ReadAllText(_gitHistoryExportFile, Encoding.UTF8);
             return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
         }
-
+        private Graph _graph;
 
         public void UpdateCache(IProgress progress)
         {
             VerifyGitDirectory();
 
             // Git graph
-            _graph = new Dictionary<string, GraphNode>();
+            _graph = new Graph();
 
             // Build a virtual commit history
             var localPaths = GetAllTrackedLocalFiltes();
@@ -70,7 +78,7 @@ namespace Insight.GitProvider
             var filesToRemove = FindSharedHistory(commits);
 
             // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
-            CleanupHistory(commits, filesToRemove);
+            _graph.DeleteSharedHistory(commits, filesToRemove);
 
             // Write history file
             var json = JsonConvert.SerializeObject(new ChangeSetHistory(commits), Formatting.Indented);
@@ -126,43 +134,6 @@ namespace Insight.GitProvider
         }
 
 
-        /// <summary>
-        /// Empty merge commits are removed implicitely
-        /// </summary>
-        void CleanupHistory(List<ChangeSet> commits, Dictionary<string, string> filesToRemove)
-        {
-            // filesToRemove: id -> cs
-            var lookup = commits.ToDictionary(x => x.Id, x => x);
-            foreach (var fileToRemove in filesToRemove)
-            {
-                var fileId = fileToRemove.Key;
-                var changeSetId = fileToRemove.Value;
-
-                // Traverse graph to find all changesets where we have to delete the files
-                var nodesToProcess = new Queue<GraphNode>();
-                GraphNode node;
-                if (_graph.TryGetValue(changeSetId, out node))
-                {
-                    nodesToProcess.Enqueue(node);
-                }
-
-                while (nodesToProcess.Any())
-                {
-                    // Remove the file from change set
-                    node = nodesToProcess.Dequeue();
-                    var cs = lookup[changeSetId];
-                    cs.Items.RemoveAll(i => i.Id == fileId);
-
-                    foreach (var parent in node.Parents)
-                    {
-                        if (_graph.TryGetValue(parent, out node))
-                        {
-                            nodesToProcess.Enqueue(node);
-                        }
-                    }
-                }
-            }
-        }
 
         // ReSharper disable once UnusedMember.Local
         void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
@@ -177,7 +148,7 @@ namespace Insight.GitProvider
         }
 
 
-        void Dump(string path, List<ChangeSet> commits, Dictionary<string, GraphNode> graph)
+        void Dump(string path, List<ChangeSet> commits, Graph graph)
         {
             // For debugging
             var writer = new StreamWriter(path);
@@ -187,7 +158,7 @@ namespace Insight.GitProvider
                 writer.WriteLine(commit.Id);
                 writer.WriteLine(commit.Committer);
                 writer.WriteLine(commit.Date.ToString("o"));
-                writer.WriteLine(string.Join("\t", graph[commit.Id].Parents));
+                writer.WriteLine(string.Join("\t", graph.GetParents(commit.Id)));
                 writer.WriteLine(commit.Comment);
                 writer.WriteLine("END_HEADER");
 
@@ -232,7 +203,7 @@ namespace Insight.GitProvider
 
             //DebugWriteLogForSingleFile(gitFileLog, localPath);
 
-            var parser = new Parser(_mapper, UpdateGraph);
+            var parser = new Parser(_mapper, _graph);
             parser.WorkItemRegex = _workItemRegex;
 
             var fileHistory = parser.ParseLogString(gitLogString);
@@ -277,7 +248,7 @@ namespace Insight.GitProvider
                         break;
                     }
 
-                  
+
                 }
             }
         }
@@ -311,22 +282,6 @@ namespace Insight.GitProvider
         void SaveRecoveredLogToDisk(List<ChangeSet> commits)
         {
             Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, _graph);
-        }
-
-        void UpdateGraph(string hash, string parents)
-        {
-            var allParents = parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                                    .Select(parent => parent)
-                                    .ToList();
-            var node = new GraphNode { Commit = hash, Parents = allParents };
-
-            lock (_lockObj)
-            {
-                if (!_graph.ContainsKey(node.Commit))
-                {
-                    _graph.Add(node.Commit, node);
-                }
-            }
         }
     }
 }

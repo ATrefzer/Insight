@@ -63,7 +63,7 @@ namespace Insight
             cp.Data = context;
             cp.Title = title + " (Circle)";
             cp.Commands = commands;
-            ShowTab(cp, true);
+            ShowTab(cp, false);
         }
 
         public void ShowHierarchicalDataAsTreeMap(string title, HierarchicalDataContext context, HierarchicalDataCommands commands)
@@ -79,7 +79,7 @@ namespace Insight
             tm.Data = context;
             tm.Title = title + " (Treemap)";
             tm.Commands = commands;
-            ShowTab(tm, false);
+            ShowTab(tm, true);
         }
 
 
