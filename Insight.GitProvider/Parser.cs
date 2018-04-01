@@ -11,23 +11,23 @@ using Insight.Shared.Model;
 namespace Insight.GitProvider
 {
     /// <summary>
-    /// Parser for a git log output. No processing but decoding the 1252 codes etc.
+    /// Parser for a git log output.
     /// Note: The parser does not provide item ids! This is no concept known by git.
     /// </summary>
     public sealed class Parser
     {
         readonly PathMapper _mapper;
-        readonly Action<string, string> _updateGraph;
+        readonly Graph _graph;
         readonly string endHeaderMarker = "END_HEADER";
         readonly string recordMarker = "START_HEADER";
         string _lastLine;
 
-        public Parser(PathMapper mapper, Action<string, string> updateGraph)
+        public Parser(PathMapper mapper, Graph graph)
         {
             _mapper = mapper;
 
             // cs id -> parents (tab separated)
-            _updateGraph = updateGraph;
+            _graph = graph;
         }
 
         public string WorkItemRegex { get; set; }
@@ -138,7 +138,7 @@ namespace Insight.GitProvider
 
             var comment = ReadComment(reader);
 
-            _updateGraph?.Invoke(hash, parents);
+            _graph.UpdateGraph(hash, parents);
 
             var cs = new ChangeSet();
             cs.Id = hash;
