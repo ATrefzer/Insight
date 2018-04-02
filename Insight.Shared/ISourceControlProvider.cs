@@ -8,7 +8,7 @@ namespace Insight.Shared
 {
     public interface ISourceControlProvider
     {
-        Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact);
+        Dictionary<string, uint> CalculateDeveloperWork(string localFile);
 
         /// <summary>
         /// Returns path to the cached file
@@ -28,7 +28,14 @@ namespace Insight.Shared
 
         /// <summary>
         /// Read the history from the source control provider and store it offline in the file system.
+        /// Work data is can be very slow to calculate, especially for svn. Therefore it is optional.
         /// </summary>
-        void UpdateCache(IProgress progress);
+        void UpdateCache(IProgress progress, bool includeWorkData);
+
+        /// <summary>
+        /// Work data is optional.
+        /// Returns null if the work data is not cached.
+        /// </summary>
+        Dictionary<string, Contribution> QueryContribution();
     }
 }

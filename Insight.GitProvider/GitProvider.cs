@@ -44,32 +44,35 @@ namespace Insight.GitProvider
             _fileFilter = fileFilter;
 
             _gitHistoryExportFile = Path.Combine(cachePath, "git_history.json");
+            _contributionFile = Path.Combine(cachePath, "contributiuon.json");
             _gitCli = new GitCommandLine(_startDirectory);
 
             _mapper = new PathMapper(_startDirectory);
         }
 
-        /// <summary>
-        /// You need to call UpdateCache before.
-        /// </summary>
-        public ChangeSetHistory QueryChangeSetHistory()
-        {
-            VerifyHistoryIsCached();
 
-            var json = File.ReadAllText(_gitHistoryExportFile, Encoding.UTF8);
-            return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
-        }
         private Graph _graph;
 
-        public void UpdateCache(IProgress progress)
+        public void UpdateCache(IProgress progress, bool includeWorkData)
         {
             VerifyGitDirectory();
 
+            UpdateHistory(progress);
+
+            if (includeWorkData)
+            {
+                // Optional
+                UpdateContribution(progress);
+            }
+        }
+
+        private void UpdateHistory(IProgress progress)
+        {
             // Git graph
             _graph = new Graph();
 
             // Build a virtual commit history
-            var localPaths = GetAllTrackedLocalFiltes();
+            var localPaths = GetAllTrackedLocalFiles();
 
             // sha1 -> commit
             var commits = RebuildHistory(localPaths, progress);
@@ -90,6 +93,7 @@ namespace Insight.GitProvider
             // Save the constructed log for information
             //SaveRecoveredLogToDisk(commits);
         }
+
 
         static Dictionary<string, string> FindSharedHistory(List<ChangeSet> commits)
         {
@@ -185,16 +189,7 @@ namespace Insight.GitProvider
             }
         }
 
-        List<string> GetAllTrackedLocalFiltes()
-        {
-            var trackedServerPaths = GetAllTrackedFiles();
-
-            // Filtered local paths
-            return trackedServerPaths.Select(sp => _mapper.MapToLocalFile(sp))
-                                     .Where(lp => _fileFilter.IsAccepted(lp))
-                                     .ToList();
-        }
-
+    
         void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> commits)
         {
             var id = Guid.NewGuid().ToString();
@@ -247,8 +242,6 @@ namespace Insight.GitProvider
                         singleFile.Kind = KindOfChange.Add;
                         break;
                     }
-
-
                 }
             }
         }

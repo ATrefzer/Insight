@@ -39,8 +39,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Contribution.cs" />
-    <Compile Include="FractalValue.cs" />
     <Compile Include="HotspotCalculator.cs" />
     <Compile Include="HotspotDelta.cs" />
     <Compile Include="HotspotPredictor.cs" />

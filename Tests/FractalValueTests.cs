@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using Insight.Analyzers;
-
+using Insight.Calculation;
 using NUnit.Framework;
 
 namespace Tests

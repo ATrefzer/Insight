@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Insight.Calculation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Insight.Shared.Model;
-
-namespace Insight.Analyzers
+namespace Insight.Shared.Model
 {
     /// <summary>
     /// Contributions for a single file or logical component.
