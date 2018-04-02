@@ -17,7 +17,7 @@ namespace Insight.GitProvider
     /// Provides higher level funtions and queries on a git repository.
     /// Strategy for getting a history
     /// 1. Ask git for all tracked (local) files
-    /// 2. For each file request the history. Each commit record has a single file 
+    /// 2. For each file request the history. Each commit record has a single file
     ///    in it. We can assign a unique id for the file.
     /// 3. Rebuild a change set history. Because a file can have a common ancestor
     ///    it is possible to have change sets containing more than one id for the same server path.
@@ -29,6 +29,9 @@ namespace Insight.GitProvider
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
         readonly object _lockObj = new object();
+
+
+        Graph _graph;
 
         public static string GetClass()
         {
@@ -50,9 +53,6 @@ namespace Insight.GitProvider
             _mapper = new PathMapper(_startDirectory);
         }
 
-
-        private Graph _graph;
-
         public void UpdateCache(IProgress progress, bool includeWorkData)
         {
             VerifyGitDirectory();
@@ -64,34 +64,6 @@ namespace Insight.GitProvider
                 // Optional
                 UpdateContribution(progress);
             }
-        }
-
-        private void UpdateHistory(IProgress progress)
-        {
-            // Git graph
-            _graph = new Graph();
-
-            // Build a virtual commit history
-            var localPaths = GetAllTrackedLocalFiles();
-
-            // sha1 -> commit
-            var commits = RebuildHistory(localPaths, progress);
-
-            // file id -> change set id
-            var filesToRemove = FindSharedHistory(commits);
-
-            // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
-            _graph.DeleteSharedHistory(commits, filesToRemove);
-
-            // Write history file
-            var json = JsonConvert.SerializeObject(new ChangeSetHistory(commits), Formatting.Indented);
-            File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
-
-            // Save the original log for information 
-            //SaveFullLogToDisk();
-
-            // Save the constructed log for information
-            //SaveRecoveredLogToDisk(commits);
         }
 
 
@@ -136,7 +108,6 @@ namespace Insight.GitProvider
 
             return filesToRemove;
         }
-
 
 
         // ReSharper disable once UnusedMember.Local
@@ -189,7 +160,6 @@ namespace Insight.GitProvider
             }
         }
 
-    
         void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> commits)
         {
             var id = Guid.NewGuid().ToString();
@@ -254,14 +224,15 @@ namespace Insight.GitProvider
             // id -> cs
             var commits = new Dictionary<string, ChangeSet>();
 
-            Parallel.ForEach(localPaths, localPath =>
-                                         {
-                                             // Progress
-                                             Interlocked.Increment(ref counter);
-                                             progress.Message($"Rebuilding history {counter}/{count}");
+            Parallel.ForEach(localPaths,
+                             localPath =>
+                             {
+                                 // Progress
+                                 Interlocked.Increment(ref counter);
+                                 progress.Message($"Rebuilding history {counter}/{count}");
 
-                                             ProcessHistoryForFile(localPath, commits);
-                                         });
+                                 ProcessHistoryForFile(localPath, commits);
+                             });
 
             return commits.Values.OrderByDescending(x => x.Date).ToList();
         }
@@ -275,6 +246,34 @@ namespace Insight.GitProvider
         void SaveRecoveredLogToDisk(List<ChangeSet> commits)
         {
             Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, _graph);
+        }
+
+        void UpdateHistory(IProgress progress)
+        {
+            // Git graph
+            _graph = new Graph();
+
+            // Build a virtual commit history
+            var localPaths = GetAllTrackedLocalFiles();
+
+            // sha1 -> commit
+            var commits = RebuildHistory(localPaths, progress);
+
+            // file id -> change set id
+            var filesToRemove = FindSharedHistory(commits);
+
+            // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
+            _graph.DeleteSharedHistory(commits, filesToRemove);
+
+            // Write history file
+            var json = JsonConvert.SerializeObject(new ChangeSetHistory(commits), Formatting.Indented);
+            File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
+
+            // Save the original log for information 
+            //SaveFullLogToDisk();
+
+            // Save the constructed log for information
+            //SaveRecoveredLogToDisk(commits);
         }
     }
 }
