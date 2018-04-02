@@ -65,7 +65,7 @@ namespace Insight.GitProvider
             var fileToContribution = new ConcurrentDictionary<string, Contribution>();
 
             var all = localFiles.Count;
-            Parallel.ForEach(localFiles, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+            Parallel.ForEach(localFiles, 
                              file =>
                              {
 
@@ -220,7 +220,7 @@ namespace Insight.GitProvider
 
         public Dictionary<string, Contribution> QueryContribution()
         {
-            /// The contributions are optional
+            // The contributions are optional
             if (!File.Exists(_contributionFile))
             {
                 return null;
