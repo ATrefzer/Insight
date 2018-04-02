@@ -138,7 +138,7 @@ namespace Insight.GitProvider
 
             var comment = ReadComment(reader);
 
-            _graph.UpdateGraph(hash, parents);
+            _graph?.UpdateGraph(hash, parents);
 
             var cs = new ChangeSet();
             cs.Id = hash;

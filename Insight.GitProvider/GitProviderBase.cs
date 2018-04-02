@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-
+using System.Threading.Tasks;
 using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
+using Newtonsoft.Json;
 
 namespace Insight.GitProvider
 {
@@ -18,6 +21,7 @@ namespace Insight.GitProvider
         protected IFilter _fileFilter;
         protected GitCommandLine _gitCli;
         protected string _gitHistoryExportFile;
+        protected string _contributionFile;
 
         protected string _lastLine;
         protected PathMapper _mapper;
@@ -26,9 +30,63 @@ namespace Insight.GitProvider
 
         public List<WarningMessage> Warnings { get; protected set; }
 
-        public Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact)
+        protected List<string> GetAllTrackedLocalFiles()
         {
-            var annotate = _gitCli.Annotate(artifact.LocalPath);
+            var trackedServerPaths = GetAllTrackedFiles();
+
+            // Filtered local paths
+            return trackedServerPaths.Select(sp => _mapper.MapToLocalFile(sp))
+                                     .Where(lp => _fileFilter.IsAccepted(lp))
+                                     .ToList();
+        }
+
+
+        protected void UpdateContribution(IProgress progress)
+        {
+            if (File.Exists(_contributionFile))
+            {
+                File.Delete(_contributionFile);
+            }
+
+            var localFiles = GetAllTrackedLocalFiles();
+
+
+            var contribution = CalculateContributionsParallel(progress, localFiles.ToList());
+
+            var json = JsonConvert.SerializeObject(contribution);
+
+            File.WriteAllText(_contributionFile, json, Encoding.UTF8);
+
+        }
+
+        protected Dictionary<string, Contribution> CalculateContributionsParallel(IProgress progress, List<string> localFiles)
+        {
+            // Calculate main developer for each file
+            var fileToContribution = new ConcurrentDictionary<string, Contribution>();
+
+            var all = localFiles.Count;
+            Parallel.ForEach(localFiles, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                             file =>
+                             {
+
+                                 var work = CalculateDeveloperWork(file);
+                                 var contribution = new Contribution(work);
+
+                                 var result = fileToContribution.TryAdd(file, contribution);
+                                 Debug.Assert(result);
+
+                                 // Progress
+                                 var count = fileToContribution.Count;
+
+                                 progress.Message($"Calculating work {count}/{all}");
+                             });
+
+            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
+        }
+
+        public Dictionary<string, uint> CalculateDeveloperWork(string localFile)
+        {
+            var annotate = _gitCli.Annotate(localFile);
 
             //S = not a whitespace
             //s = whitespace
@@ -110,6 +168,17 @@ namespace Insight.GitProvider
             }
         }
 
+        protected void VerifyContributionIsCached()
+        {
+            if (!File.Exists(_contributionFile))
+            {
+                var msg = $"Contribution file '{_contributionFile}' not found. You have to 'Sync' first.";
+                throw new FileNotFoundException(msg);
+            }
+        }
+
+
+
         /// <summary>
         /// I don't want to run into merge conflicts.
         /// Abort if there are local changes to the working or staging area.
@@ -137,6 +206,28 @@ namespace Insight.GitProvider
             }
 
             return path;
+        }
+
+        /// <summary>
+        /// You need to call UpdateCache before.
+        /// </summary>
+        public ChangeSetHistory QueryChangeSetHistory()
+        {
+            VerifyHistoryIsCached();
+            var json = File.ReadAllText(_gitHistoryExportFile, Encoding.UTF8);
+            return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
+        }
+
+        public Dictionary<string, Contribution> QueryContribution()
+        {
+            /// The contributions are optional
+            if (!File.Exists(_contributionFile))
+            {
+                return null;
+            }
+
+            var input = File.ReadAllText(_contributionFile, Encoding.UTF8);
+            return JsonConvert.DeserializeObject<Dictionary<string, Contribution>>(input);
         }
 
         string GetPathToExportedFile(FileInfo localFile, string revision)

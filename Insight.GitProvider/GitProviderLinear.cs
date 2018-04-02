@@ -27,25 +27,27 @@ namespace Insight.GitProvider
             _workItemRegex = workItemRegex;
             _fileFilter = fileFilter;
 
-            _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.json");
+            _gitHistoryExportFile = Path.Combine(cachePath, "git_history.json");
+            _contributionFile = Path.Combine(cachePath, "contributiuon.json");
             _gitCli = new GitCommandLine(_startDirectory);
             _mapper = new PathMapper(_startDirectory);
         }
 
-        /// <summary>
-        /// You need to call UpdateCache before.
-        /// </summary>
-        public ChangeSetHistory QueryChangeSetHistory()
-        {
-            VerifyHistoryIsCached();
-            var json = File.ReadAllText(_gitHistoryExportFile, Encoding.UTF8);
-            return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
-        }
-
-        public void UpdateCache(IProgress progress)
+        public void UpdateCache(IProgress progress, bool includeWorkData)
         {
             VerifyGitDirectory();
 
+            UpdateHistory();
+
+            if (includeWorkData)
+            {
+                // Optional
+                UpdateContribution(progress);
+            }
+        }
+
+        private void UpdateHistory()
+        {
             var log = _gitCli.Log();
 
             var parser = new Parser(_mapper, null);
