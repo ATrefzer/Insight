@@ -2,9 +2,8 @@
 In Progress
 ---------------------------------------
 - Try on different git projects
+- File classifier for coupling not working correctly
 
-- Move UpdateContributions into provider and base on all tracked local files.
-- Bad color for Prouse
 - Outer circle not correct for nunit!
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 
