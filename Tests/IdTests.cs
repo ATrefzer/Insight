@@ -96,20 +96,6 @@ namespace Tests
             Assert.AreEqual(2, hash.Count);
         }
 
-        [Test]
-        public void StringId_CanBeUsedAsKey_WorkItem()
-        {
-            Id id1 = new StringId("a");
-            Id id2 = new StringId("a");
-
-            var w1 = new WorkItem(id1);
-            var w2 = new WorkItem(id2);
-
-            var hash = new HashSet<WorkItem>();
-            hash.Add(w1);
-            hash.Add(w2);
-
-            Assert.AreEqual(1, hash.Count);
-        }
+      
     }
 }

@@ -25,6 +25,18 @@ namespace Insight.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Insight.SvnProvider.SvnProvider,Insight.SvnProvider")]
+        public string Provider {
+            get {
+                return ((string)(this["Provider"]));
+            }
+            set {
+                this["Provider"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute(".\\ProjectBase")]
         public string ProjectBase {
             get {
@@ -32,6 +44,18 @@ namespace Insight.Properties {
             }
             set {
                 this["ProjectBase"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(".\\Cache")]
+        public string Cache {
+            get {
+                return ((string)(this["Cache"]));
+            }
+            set {
+                this["Cache"] = value;
             }
         }
         
@@ -61,25 +85,13 @@ namespace Insight.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Insight.SvnProvider.SvnProvider,Insight.SvnProvider")]
-        public string Provider {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PathsToInclude {
             get {
-                return ((string)(this["Provider"]));
+                return ((string)(this["PathsToInclude"]));
             }
             set {
-                this["Provider"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".\\Cache")]
-        public string Cache {
-            get {
-                return ((string)(this["Cache"]));
-            }
-            set {
-                this["Cache"] = value;
+                this["PathsToInclude"] = value;
             }
         }
         
@@ -95,82 +107,58 @@ namespace Insight.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string PathsToInclude {
-            get {
-                return ((string)(this["PathsToInclude"]));
-            }
-            set {
-                this["PathsToInclude"] = value;
-            }
-        }
-
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("200")]
-        public int MaxWorkItemsPerCommitForSummary
-        {
-            get
-            {
+        public int MaxWorkItemsPerCommitForSummary {
+            get {
                 return ((int)(this["MaxWorkItemsPerCommitForSummary"]));
             }
         }
-
-
+        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("3")]
-        public int MinCommitsForHotspots
-        {
-            get
-            {
+        public int MinCommitsForHotspots {
+            get {
                 return ((int)(this["MinCommitsForHotspots"]));
             }
         }
-
+        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public int MinLinesOfCodeForHotspot
-        {
-            get
-            {
+        public int MinLinesOfCodeForHotspot {
+            get {
                 return ((int)(this["MinLinesOfCodeForHotspot"]));
             }
         }
-
+        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("300")]
-        public int MaxItemsInChangesetForChangeCoupling
-        {
-            get
-            {
+        public int MaxItemsInChangesetForChangeCoupling {
+            get {
                 return ((int)(this["MaxItemsInChangesetForChangeCoupling"]));
             }
         }
-
+        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
         public int MinCouplingForChangeCoupling {
             get {
                 return ((int)(this["MinCouplingForChangeCoupling"]));
             }
         }
         
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        [global::System.Configuration.DefaultSettingValueAttribute("40")]
         public double MinDegreeForChangeCoupling {
             get {
                 return ((double)(this["MinDegreeForChangeCoupling"]));
             }
         }
-        
-      
     }
 }

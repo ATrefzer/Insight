@@ -1,13 +1,12 @@
-﻿using Insight.Shared.Model;
-
-namespace Insight.Dto
+﻿namespace Insight.Dto
 {
     /// <summary>
     /// Copied base class attributes to control order in data grid / csv
+    /// DO NOT FORMAT
     /// </summary>
     public sealed class DataGridFriendlyArtifact
     {
-        public Id Revision { get; set; }
+        public string Revision { get; set; }
         public string LocalPath { get; set; }
         public int Commits { get; set; }
         public int Committers { get; set; }
@@ -20,8 +19,5 @@ namespace Insight.Dto
         public double FractalValue { get; set; }
         public string MainDev { get; set; }
         public double MainDevPercent { get; set; }
-        
     }
-
-   
 }

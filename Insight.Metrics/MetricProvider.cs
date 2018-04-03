@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-
+using System.Text;
 using Insight.Shared;
 using Insight.Shared.Model;
+using Newtonsoft.Json;
 
 namespace Insight.Metrics
 {
@@ -11,7 +12,7 @@ namespace Insight.Metrics
     /// </summary>
     public sealed class MetricProvider
     {
-        private readonly string _metricsBinFile;
+        private readonly string _metricsFile;
         private readonly IEnumerable<string> _normalizedFileExtensions;
         private readonly string _startDirectory;
 
@@ -20,26 +21,25 @@ namespace Insight.Metrics
         {
             _startDirectory = projectBase;
             _normalizedFileExtensions = normalizedFileExtensions;
-            _metricsBinFile = Path.Combine(cache, "metrics.bin");
+            _metricsFile = Path.Combine(cache, "metrics.json");
         }
-
 
         public Dictionary<string, LinesOfCode> QueryCodeMetrics()
         {
-            if (!File.Exists(_metricsBinFile))
+            if (!File.Exists(_metricsFile))
             {
-                throw new FileNotFoundException(_metricsBinFile);
+                throw new FileNotFoundException(_metricsFile);
             }
 
-            var binFile = new BinaryFile<Dictionary<string, LinesOfCode>>();
-            return binFile.Read(_metricsBinFile);
+            var json = File.ReadAllText(_metricsFile, Encoding.UTF8);
+            return JsonConvert.DeserializeObject<Dictionary<string, LinesOfCode>>(json);
         }
 
         public void UpdateCache()
         {
-            if (File.Exists(_metricsBinFile))
+            if (File.Exists(_metricsFile))
             {
-                File.Delete(_metricsBinFile);
+                File.Delete(_metricsFile);
             }
 
             // Query code metrics of local version
@@ -48,8 +48,10 @@ namespace Insight.Metrics
             // Take every file that can we can calculate a metric for.         
             var metrics = metric.CalculateLinesOfCode(new DirectoryInfo(_startDirectory), _normalizedFileExtensions);
 
-            var binFile = new BinaryFile<Dictionary<string, LinesOfCode>>();
-            binFile.Write(_metricsBinFile, metrics);
+         
+            var json = JsonConvert.SerializeObject(metrics, Formatting.Indented);
+            File.WriteAllText(_metricsFile, json, Encoding.UTF8);
+           
         }
     }
 }

@@ -41,6 +41,9 @@
     <Compile Include="BinaryFile.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="Exceptions\ProviderException.cs" />
+    <Compile Include="Calculation\FractalValue.cs" />
+    <Compile Include="IProgress.cs" />
+    <Compile Include="Model\Contribution.cs" />
     <Compile Include="Model\FileRevision.cs" />
     <Compile Include="Model\InvertedSpace.cs" />
     <Compile Include="Model\NumberId.cs" />

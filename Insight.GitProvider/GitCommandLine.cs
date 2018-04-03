@@ -1,12 +1,11 @@
 ﻿using System.IO;
-
+using System.Text;
 using Insight.Shared.Exceptions;
-using Insight.Shared.Model;
 using Insight.Shared.System;
 
 namespace Insight.GitProvider
 {
-    internal sealed class GitCommandLine
+    public sealed class GitCommandLine
     {
         /// <summary>
         /// %H   Hash (abbrebiated is %h)
@@ -16,15 +15,18 @@ namespace Insight.GitProvider
         /// %ad  Author date (format respects --date= option)
         /// %cd  Committer date (format respects --date= option)
         /// %s   Subject (commit message)
+        /// %P   Parents (all sha1s in one line) First commit does not have a parent!
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
-        private const string LogFormat = "START_HEADER%n%H%n%cN%n%cd%n%s%nEND_HEADER";
+        const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
 
-        private readonly string _workingDirectory;
+        readonly string _workingDirectory;
+        private readonly ProcessRunner _runner;
 
         public GitCommandLine(string workingDirectory)
         {
             _workingDirectory = workingDirectory;
+            _runner = new ProcessRunner { DefaultEncoding = Encoding.UTF8 };
         }
 
         public string Annotate(string localPath)
@@ -35,7 +37,7 @@ namespace Insight.GitProvider
             return ExecuteCommandLine(program, args).StdOut;
         }
 
-        public void ExportFileRevision(string serverPath, Id revision, string exportFile)
+        public void ExportFileRevision(string serverPath, string revision, string exportFile)
         {
             var program = "git";
 
@@ -43,6 +45,17 @@ namespace Insight.GitProvider
 
             var result = ExecuteCommandLine(program, args);
             File.WriteAllText(exportFile, result.StdOut);
+        }
+
+        public string GetAllTrackedFiles()
+        {
+            var program = "git";
+
+            // Optional HEAD
+            var args = $"ls-tree -r master --name-only";
+
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut;
         }
 
         /// <summary>
@@ -69,15 +82,7 @@ namespace Insight.GitProvider
             return !result.StdOut.ToLowerInvariant().Contains(hint);
         }
 
-        public ProcessResult PullMasterFromOrigin()
-        {
-            // git pull origin master
-            var program = "git";
-            var args = $"pull origin master";
-            return ExecuteCommandLine(program, args);
-        }
-
-        internal string Log()
+        public string Log()
         {
             // --num_stat Shows added and removed lines
             var program = "git";
@@ -90,7 +95,7 @@ namespace Insight.GitProvider
             return result.StdOut;
         }
 
-        internal string Log(string localPath)
+        public string Log(string localPath)
         {
             localPath = localPath.Replace("\\", "/");
             var program = "git";
@@ -102,9 +107,17 @@ namespace Insight.GitProvider
             return result.StdOut;
         }
 
-        private ProcessResult ExecuteCommandLine(string program, string args)
+        public ProcessResult PullMasterFromOrigin()
         {
-            var result = ProcessRunner.RunProcess(program, args, _workingDirectory);
+            // git pull origin master
+            var program = "git";
+            var args = $"pull origin master";
+            return ExecuteCommandLine(program, args);
+        }
+
+        ProcessResult ExecuteCommandLine(string program, string args)
+        {
+            var result = _runner.RunProcess(program, args, _workingDirectory);
 
             if (!string.IsNullOrEmpty(result.StdErr))
             {
@@ -112,17 +125,6 @@ namespace Insight.GitProvider
             }
 
             return result;
-        }
-
-        public string GetAllTrackedFiles()
-        {
-            var program = "git";
-
-            // Optional HEAD
-            var args = $"ls-tree -r master --name-only";
-
-            var result = ExecuteCommandLine(program, args);
-            return result.StdOut;
         }
     }
 }

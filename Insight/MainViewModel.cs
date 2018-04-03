@@ -169,8 +169,8 @@ namespace Insight
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
@@ -192,10 +192,15 @@ namespace Insight
         private async void FragmentationClick()
         {
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
+            if (context == null)
+            {
+                return;
+            }
+
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands(colorScheme));
 
             //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }
@@ -246,8 +251,8 @@ namespace Insight
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
@@ -261,8 +266,8 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands(colorScheme));
         }
 
         private async void KnowledgeLossClick()
@@ -281,8 +286,8 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands(colorScheme));
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands(colorScheme));
         }
 
         private void LoadDataClick()
@@ -317,8 +322,8 @@ namespace Insight
                     }
 
                     var context = new HierarchicalDataContext(data, colorScheme);
-                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), GetDefaultCommands(colorScheme));
                     _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Loaded", context, GetDefaultCommands(colorScheme));
+                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), GetDefaultCommands(colorScheme));
                 }
             }
             catch (Exception ex)

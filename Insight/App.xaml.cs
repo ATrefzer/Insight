@@ -1,7 +1,9 @@
-﻿using System.Windows;
+﻿using System.Text;
+using System.Windows;
 
 using Insight.Properties;
 using Insight.Shared;
+using Insight.Shared.System;
 
 namespace Insight
 {
@@ -19,7 +21,7 @@ namespace Insight
         }
 
         private void App_OnStartup(object sender, StartupEventArgs e)
-        {
+        {         
             _project = new Project();
             _project.Load();
 

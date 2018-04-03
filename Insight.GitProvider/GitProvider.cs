@@ -1,35 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Insight.Shared;
-using Insight.Shared.Extensions;
 using Insight.Shared.Model;
-using Insight.Shared.VersionControl;
+
+using Newtonsoft.Json;
 
 namespace Insight.GitProvider
 {
     /// <summary>
     /// Provides higher level funtions and queries on a git repository.
+    /// Strategy for getting a history
+    /// 1. Ask git for all tracked (local) files
+    /// 2. For each file request the history. Each commit record has a single file
+    ///    in it. We can assign a unique id for the file.
+    /// 3. Rebuild a change set history. Because a file can have a common ancestor
+    ///    it is possible to have change sets containing more than one id for the same server path.
+    /// 4. Remove all entries for files that share the same part of the history.
+    /// So I track all renamings of a file until the file starts sharing history with another file.
+    /// This allows me to use unique file ids but not losing too much of the history.
+    /// The approach is easier to handle but is very slow for larger repositories.
     /// </summary>
-    public sealed class GitProvider : ISourceControlProvider
+    public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
-        private static readonly Regex _regex = new Regex(@"\\(?<Value>[a-zA-Z0-9]{3})", RegexOptions.Compiled);
-        private readonly string endHeaderMarker = "END_HEADER";
+        readonly object _lockObj = new object();
 
-        private readonly string recordMarker = "START_HEADER";
-        private string _cachePath;
-        private GitCommandLine _gitCli;
-        private string _gitHistoryExportFile;
 
-        private string _lastLine;
-        private string _startDirectory;
-        private string _workItemRegex;
+        Graph _graph;
 
         public static string GetClass()
         {
@@ -37,366 +39,241 @@ namespace Insight.GitProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-        public Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact)
-        {
-            var annotate = _gitCli.Annotate(artifact.LocalPath);
-
-            //S = not a whitespace
-            //s = whitespace
-
-            // Parse annotated file
-            var workByDevelopers = new Dictionary<string, uint>();
-            var changeSetRegex = new Regex(@"^\S+\t\(\s*(?<developerName>[^\t]+).*", RegexOptions.Multiline | RegexOptions.Compiled);
-
-            // Work by changesets (line by line)
-            var matches = changeSetRegex.Matches(annotate);
-            foreach (Match match in matches)
-            {
-                var developer = match.Groups["developerName"].Value;
-                developer = developer.Trim('\t');
-                workByDevelopers.AddToValue(developer, 1);
-            }
-
-            return workByDevelopers;
-        }
-
-        // TODO that seems unreliable
-        public string Decoder(string value)
-        {
-            var replace = _regex.Replace(
-                                         value,
-                                         m => ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString()
-                                        );
-            return replace.Trim('"');
-        }
-
-        public List<FileRevision> ExportFileHistory(string localFile)
-        {
-            var result = new List<FileRevision>();
-
-            var xml = _gitCli.Log(localFile);
-
-            var historyOfSingleFile = ParseLogString(xml);
-            foreach (var cs in historyOfSingleFile.ChangeSets)
-            {
-                var changeItem = cs.Items.First();
-
-                var fi = new FileInfo(localFile);
-                var exportFile = GetPathToExportedFile(fi, cs.Id);
-
-                // Download if not already in cache
-                if (!File.Exists(exportFile))
-                {
-                    _gitCli.ExportFileRevision(changeItem.ServerPath, cs.Id, exportFile);
-                }
-
-                var revision = new FileRevision(changeItem.LocalPath, cs.Id, cs.Date, exportFile);
-                result.Add(revision);
-            }
-
-            return result;
-        }
-
-        public void Initialize(string projectBase, string cachePath, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
+            _fileFilter = fileFilter;
 
-            _gitHistoryExportFile = Path.Combine(cachePath, @"git_history.log");
+            _gitHistoryExportFile = Path.Combine(cachePath, "git_history.json");
+            _contributionFile = Path.Combine(cachePath, "contributiuon.json");
             _gitCli = new GitCommandLine(_startDirectory);
+
+            _mapper = new PathMapper(_startDirectory);
         }
 
-        public List<WarningMessage> Warnings { get; private set; }
-
-        /// <summary>
-        /// You need to call UpdateCache before.
-        /// </summary>
-        public ChangeSetHistory QueryChangeSetHistory()
+        public void UpdateCache(IProgress progress, bool includeWorkData)
         {
-            if (!File.Exists(_gitHistoryExportFile))
-            {
-                var msg = $"Log export file '{_gitHistoryExportFile}' not found. You have to 'Sync' first.";
-                throw new FileNotFoundException(msg);
-            }
+            VerifyGitDirectory();
 
-            return ParseLogFile(_gitHistoryExportFile);
+            UpdateHistory(progress);
+
+            if (includeWorkData)
+            {
+                // Optional
+                UpdateContribution(progress);
+            }
         }
 
-        public void UpdateCache()
+
+        static Dictionary<string, string> FindSharedHistory(List<ChangeSet> commits)
         {
-            if (!Directory.Exists(Path.Combine(_startDirectory, ".git")))
+            // file id -> change set id
+            var filesToRemove = new Dictionary<string, string>();
+
+            // Find overlapping files in history.
+            foreach (var cs in commits)
             {
-                // We need the root (containing .git) because of the function MapToLocalFile.
-                // We could go upwards and find the git root ourself and use this root for the path mapping.
-                // But for the moment take everything. The user can set filters in the project settings.
-                throw new ArgumentException("The given start directory is not the root of a git repository.");
+                // Commits are ordered by date
+
+                // Server path
+
+                var serverPaths = new HashSet<string>();
+                var duplicateServerPaths = new HashSet<string>();
+
+                // Pass 1: Find which server paths are used more than once in the change set
+                foreach (var item in cs.Items)
+                {
+                    // Second pass: Remember the files to be deleted.
+                    if (!serverPaths.Add(item.ServerPath))
+                    {
+                        // Same server path on more than one change set items.
+                        duplicateServerPaths.Add(item.ServerPath);
+                    }
+                }
+
+                // Pass 2: Determine the files to be deleted.
+                foreach (var item in cs.Items)
+                {
+                    if (duplicateServerPaths.Contains(item.ServerPath))
+                    {
+                        if (!filesToRemove.ContainsKey(item.Id))
+                        {
+                            filesToRemove.Add(item.Id, cs.Id);
+                        }
+                    }
+                }
             }
 
-            // Git has the complete history locally anyway.
+            return filesToRemove;
+        }
 
+
+        // ReSharper disable once UnusedMember.Local
+        void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
+        {
+            var logPath = Path.Combine(_cachePath, "logs");
+            if (!Directory.Exists(logPath))
+            {
+                Directory.CreateDirectory(logPath);
+            }
+
+            File.WriteAllText(Path.Combine(logPath, new FileInfo(forLocalFile).Name), gitFileLog);
+        }
+
+
+        void Dump(string path, List<ChangeSet> commits, Graph graph)
+        {
+            // For debugging
+            var writer = new StreamWriter(path);
+            foreach (var commit in commits)
+            {
+                writer.WriteLine("START_HEADER");
+                writer.WriteLine(commit.Id);
+                writer.WriteLine(commit.Committer);
+                writer.WriteLine(commit.Date.ToString("o"));
+                writer.WriteLine(string.Join("\t", graph.GetParents(commit.Id)));
+                writer.WriteLine(commit.Comment);
+                writer.WriteLine("END_HEADER");
+
+                // files
+                foreach (var file in commit.Items)
+                {
+                    switch (file.Kind)
+                    {
+                        // Lose the similarity
+                        case KindOfChange.Add:
+                            writer.WriteLine("A\t" + file.ServerPath);
+                            break;
+                        case KindOfChange.Edit:
+                            writer.WriteLine("M\t" + file.ServerPath);
+                            break;
+                        case KindOfChange.Copy:
+                            writer.WriteLine("C\t" + file.FromServerPath + "\t" + file.ServerPath);
+                            break;
+                        case KindOfChange.Rename:
+                            writer.WriteLine("R\t" + file.FromServerPath + "\t" + file.ServerPath);
+                            break;
+                    }
+                }
+            }
+        }
+
+        void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> commits)
+        {
+            var id = Guid.NewGuid().ToString();
+
+            var gitLogString = _gitCli.Log(localPath);
+
+            //DebugWriteLogForSingleFile(gitFileLog, localPath);
+
+            var parser = new Parser(_mapper, _graph);
+            parser.WorkItemRegex = _workItemRegex;
+
+            var fileHistory = parser.ParseLogString(gitLogString);
+
+            foreach (var cs in fileHistory.ChangeSets)
+            {
+                var singleFile = cs.Items.Single();
+
+                if (singleFile.Kind == KindOfChange.Delete)
+                {
+                    // File was deleted and maybe added later again.
+                    // Stop following this file. Do not add current version to
+                    // history. Analyzer.LoadHistory will kill all deleted items
+                    // and the file will not be part of the summary
+                    break;
+                }
+
+                lock (_lockObj)
+                {
+                    if (!commits.ContainsKey(cs.Id))
+                    {
+                        singleFile.Id = id;
+                        commits.Add(cs.Id, cs);
+                    }
+                    else
+                    {
+                        // Seen this changeset before. Add the file.
+                        var changeSet = commits[cs.Id];
+                        singleFile.Id = id;
+                        changeSet.Items.Add(singleFile);
+                    }
+
+                    // Convert copy to add
+                    if (singleFile.Kind == KindOfChange.Copy)
+                    {
+                        // Consider copy as a new start. Ignore anything before
+                        // Example: 
+                        // StringId is created in cs1. Not touched later.
+                        // NumberId is copied from StringId in cs2. Not touched later.
+                        // Shared history in cs1 would cause StringId to disappear.
+                        singleFile.Kind = KindOfChange.Add;
+                        break;
+                    }
+                }
+            }
+        }
+
+        List<ChangeSet> RebuildHistory(List<string> localPaths, IProgress progress)
+        {
+            var count = localPaths.Count;
+            var counter = 0;
+
+            // id -> cs
+            var commits = new Dictionary<string, ChangeSet>();
+
+            Parallel.ForEach(localPaths,
+                             localPath =>
+                             {
+                                 // Progress
+                                 Interlocked.Increment(ref counter);
+                                 progress.Message($"Rebuilding history {counter}/{count}");
+
+                                 ProcessHistoryForFile(localPath, commits);
+                             });
+
+            return commits.Values.OrderByDescending(x => x.Date).ToList();
+        }
+
+        void SaveFullLogToDisk()
+        {
             var log = _gitCli.Log();
-            File.WriteAllText(_gitHistoryExportFile, log);
+            File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
         }
 
-        /// <summary>
-        /// I don't want to run into merge conflicts.
-        /// Abort if there are local changes to the working or staging area.
-        /// Abort if there are local commits not pushed to the remote.
-        /// </summary>
-        private void AbortOnPotentialMergeConflicts()
+        void SaveRecoveredLogToDisk(List<ChangeSet> commits)
         {
-            if (_gitCli.HasLocalChanges())
-            {
-                throw new Exception("Abort. There are local changes.");
-            }
-
-            if (_gitCli.HasLocalCommits())
-            {
-                throw new Exception("Abort. There are local commits.");
-            }
+            Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, _graph);
         }
 
-        private void CreateChangeItem(string changeItem, MovementTracker tracker)
+        void UpdateHistory(IProgress progress)
         {
-            var ci = new ChangeItem();
+            // Git graph
+            _graph = new Graph();
 
-            // Example
-            // M Visualization.Controls/Strings.resx
-            // A Visualization.Controls/Tools/IHighlighting.cs
-            // R083 Visualization.Controls/Filter/FilterView.xaml   Visualization.Controls/Tools/ToolView.xaml
+            // Build a virtual commit history
+            var localPaths = GetAllTrackedLocalFiles();
 
-            var parts = changeItem.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            var changeKind = ToKindOfChange(parts[0]);
-            ci.Kind = changeKind;
-            if (changeKind == KindOfChange.Rename)
-            {
-                Debug.Assert(parts.Length == 3);
-                var oldName = parts[1];
-                var newName = parts[2];
-                ci.ServerPath = Decoder(newName);
-                ci.FromServerPath = oldName;
-                tracker.TrackId(ci);
-            }
-            else
-            {
-                Debug.Assert(parts.Length == 2 || parts.Length == 3);
-                ci.ServerPath = Decoder(parts[1]);
-                tracker.TrackId(ci);
-            }
+            // sha1 -> commit
+            var commits = RebuildHistory(localPaths, progress);
 
-            ci.LocalPath = MapToLocalFile(ci.ServerPath);
-        }
+            // file id -> change set id
+            var filesToRemove = FindSharedHistory(commits);
 
+            // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
+            _graph.DeleteSharedHistory(commits, filesToRemove);
 
-        private string GetHistoryCache()
-        {
-            var path = Path.Combine(_cachePath, "History");
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
+            // Write history file
+            var json = JsonConvert.SerializeObject(new ChangeSetHistory(commits), Formatting.Indented);
+            File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
 
-            return path;
-        }
+            // Save the original log for information 
+            //SaveFullLogToDisk();
 
-        private string GetPathToExportedFile(FileInfo localFile, Id revision)
-        {
-            var name = new StringBuilder();
-
-            name.Append(localFile.FullName.GetHashCode().ToString("X"));
-            name.Append("_");
-            name.Append(revision);
-            name.Append("_");
-            name.Append(localFile.Name);
-
-            return Path.Combine(GetHistoryCache(), name.ToString());
-        }
-
-        private bool GoToNextRecord(StreamReader reader)
-        {
-            if (_lastLine == recordMarker)
-            {
-                // We are already positioned on the next changeset.
-                return true;
-            }
-
-            string line;
-            while ((line = ReadLine(reader)) != null)
-            {
-                if (line.Equals(recordMarker))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private string MapToLocalFile(string serverPath)
-        {
-            // In git we have the restriction 
-            // that we cannot choose any sub directory.
-            // (Current knowledge). Select the one with .git for the moment.
-
-            // Example
-            // _startDirectory = d:\\....\Insight
-            // serverPath = Insight/Board.txt
-            // localPath = d:\\....\Insight\Insight/Board.txt
-            var serverNormalized = serverPath.Replace("/", "\\");
-            var localPath = Path.Combine(_startDirectory, serverNormalized);
-            return localPath;
-        }
-
-        /// <summary>
-        /// Log file has format specified in GitCommandLine class
-        /// </summary>
-        private ChangeSetHistory ParseLog(Stream log)
-        {
-            var changeSets = new List<ChangeSet>();
-            var tracker = new MovementTracker();
-
-            using (var reader = new StreamReader(log))
-            {
-                var proceed = GoToNextRecord(reader);
-                if (!proceed)
-                {
-                    throw new FormatException("The file does not contain any change sets.");
-                }
-
-                while (proceed)
-                {
-                    var changeSet = ParseRecord(reader, tracker);
-                    changeSets.Add(changeSet);
-                    proceed = GoToNextRecord(reader);
-                }
-            }
-
-            Warnings = tracker.Warnings;
-            var history = new ChangeSetHistory(changeSets);
-            return history;
-        }
-
-        public HashSet<string> GetAllTrackedFiles()
-        {
-            var serverPaths = _gitCli.GetAllTrackedFiles();
-            var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            return new HashSet<string>(all);
-        }
-
-        private ChangeSetHistory ParseLogFile(string logFile)
-        {
-            using (var stream = new FileStream(logFile, FileMode.Open))
-            {
-                var history = ParseLog(stream);           
-                return history;
-            }
-        }
-
-        private ChangeSetHistory ParseLogString(string logString)
-        {
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(logString));
-            return ParseLog(stream);
-        }
-
-        private ChangeSet ParseRecord(StreamReader reader, MovementTracker tracker)
-        {
-            // We are located on the first data item of the record
-            var hash = ReadLine(reader);
-            var committer = ReadLine(reader);
-            var date = ReadLine(reader);
-
-            var commentBuilder = new StringBuilder();
-            string commentLine;
-
-            while ((commentLine = ReadLine(reader)) != endHeaderMarker)
-            {
-                if (!string.IsNullOrEmpty(commentLine))
-                {
-                    commentBuilder.AppendLine(commentLine);
-                }
-            }
-
-            var cs = new ChangeSet();
-            cs.Id = new StringId(hash);
-            cs.Committer = committer;
-            cs.Comment = commentBuilder.ToString().Trim('\r', '\n');
-
-            ParseWorkItemsFromComment(cs.WorkItems, cs.Comment);
-
-            cs.Date = DateTime.Parse(date);
-
-            Debug.Assert(commentLine == endHeaderMarker);
-
-            tracker.BeginChangeSet(cs);
-            ReadChangeItems(reader, tracker);
-            tracker.ApplyChangeSet(cs.Items);
-            return cs;
-        }
-
-        private void ParseWorkItemsFromComment(List<WorkItem> workItems, string comment)
-        {
-            if (!string.IsNullOrEmpty(_workItemRegex))
-            {
-                var extractor = new WorkItemExtractor(_workItemRegex);
-                workItems.AddRange(extractor.Extract(comment));
-            }
-        }
-
-
-        private void ReadChangeItems(StreamReader reader, MovementTracker tracker)
-        {
-            // Now parse the files!
-            var changeItem = ReadLine(reader);
-            while (changeItem != null && changeItem != recordMarker)
-            {
-                if (!string.IsNullOrEmpty(changeItem))
-                {
-                    CreateChangeItem(changeItem, tracker);
-                }
-
-                changeItem = ReadLine(reader);
-            }
-        }
-
-        private string ReadLine(StreamReader reader)
-        {
-            // The only place where we read
-            _lastLine = reader.ReadLine()?.Trim();
-            return _lastLine;
-        }
-
-        private KindOfChange ToKindOfChange(string kind)
-        {
-            if (kind.StartsWith("R"))
-            {
-                // Followed by the similarity
-                return KindOfChange.Rename;
-            }
-            if (kind.StartsWith("C"))
-            {
-                // Followed by the similarity. 
-                // I tread a copy of a file as a new start.
-                Trace.WriteLine("Found copy operation for git!");
-                return KindOfChange.Add;
-            }
-            else if (kind == "A")
-            {
-                return KindOfChange.Add;
-            }
-            else if (kind == "D")
-            {
-                return KindOfChange.Delete;
-            }
-            else if (kind == "M")
-            {
-                return KindOfChange.Edit;
-            }
-            else
-            {
-                Debug.Assert(false);
-                return KindOfChange.None;
-            }
+            // Save the constructed log for information
+            //SaveRecoveredLogToDisk(commits);
         }
     }
 }

@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Insight.Analyzers;
 using Insight.Builder;
@@ -14,8 +11,6 @@ using Insight.Metrics;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
-
-using Newtonsoft.Json;
 
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
@@ -27,10 +22,10 @@ namespace Insight
         /// <summary>
         /// Local path to contribution
         /// </summary>
-        private Dictionary<string, Contribution> _contributions;
+        Dictionary<string, Contribution> _contributions;
 
-        private ChangeSetHistory _history;
-        private Dictionary<string, LinesOfCode> _metrics;
+        ChangeSetHistory _history;
+        Dictionary<string, LinesOfCode> _metrics;
 
         public Analyzer(Project project)
         {
@@ -39,7 +34,7 @@ namespace Insight
 
         public List<WarningMessage> Warnings { get; private set; }
 
-        private Project Project { get; }
+        Project Project { get; }
 
 
         public List<Coupling> AnalyzeChangeCoupling()
@@ -79,7 +74,7 @@ namespace Insight
         {
             LoadHistory();
             LoadMetrics();
-            LoadContributions();
+            LoadContributions(false);
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var fileToFractalValue = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
@@ -107,7 +102,7 @@ namespace Insight
         {
             LoadHistory();
             LoadMetrics();
-            LoadContributions();
+            LoadContributions(false);
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
@@ -130,7 +125,7 @@ namespace Insight
         {
             LoadHistory();
             LoadMetrics();
-            LoadContributions();
+            LoadContributions(false);
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
@@ -174,7 +169,7 @@ namespace Insight
         {
             Debug.Assert(colorScheme != null);
             var provider = Project.CreateProvider();
-            var workByDeveloper = provider.CalculateDeveloperWork(new Artifact { LocalPath = fileName });
+            var workByDeveloper = provider.CalculateDeveloperWork(fileName);
 
             var bitmap = new FractionBitmap();
 
@@ -234,13 +229,15 @@ namespace Insight
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var hotspotCalculator = new HotspotCalculator(summary, _metrics);
 
+            var orderedByLocalPath = summary.OrderBy(x => x.LocalPath).ToList();
             var gridData = new List<object>();
-            foreach (var artifact in summary)
+            foreach (var artifact in orderedByLocalPath)
             {
                 gridData.Add(CreateDataGridFriendlyArtifact(artifact, hotspotCalculator));
             }
 
             var now = DateTime.Now.ToIsoShort();
+            
             Csv.Write(Path.Combine(Project.Cache, $"summary-{now}.csv"), gridData);
             return gridData;
         }
@@ -252,21 +249,16 @@ namespace Insight
             // Note: You should have the latest code locally such that history and metrics match!
             // Update svn history
             var svnProvider = Project.CreateProvider();
-            svnProvider.UpdateCache();
+            svnProvider.UpdateCache(progress, includeContributions);
 
             progress.Message("Updating code metrics.");
 
             // Update code metrics
             var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
-            metricProvider.UpdateCache();
-
-            File.Delete(GetPathToContributionFile());
-            if (includeContributions)
-            {
-                // Update contributions. This takes a long time. Not useful for svn.
-                UpdateContributions(progress);
-            }
+            metricProvider.UpdateCache();        
         }
+
+      
 
         internal void Clear()
         {
@@ -277,11 +269,11 @@ namespace Insight
 
         internal List<string> GetMainDevelopers()
         {
-            LoadContributions();
+            LoadContributions(false);
             return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
 
-        private static string ClassifyDirectory(string localPath)
+        static string ClassifyDirectory(string localPath)
         {
             // Classify different source code folders
 
@@ -304,7 +296,7 @@ namespace Insight
             return string.Empty;
         }
 
-        private void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
+        void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
         {
             // order such that same developers get same colors regardless of order.
             foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
@@ -313,37 +305,11 @@ namespace Insight
             }
         }
 
-        private Dictionary<string, Contribution> CalculateContributionsParallel(Progress progress, List<Artifact> summary)
+      
+
+        object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
         {
-            // Calculate main developer for each file
-            var fileToContribution = new ConcurrentDictionary<string, Contribution>();
-
-            var all = summary.Count;
-            Parallel.ForEach(summary, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                             artifact =>
-                             {
-                                 var provider = Project.CreateProvider();
-                                 var work = provider.CalculateDeveloperWork(artifact);
-                                 var contribution = new Contribution(work);
-
-                                 var result = fileToContribution.TryAdd(artifact.LocalPath, contribution);
-                                 Debug.Assert(result);
-
-                                 // Progress
-                                 var count = fileToContribution.Count;
-
-                                 // if (count % 10 == 0)
-                                 {
-                                     progress.Message($"Calculating work {count}/{all}");
-                                 }
-                             });
-
-            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
-        }
-
-        private object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
-        {
-            int linesOfCode = (int)hotspotCalculator.GetArea(artifact);
+            var linesOfCode = (int) hotspotCalculator.GetArea(artifact);
             if (_contributions != null)
             {
                 var result = new DataGridFriendlyArtifact();
@@ -380,31 +346,21 @@ namespace Insight
             }
         }
 
-        private string GetPathToContributionFile()
-        {
-            return Path.Combine(Project.Cache, "contribution_analysis.json");
-        }
-
-        private void LoadContributions(bool silent = false)
+        void LoadContributions(bool silent)
         {
             if (_contributions == null)
             {
-                if (File.Exists(GetPathToContributionFile()) == false)
+                var provider = Project.CreateProvider();
+                _contributions = provider.QueryContribution();
+
+                if (_contributions == null && !silent)
                 {
-                    if (silent)
-                    {
-                        return;
-                    }
-
-                    throw new Exception($"The file '{GetPathToContributionFile()}' was not found. Please click Sync to create it.");
+                    throw new FileNotFoundException("Contribution data is not available. Sync to create it.");
                 }
-
-                var input = File.ReadAllText(GetPathToContributionFile(), Encoding.UTF8);
-                _contributions = JsonConvert.DeserializeObject<Dictionary<string, Contribution>>(input);
-            }
+            }            
         }
 
-        private void LoadHistory()
+        void LoadHistory()
         {
             if (_history == null)
             {
@@ -417,7 +373,7 @@ namespace Insight
             }
         }
 
-        private void LoadMetrics()
+        void LoadMetrics()
         {
             // Get code metrics (all files from the cache!)
             if (_metrics == null)
@@ -425,19 +381,6 @@ namespace Insight
                 var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
                 _metrics = metricProvider.QueryCodeMetrics();
             }
-        }
-
-        private void UpdateContributions(Progress progress)
-        {
-            LoadHistory();
-            LoadMetrics();
-
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
-            _contributions = CalculateContributionsParallel(progress, summary);
-
-            var json = JsonConvert.SerializeObject(_contributions);
-            var path = GetPathToContributionFile();
-            File.WriteAllText(path, json, Encoding.UTF8);
-        }
+        }      
     }
 }

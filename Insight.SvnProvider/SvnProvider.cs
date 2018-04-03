@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -6,12 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml;
 
 using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
+using Newtonsoft.Json;
 
 namespace Insight.SvnProvider
 {
@@ -28,11 +31,11 @@ namespace Insight.SvnProvider
         private string _startDirectory;
 
         private SvnCommandLine _svnCli;
-
+        private IFilter _fileFilter;
         private string _svnHistoryExportFile;
         private MovementTracker _tracking;
         private string _workItemRegex;
-
+        private string _contributionFile;
 
         public static string GetClass()
         {
@@ -40,7 +43,10 @@ namespace Insight.SvnProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-        // TODO returns path based on the working directory.
+        /// <summary>
+        /// Returns the paths relative from the working directory
+        /// </summary>
+        /// <returns></returns>
         public HashSet<string> GetAllTrackedFiles()
         {
             var serverPaths = _svnCli.GetAllTrackedFiles();
@@ -48,13 +54,23 @@ namespace Insight.SvnProvider
             return new HashSet<string>(all);
         }
 
+
+        private List<string> GetAllTrackedLocalFiles()
+        {
+            var localFiles = GetAllTrackedFiles()
+                .Select(server => MapToLocalFile_ServerIsRelativeToBaseDirectory(server))
+                .Where(local => _fileFilter.IsAccepted(local) && File.Exists(local))
+                .ToList();
+            return localFiles;
+        }
+
         /// <summary>
         /// Note: Use local path to avoid the problem that power tools are called from a non mapped directory.
         /// Developer -> lines of code
         /// </summary>
-        public Dictionary<string, uint> CalculateDeveloperWork(Artifact artifact)
+        public Dictionary<string, uint> CalculateDeveloperWork(string localFile)
         {
-            var blame = Blame(artifact.LocalPath);
+            var blame = Blame(localFile);
 
             // Parse annotated file
             var workByDevelopers = new Dictionary<string, uint>();
@@ -98,8 +114,7 @@ namespace Insight.SvnProvider
                     continue;
                 }
 
-                var value = ulong.Parse(entry.Attributes["revision"].Value);
-                var revision =  new NumberId(value);
+                var revision = entry.Attributes["revision"].Value;
                 var date = entry.SelectSingleNode("./date")?.InnerText;
                 var dateTime = DateTime.Parse(date);
 
@@ -120,13 +135,15 @@ namespace Insight.SvnProvider
             return result;
         }
 
-        public void Initialize(string projectBase, string cachePath, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
             _svnHistoryExportFile = Path.Combine(cachePath, @"svn_history.log");
+            _contributionFile = Path.Combine(cachePath, @"contributiuon.json");
             _svnCli = new SvnCommandLine(_startDirectory);
+            _fileFilter = fileFilter;
         }
 
         /// <summary>
@@ -145,7 +162,7 @@ namespace Insight.SvnProvider
 
         public List<WarningMessage> Warnings { get; private set; }
 
-        public void UpdateCache()
+        public void UpdateCache(IProgress progress, bool includeWorkData)
         {
             // Important: svn log returns the revisions in a different order 
             // than the {revision:HEAD} version.
@@ -156,6 +173,58 @@ namespace Insight.SvnProvider
             _serverRoot = null;
 
             ExportLogToDisk();
+
+            if (includeWorkData)
+            {
+                UpdateContribution(progress);
+            }
+        }
+
+        void UpdateContribution(IProgress progress)
+        {
+            if (File.Exists(_contributionFile))
+            {
+                File.Delete(_contributionFile);
+            }
+
+            var localFiles = GetAllTrackedLocalFiles();
+
+
+            var contribution = CalculateContributionsParallel(progress, localFiles.ToList());
+
+            var json = JsonConvert.SerializeObject(contribution);
+
+            File.WriteAllText(_contributionFile, json, Encoding.UTF8);
+
+        }
+
+
+        /// <summary>
+        /// Duplicate with git probvider
+        /// </summary>
+        Dictionary<string, Contribution> CalculateContributionsParallel(IProgress progress, List<string> localFiles)
+        {
+            // Calculate main developer for each file
+            var fileToContribution = new ConcurrentDictionary<string, Contribution>();
+
+            var all = localFiles.Count;
+            Parallel.ForEach(localFiles, new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                             file =>
+                             {
+
+                                 var work = CalculateDeveloperWork(file);
+                                 var contribution = new Contribution(work);
+
+                                 var result = fileToContribution.TryAdd(file, contribution);
+                                 Debug.Assert(result);
+
+                                 // Progress
+                                 var count = fileToContribution.Count;
+
+                                 progress.Message($"Calculating work {count}/{all}");
+                             });
+
+            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
         }
 
         private string Blame(string path)
@@ -209,7 +278,7 @@ namespace Insight.SvnProvider
             return path;
         }
 
-        private string GetPathToExportedFile(FileInfo localFile, Id revision)
+        private string GetPathToExportedFile(FileInfo localFile, string revision)
         {
             var name = new StringBuilder();
 
@@ -257,13 +326,14 @@ namespace Insight.SvnProvider
             return ulong.Parse(value);
         }
 
-        private string MapToLocalFile(string serverPath)
+        private string MapToLocalFile_ServerIsAbsolute(string serverPath)
         {
             // In svn we can select any sub directory of our working copy.
             // GetServerPathForBaseDirectory returns an updated relative path!
             var serverNormalized = serverPath.Replace("/", "\\");
             if (_serverRoot == null)
             {
+                // For example /
                 _serverRoot = GetServerPathForBaseDirectory();
             }
 
@@ -271,6 +341,16 @@ namespace Insight.SvnProvider
             var localPath = Path.Combine(_startDirectory, common);
             return localPath;
         }
+
+        private string MapToLocalFile_ServerIsRelativeToBaseDirectory(string serverPath)
+        {
+            // Simplified version when requesting the path. Server is relative to the starting directory!
+
+            var serverNormalized = serverPath.Replace("/", "\\");
+            var localPath = Path.Combine(_startDirectory, serverNormalized);
+            return localPath;
+        }
+
 
         private void ParseLogEntry(XmlReader reader, List<ChangeSet> result)
         {
@@ -340,7 +420,7 @@ namespace Insight.SvnProvider
 
                     var path = reader.ReadString().Trim();
                     item.ServerPath = path;
-                    item.LocalPath = MapToLocalFile(path);
+                    item.LocalPath = MapToLocalFile_ServerIsAbsolute(path);
 
                     if (item.Kind == KindOfChange.Rename && item.FromServerPath == null)
                     {
@@ -400,7 +480,7 @@ namespace Insight.SvnProvider
             return new ChangeSetHistory(result);
         }
 
-        private NumberId ReadRevision(XmlReader reader)
+        private string ReadRevision(XmlReader reader)
         {
             var revision = reader.GetAttribute("revision");
             if (revision == null)
@@ -408,8 +488,7 @@ namespace Insight.SvnProvider
                 throw new InvalidDataException();
             }
 
-            var value = ulong.Parse(revision);
-            return new NumberId(value);
+            return revision;
         }
 
         private KindOfChange SvnActionToKindOfChange(string action)
@@ -448,6 +527,18 @@ namespace Insight.SvnProvider
             }
 
             _svnCli.UpdateWorkingCopy();
+        }
+
+        public Dictionary<string, Contribution> QueryContribution()
+        {
+            /// The contributions are optional
+            if (!File.Exists(_contributionFile))
+            {
+                return null;
+            }
+
+            var input = File.ReadAllText(_contributionFile, Encoding.UTF8);
+            return JsonConvert.DeserializeObject<Dictionary<string, Contribution>>(input);
         }
     }
 }

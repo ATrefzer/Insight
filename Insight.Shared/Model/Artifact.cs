@@ -16,7 +16,7 @@ namespace Insight.Shared.Model
         /// If the source control system does not provide unique ids like in svn use the StringId with
         /// server path.
         /// </summary>
-        public Id Id { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         ///  It still may be around on hard disk but removed from TFS!
@@ -27,7 +27,7 @@ namespace Insight.Shared.Model
 
         public string LocalPath { get; set; }
 
-        public Id Revision { get; set; }
+        public string Revision { get; set; }
 
         public string ServerPath { get; set; }
 

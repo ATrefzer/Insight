@@ -1,13 +1,14 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-
-- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
-
 - Try on different git projects
 
+- Move UpdateContributions into provider and base on all tracked local files.
+- Bad color for Prouse
+- Outer circle not correct for nunit!
+- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+
 - state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
-- Check why git history is deeper for some files.
 
 ---------------------------------------
 Features and improvements
@@ -62,7 +63,7 @@ Chord
 Low prio, fun
 ---------------------------------------
 
-- Decoder for comment characters (multi characters?)
+
 - Refactor Svn Parser
 - Use WritableBitmap?
 

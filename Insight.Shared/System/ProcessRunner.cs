@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 
 namespace Insight.Shared.System
 {
@@ -9,9 +10,11 @@ namespace Insight.Shared.System
         public string StdOut { get; set; }
     }
 
-    public static class ProcessRunner
+    public class ProcessRunner
     {
-        public static ProcessResult RunProcess(string pathToExecutable, string arguments)
+        public Encoding DefaultEncoding { get; set; }
+
+        public ProcessResult RunProcess(string pathToExecutable, string arguments)
         {
             return RunProcess(pathToExecutable, arguments, null);
         }
@@ -19,9 +22,9 @@ namespace Insight.Shared.System
         /// <summary>
         /// ExitCode, StdOut, StdErr
         /// </summary>
-        public static ProcessResult RunProcess(string pathToExecutable, string arguments, string workingDirectory)
+        public ProcessResult RunProcess(string pathToExecutable, string arguments, string workingDirectory)
         {
-            using (var process = CreateProcess(pathToExecutable, workingDirectory))
+            using (var process = CreateProcess(pathToExecutable, DefaultEncoding, workingDirectory))
             {
                 if (!string.IsNullOrEmpty(arguments))
                 {
@@ -35,25 +38,27 @@ namespace Insight.Shared.System
                 process.WaitForExit();
 
                 return new ProcessResult
-                       {
-                               ExitCode = process.ExitCode,
-                               StdOut = stdOut,
-                               StdErr = stdErr
-                       };
+                {
+                    ExitCode = process.ExitCode,
+                    StdOut = stdOut,
+                    StdErr = stdErr
+                };
             }
         }
 
-        private static Process CreateProcess(string pathToExecutable, string workingDirectory = null)
+        private static Process CreateProcess(string pathToExecutable, Encoding encoding, string workingDirectory = null)
         {
             var startInfo = new ProcessStartInfo
-                            {
-                                    UseShellExecute = false,
-                                    FileName = pathToExecutable,
-                                    CreateNoWindow = true,
-                                    RedirectStandardOutput = true,
-                                    RedirectStandardInput = true,
-                                    RedirectStandardError = true
-                            };
+            {
+                UseShellExecute = false,
+                FileName = pathToExecutable,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardInput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = encoding,
+                StandardErrorEncoding = encoding
+            };
 
             if (!string.IsNullOrEmpty(workingDirectory))
             {
@@ -61,9 +66,9 @@ namespace Insight.Shared.System
             }
 
             var process = new Process
-                          {
-                                  StartInfo = startInfo
-                          };
+            {
+                StartInfo = startInfo
+            };
 
             return process;
         }

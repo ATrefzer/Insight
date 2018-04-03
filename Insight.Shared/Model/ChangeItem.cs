@@ -14,12 +14,15 @@ namespace Insight.Shared.Model
         Merge = 256,
         None = 1,
         Rename = 16,
+
+        // Added for git file history
+        Copy
     }
 
     [Serializable]
     public sealed class ChangeItem
     {
-        public Id Id { get; set; }
+        public string Id { get; set; }
 
         public KindOfChange Kind { get; set; }
         public string LocalPath { get; set; }
@@ -43,7 +46,8 @@ namespace Insight.Shared.Model
 
         public bool IsDelete()
         {
-            return (Kind & KindOfChange.Delete) == KindOfChange.Delete;
+            var isDelete = (Kind & KindOfChange.Delete) == KindOfChange.Delete;
+            return isDelete;
         }
 
         public bool IsEdit()
