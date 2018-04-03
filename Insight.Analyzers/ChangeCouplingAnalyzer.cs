@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 using Insight.Shared;
@@ -24,6 +26,8 @@ namespace Insight.Analyzers
             _couplings.Clear();
             _count.Clear();
 
+            var idToLocalFile = BuildIdToLocalFileMap(history);
+
             foreach (var cs in history.ChangeSets)
             {
                 if (cs.Items.Count > Thresholds.MaxItemsInChangesetForChangeCoupling)
@@ -32,8 +36,9 @@ namespace Insight.Analyzers
                 }
 
                 // Only accepted files
+                // Normally the files are already filtered when the history was created.
                 var reducedItems =
-                        cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.LocalPath).ToList();
+                        cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.Id).ToList();
 
 
                 IncrementCommitCount(reducedItems);
@@ -55,7 +60,32 @@ namespace Insight.Analyzers
 
             return _couplings.Values
                              .Where(coupling => coupling.Couplings >= Thresholds.MinCouplingForChangeCoupling && coupling.Degree >= Thresholds.MinDegreeForChangeCoupling)
-                             .OrderByDescending(coupling => coupling.Degree).ToList();
+                             .OrderByDescending(coupling => coupling.Degree)
+                             .Select(c => new Coupling(idToLocalFile[c.Item1], idToLocalFile[c.Item2])
+                             {
+                                 // Coupling item with local path instead of identifier.
+                                 Degree = c.Degree,
+                                 Couplings = c.Couplings
+                             }).ToList();
+        }
+
+        private static Dictionary<string, string> BuildIdToLocalFileMap(ChangeSetHistory history)
+        {
+            var idToLocalFile = new Dictionary<string, string>();
+            foreach (var cs in history.ChangeSets)
+            {
+                foreach (var item in cs.Items)
+                {
+                    if (!idToLocalFile.ContainsKey(item.Id))
+                    {
+                        // Seen the first time means latest file.
+                        idToLocalFile.Add(item.Id, item.LocalPath);
+                        Debug.Assert(File.Exists(item.LocalPath));
+                    }
+                }
+            }
+
+            return idToLocalFile;
         }
 
         /// <summary>
@@ -98,6 +128,7 @@ namespace Insight.Analyzers
                 coupling.Degree = 100.0 * coupling.Couplings /
                                   (GetCount(coupling.Item1) + GetCount(coupling.Item2) - coupling.Couplings);
 
+                Debug.Assert(coupling.Degree <= 100);
                 coupling.Degree = Math.Round(coupling.Degree, 2);
             }
         }
@@ -108,7 +139,7 @@ namespace Insight.Analyzers
             var set = new HashSet<string>();
             foreach (var item in cs.Items)
             {
-                var classification = classifier(item.LocalPath);
+                var classification = classifier(item.LocalPath); // TODO this does not work! Use the id to local file map
                 if (!string.IsNullOrEmpty(classification))
                 {
                     set.Add(classification);
