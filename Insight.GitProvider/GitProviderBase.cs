@@ -72,8 +72,11 @@ namespace Insight.GitProvider
                                  var work = CalculateDeveloperWork(file);
                                  var contribution = new Contribution(work);
 
-                                 var result = fileToContribution.TryAdd(file, contribution);
-                                 Debug.Assert(result);
+                                 if (work.Any()) // get rid of 0 byte files.
+                                 {
+                                     var result = fileToContribution.TryAdd(file, contribution);
+                                     Debug.Assert(result);
+                                 }
 
                                  // Progress
                                  var count = fileToContribution.Count;
