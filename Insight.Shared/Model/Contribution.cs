@@ -29,10 +29,10 @@ namespace Insight.Shared.Model
         public MainDeveloper GetMainDeveloper()
         {
             // Find main developer
-            string mainDeveloper = null;
+            string mainDeveloper = "---";
             double linesOfWork = 0;
 
-            double lineCount = DeveloperToContribution.Values.Sum(w => w);
+            double lineCount = Math.Max(DeveloperToContribution.Values.Sum(w => w), 1);
 
             foreach (var pair in DeveloperToContribution)
             {
