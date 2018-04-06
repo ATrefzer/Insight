@@ -73,7 +73,7 @@ namespace Insight.Builder
             // Area must > 0 because of division.
             var area = GetArea(item);
 
-            return area > 1;
+            return area >= 1;
         }
 
         private MainDeveloper GetMainDeveloper(Artifact item)
