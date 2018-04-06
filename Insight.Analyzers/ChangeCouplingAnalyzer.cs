@@ -37,21 +37,19 @@ namespace Insight.Analyzers
 
                 // Only accepted files
                 // Normally the files are already filtered when the history was created.
-                var reducedItems =
-                        cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.Id).ToList();
+                var itemIds = cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.Id).ToList();
 
+                IncrementCommitCount(itemIds);
 
-                IncrementCommitCount(reducedItems);
-
-                for (var i = 0; i < reducedItems.Count - 1; i++) // Keep one for the last pair
+                for (var i = 0; i < itemIds.Count - 1; i++) // Keep one for the last pair
                 {
                     // Make pairs of files.
-                    for (var j = i + 1; j < reducedItems.Count; j++)
+                    for (var j = i + 1; j < itemIds.Count; j++)
                     {
-                        var path1 = reducedItems[i];
-                        var path2 = reducedItems[j];
+                        var id1 = itemIds[i];
+                        var id2 = itemIds[j];
 
-                        IncrementCoupling(path1, path2);
+                        IncrementCoupling(id1, id2);
                     }
                 }
             }
@@ -63,7 +61,7 @@ namespace Insight.Analyzers
                              .OrderByDescending(coupling => coupling.Degree)
                              .Select(c => new Coupling(idToLocalFile[c.Item1], idToLocalFile[c.Item2])
                              {
-                                 // Coupling item with local path instead of identifier.
+                                 // Display coupling item with local path instead of identifier.
                                  Degree = c.Degree,
                                  Couplings = c.Couplings
                              }).ToList();
@@ -117,7 +115,7 @@ namespace Insight.Analyzers
             CalculateDegree();
 
             return _couplings.Values
-                             .Where(coupling => coupling.Couplings >= Thresholds.MinCouplingForChangeCoupling && coupling.Degree >= Thresholds.MinDegreeForChangeCoupling)
+                           //  .Where(coupling => coupling.Couplings >= Thresholds.MinCouplingForChangeCoupling && coupling.Degree >= Thresholds.MinDegreeForChangeCoupling)
                              .OrderByDescending(coupling => coupling.Degree).ToList();
         }
 
@@ -139,7 +137,7 @@ namespace Insight.Analyzers
             var set = new HashSet<string>();
             foreach (var item in cs.Items)
             {
-                var classification = classifier(item.LocalPath); // TODO this does not work! Use the id to local file map
+                var classification = classifier(item.LocalPath);
                 if (!string.IsNullOrEmpty(classification))
                 {
                     set.Add(classification);
