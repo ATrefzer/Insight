@@ -9,8 +9,8 @@ namespace Insight.GitProvider
     {
         private sealed class GraphNode
         {
-            public string Commit { get; set; }
-            public List<string> Parents { get; set; }
+            public string CommitHash { get; set; }
+            public List<string> ParentHashes { get; set; }
         }
 
         private object _lockObj = new object();
@@ -21,7 +21,7 @@ namespace Insight.GitProvider
         /// <summary>
         /// Empty merge commits are removed implicitely
         /// In each commit remove the files that share the same history
-        /// filesToRemove: 
+        /// For each file to remove we traverse the whole graph from the starting commit.
         /// </summary>
         public void DeleteSharedHistory(List<ChangeSet> commits, Dictionary<string, string> filesToRemove)
         {
@@ -46,12 +46,12 @@ namespace Insight.GitProvider
                     while (nodesToProcess.Any())
                     {
                         node = nodesToProcess.Dequeue();
-                        var cs = lookup[changeSetId];
+                        var cs = lookup[node.CommitHash];
 
                         // Remove the file from change set
                         cs.Items.RemoveAll(i => i.Id == fileIdToRemove);
 
-                        foreach (var parent in node.Parents)
+                        foreach (var parent in node.ParentHashes)
                         {
                             if (_graph.TryGetValue(parent, out node))
                             {
@@ -70,23 +70,23 @@ namespace Insight.GitProvider
         /// <param name="parents">List of parent commit hashes</param>
         public void UpdateGraph(string hash, string parents)
         {
-            var allParents = parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+            var allParents = !string.IsNullOrEmpty(parents) ? parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                                     .Select(parent => parent)
-                                    .ToList();
-            var node = new GraphNode { Commit = hash, Parents = allParents };
+                                    .ToList() : new List<string>();
+            var node = new GraphNode { CommitHash = hash, ParentHashes = allParents };
 
             lock (_lockObj)
             {
-                if (!_graph.ContainsKey(node.Commit))
+                if (!_graph.ContainsKey(node.CommitHash))
                 {
-                    _graph.Add(node.Commit, node);
+                    _graph.Add(node.CommitHash, node);
                 }
             }
         }
 
         public List<string> GetParents(string id)
         {
-            return _graph[id].Parents;
+            return _graph[id].ParentHashes;
         }
     }
 }

@@ -1,9 +1,12 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-- Try on different git projects
-- File classifier for coupling not working correctly
 
+- File classifier for coupling not working correctly
+- Classifier for names!
+- Bug evaluation
+
+- Try on different git projects
 - Outer circle not correct for nunit!
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 

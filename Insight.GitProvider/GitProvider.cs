@@ -85,7 +85,7 @@ namespace Insight.GitProvider
                 // Pass 1: Find which server paths are used more than once in the change set
                 foreach (var item in cs.Items)
                 {
-                    // Second pass: Remember the files to be deleted.
+                    // Remember the files to be deleted.
                     if (!serverPaths.Add(item.ServerPath))
                     {
                         // Same server path on more than one change set items.
@@ -274,6 +274,17 @@ namespace Insight.GitProvider
 
             // Save the constructed log for information
             //SaveRecoveredLogToDisk(commits);
+
+            // Just a plausibility check
+            VerifyNoDuplicateServerPathsInChangeset(commits);
+        }
+
+        private static void VerifyNoDuplicateServerPathsInChangeset(List<ChangeSet> commits)
+        {
+            foreach (var cs in commits)
+            {
+                cs.Items.ToDictionary(k => k.ServerPath, k => k.ServerPath);
+            }
         }
     }
 }
