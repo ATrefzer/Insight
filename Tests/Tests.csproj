@@ -70,6 +70,7 @@
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="DecoderTests.cs" />
     <Compile Include="FractalValueTests.cs" />
+    <Compile Include="GraphTests.cs" />
     <Compile Include="MovementTrackerTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="RangeTests.cs" />

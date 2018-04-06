@@ -107,57 +107,75 @@ namespace Insight.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("200")]
         public int MaxWorkItemsPerCommitForSummary {
             get {
                 return ((int)(this["MaxWorkItemsPerCommitForSummary"]));
             }
+            set {
+                this["MaxWorkItemsPerCommitForSummary"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("3")]
         public int MinCommitsForHotspots {
             get {
                 return ((int)(this["MinCommitsForHotspots"]));
             }
+            set {
+                this["MinCommitsForHotspots"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public int MinLinesOfCodeForHotspot {
             get {
                 return ((int)(this["MinLinesOfCodeForHotspot"]));
             }
+            set {
+                this["MinLinesOfCodeForHotspot"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("300")]
         public int MaxItemsInChangesetForChangeCoupling {
             get {
                 return ((int)(this["MaxItemsInChangesetForChangeCoupling"]));
             }
+            set {
+                this["MaxItemsInChangesetForChangeCoupling"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
         public int MinCouplingForChangeCoupling {
             get {
                 return ((int)(this["MinCouplingForChangeCoupling"]));
             }
+            set {
+                this["MinCouplingForChangeCoupling"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("40")]
         public double MinDegreeForChangeCoupling {
             get {
                 return ((double)(this["MinDegreeForChangeCoupling"]));
+            }
+            set {
+                this["MinDegreeForChangeCoupling"] = value;
             }
         }
     }

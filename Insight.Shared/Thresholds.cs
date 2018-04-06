@@ -1,5 +1,8 @@
 ﻿namespace Insight.Shared
 {
+    /// <summary>
+    /// These values are overwritten from the application settings!
+    /// </summary>
     public static class Thresholds
     {
         public static int MaxWorkItemsPerCommitForSummary { get; set; }= 200;
@@ -16,6 +19,6 @@
         /// Reduces the output for change coupling
         /// </summary>
         public static int MinCouplingForChangeCoupling { get; set; } = 20;
-        public static double MinDegreeForChangeCoupling { get; set; } = 50.0;
+        public static double MinDegreeForChangeCoupling { get; set; } = 40.0;
     }
 }
