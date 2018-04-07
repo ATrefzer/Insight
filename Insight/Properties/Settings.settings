@@ -23,22 +23,22 @@
     <Setting Name="WorkItemRegEx" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="MaxWorkItemsPerCommitForSummary" Type="System.Int32" Scope="Application">
+    <Setting Name="MaxWorkItemsPerCommitForSummary" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">200</Value>
     </Setting>
-    <Setting Name="MinCommitsForHotspots" Type="System.Int32" Scope="Application">
+    <Setting Name="MinCommitsForHotspots" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">3</Value>
     </Setting>
-    <Setting Name="MinLinesOfCodeForHotspot" Type="System.Int32" Scope="Application">
+    <Setting Name="MinLinesOfCodeForHotspot" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1</Value>
     </Setting>
-    <Setting Name="MaxItemsInChangesetForChangeCoupling" Type="System.Int32" Scope="Application">
+    <Setting Name="MaxItemsInChangesetForChangeCoupling" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">300</Value>
     </Setting>
-    <Setting Name="MinCouplingForChangeCoupling" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">10</Value>
+    <Setting Name="MinCouplingForChangeCoupling" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">20</Value>
     </Setting>
-    <Setting Name="MinDegreeForChangeCoupling" Type="System.Double" Scope="Application">
+    <Setting Name="MinDegreeForChangeCoupling" Type="System.Double" Scope="User">
       <Value Profile="(Default)">40</Value>
     </Setting>
   </Settings>

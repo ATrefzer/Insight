@@ -28,7 +28,7 @@ namespace Insight.GitProvider
             _fileFilter = fileFilter;
 
             _gitHistoryExportFile = Path.Combine(cachePath, "git_history.json");
-            _contributionFile = Path.Combine(cachePath, "contributiuon.json");
+            _contributionFile = Path.Combine(cachePath, "contribution.json");
             _gitCli = new GitCommandLine(_startDirectory);
             _mapper = new PathMapper(_startDirectory);
         }

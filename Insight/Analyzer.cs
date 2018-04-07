@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-
 using Insight.Analyzers;
 using Insight.Builder;
 using Insight.Dto;
 using Insight.Metrics;
+using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
@@ -36,23 +36,67 @@ namespace Insight
 
         Project Project { get; }
 
+        static string ClassifyDirectory(string localPath)
+        {
+            // Classify different source code folders
+
+            // THIS IS AN EXAMPLE
+            if (localPath.Contains("UnitTest"))
+            {
+                return "Test";
+            }
+
+            if (localPath.Contains("UI"))
+            {
+                return "UserInterface";
+            }
+
+            if (localPath.Contains("bla\\bla\\bla"))
+            {
+                return "bla";
+            }
+
+            return string.Empty;
+        }
 
         public List<Coupling> AnalyzeChangeCoupling()
         {
             LoadHistory();
 
             // Pair wise couplings
-            var tmp = new ChangeCouplingAnalyzer();
-            var couplings = tmp.CalculateChangeCouplings(_history, Project.Filter);
+            var couplingAnalyzer = new ChangeCouplingAnalyzer();
+            var couplings = couplingAnalyzer.CalculateChangeCouplings(_history, Project.Filter);
             var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
             Csv.Write(Path.Combine(Project.Cache, "change_couplings.csv"), sortedCouplings);
 
-            // Same with classified folders
-            var classifiedCouplings = tmp.CalculateClassifiedChangeCouplings(_history, localPath => { return ClassifyDirectory(localPath); });
-            Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
+            // Same with classified folders (show this one if available)
+            var mappingFile = Path.Combine(Project.Cache, "logical_components.xml");
+            if (File.Exists(mappingFile))
+            {
+                return AnalyzeLogicalComponentChangeCoupling(mappingFile);
+            }
 
             return sortedCouplings;
         }
+
+        private List<Coupling> AnalyzeLogicalComponentChangeCoupling(string mappingFile)
+        {
+            var couplingAnalyzer = new ChangeCouplingAnalyzer();
+            var mapper = new LogicalComponentMapper();
+            mapper.ReadDefinitionFile(mappingFile, true);
+
+            Func<string, string> classifier = (localPath) =>
+            {
+                return mapper.MapLocalPathToLogicalComponent(localPath);
+            };
+
+            var classifiedCouplings = couplingAnalyzer.CalculateClassifiedChangeCouplings(_history, classifier);
+            Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
+
+            return classifiedCouplings;
+        }
+
+     
 
         public HierarchicalDataContext AnalyzeCodeAge()
         {
@@ -210,10 +254,10 @@ namespace Insight
             foreach (var cs in _history.ChangeSets)
             {
                 result.Add(new DataGridFriendlyComment
-                           {
-                                   Committer = cs.Committer,
-                                   Comment = cs.Comment
-                           });
+                {
+                    Committer = cs.Committer,
+                    Comment = cs.Comment
+                });
             }
 
             Csv.Write(Path.Combine(Project.Cache, "comments.csv"), result);
@@ -237,7 +281,7 @@ namespace Insight
             }
 
             var now = DateTime.Now.ToIsoShort();
-            
+
             Csv.Write(Path.Combine(Project.Cache, $"summary-{now}.csv"), gridData);
             return gridData;
         }
@@ -255,10 +299,10 @@ namespace Insight
 
             // Update code metrics
             var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
-            metricProvider.UpdateCache();        
+            metricProvider.UpdateCache();
         }
 
-      
+
 
         internal void Clear()
         {
@@ -273,28 +317,7 @@ namespace Insight
             return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
 
-        static string ClassifyDirectory(string localPath)
-        {
-            // Classify different source code folders
 
-            // THIS IS AN EXAMPLE
-            if (localPath.Contains("UnitTest"))
-            {
-                return "Test";
-            }
-
-            if (localPath.Contains("UI"))
-            {
-                return "UserInterface";
-            }
-
-            if (localPath.Contains("bla\\bla\\bla"))
-            {
-                return "bla";
-            }
-
-            return string.Empty;
-        }
 
         void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
         {
@@ -305,11 +328,11 @@ namespace Insight
             }
         }
 
-      
+
 
         object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
         {
-            var linesOfCode = (int) hotspotCalculator.GetArea(artifact);
+            var linesOfCode = (int)hotspotCalculator.GetArea(artifact);
             if (_contributions != null)
             {
                 var result = new DataGridFriendlyArtifact();
@@ -357,7 +380,7 @@ namespace Insight
                 {
                     throw new FileNotFoundException("Contribution data is not available. Sync to create it.");
                 }
-            }            
+            }
         }
 
         void LoadHistory()
@@ -381,6 +404,6 @@ namespace Insight
                 var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
                 _metrics = metricProvider.QueryCodeMetrics();
             }
-        }      
+        }
     }
 }

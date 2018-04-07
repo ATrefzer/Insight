@@ -141,7 +141,7 @@ namespace Insight.SvnProvider
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
             _svnHistoryExportFile = Path.Combine(cachePath, @"svn_history.log");
-            _contributionFile = Path.Combine(cachePath, @"contributiuon.json");
+            _contributionFile = Path.Combine(cachePath, @"contribution.json");
             _svnCli = new SvnCommandLine(_startDirectory);
             _fileFilter = fileFilter;
         }

@@ -138,6 +138,7 @@ namespace Insight.GitProvider
 
             var comment = ReadComment(reader);
 
+            // Last node has no parents.
             _graph?.UpdateGraph(hash, parents);
 
             var cs = new ChangeSet();
