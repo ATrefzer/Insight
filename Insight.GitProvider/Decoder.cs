@@ -35,7 +35,7 @@ namespace Insight.GitProvider
                                              });
                 return replace.Trim('"');
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return escapedString;
             }
