@@ -55,6 +55,7 @@ namespace Insight.GitProvider
         public void UpdateCache(IProgress progress, bool includeWorkData)
         {
             VerifyGitDirectory();
+            PrepareLogDirectory();
 
             UpdateHistory(progress);
 
@@ -63,6 +64,23 @@ namespace Insight.GitProvider
                 // Optional
                 UpdateContribution(progress);
             }
+        }
+
+        void PrepareLogDirectory()
+        {
+            var logPath = Path.Combine(_cachePath, "logs");
+            if (!Directory.Exists(logPath))
+            {
+                Directory.CreateDirectory(logPath);
+            }
+            //else
+            //{
+            //    foreach (var delFile in Directory.EnumerateFiles(logPath))
+            //    {
+            //        File.Delete(delFile);
+            //    }
+            //}
+
         }
 
 
@@ -112,22 +130,13 @@ namespace Insight.GitProvider
         // ReSharper disable once UnusedMember.Local
         void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
         {
-            var logPath = Path.Combine(_cachePath, "logs");
-            if (!Directory.Exists(logPath))
-            {
-                Directory.CreateDirectory(logPath);
-            }
+            var logPath = Path.Combine(_cachePath, "logs");          
 
-            var path = Path.Combine(logPath, new FileInfo(forLocalFile).Name);
+            var file = forLocalFile.Replace("\\", "_").Replace(":", "_");
+            file = Path.Combine(logPath, file);
 
             // Ensure same file stored in different directories don't override each other.
-            var index = 1;
-            while (File.Exists(path))
-            {
-                path = path + "_" + index++;
-            }
-
-            File.WriteAllText(path, gitFileLog);
+            File.WriteAllText(file, gitFileLog);
         }
 
 
@@ -176,7 +185,7 @@ namespace Insight.GitProvider
 
             // TODO Disable
             // Writes logs for all files!
-            DebugWriteLogForSingleFile(gitFileLog, localPath);
+            //DebugWriteLogForSingleFile(gitFileLog, localPath);
 
             var parser = new Parser(_mapper, null);
             parser.WorkItemRegex = _workItemRegex;
@@ -271,7 +280,7 @@ namespace Insight.GitProvider
             parser.ParseLogString(fullLog);
 
             // Save the original log for information 
-            SaveFullLogToDisk();
+            // TODO SaveFullLogToDisk();
 
             // Build a virtual commit history
             var localPaths = GetAllTrackedLocalFiles();
