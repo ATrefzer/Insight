@@ -24,7 +24,7 @@ namespace Insight.GitProvider
         /// In each commit remove the files that share the same history
         /// For each file to remove we traverse the whole graph from the starting commit.
         /// </summary>
-        public void DeleteSharedHistory(List<ChangeSet> commits, Dictionary<string, string> filesToRemove)
+        public void DeleteSharedHistory(List<ChangeSet> commits, Dictionary<string, HashSet<string>> filesToRemove)
         {
             lock (_lockObj)
             {
@@ -34,17 +34,26 @@ namespace Insight.GitProvider
                 foreach (var fileToRemove in filesToRemove)
                 {
                     var fileIdToRemove = fileToRemove.Key;
-                    var changeSetId = fileToRemove.Value;
+                    var changeSetIds = fileToRemove.Value;
 
                     // Traverse graph to find all change sets where we have to delete the files
                     var nodesToProcess = new Queue<GraphNode>();
                     var handledNodes = new HashSet<string>();
                     GraphNode node;
-                    if (_graph.TryGetValue(changeSetId, out node))
+
+                    foreach (var csId in changeSetIds)
                     {
-                        nodesToProcess.Enqueue(node);
-                        handledNodes.Add(node.CommitHash);
+                        if (_graph.TryGetValue(csId, out node))
+                        {
+                            nodesToProcess.Enqueue(node);
+                            handledNodes.Add(node.CommitHash);
+                        }
+                        else
+                        {
+                            Debug.Assert(false);
+                        }
                     }
+                  
 
                     while (nodesToProcess.Any())
                     {
