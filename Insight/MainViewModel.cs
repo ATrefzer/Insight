@@ -249,6 +249,11 @@ namespace Insight
         {
             // Analyze hotspots from summary and code metrics
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
+            if (context == null)
+            {
+                return;
+            }
+
             var colorScheme = context.ColorScheme;
 
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands(colorScheme));

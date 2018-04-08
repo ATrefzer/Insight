@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,8 +30,6 @@ namespace Insight.GitProvider
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
         readonly object _lockObj = new object();
-
-
         Graph _graph;
 
         public static string GetClass()
@@ -119,7 +118,16 @@ namespace Insight.GitProvider
                 Directory.CreateDirectory(logPath);
             }
 
-            File.WriteAllText(Path.Combine(logPath, new FileInfo(forLocalFile).Name), gitFileLog);
+            var path = Path.Combine(logPath, new FileInfo(forLocalFile).Name);
+
+            // Ensure same file stored in different directories don't override each other.
+            var index = 1;
+            while (File.Exists(path))
+            {
+                path = path + "_" + index++;
+            }
+
+            File.WriteAllText(path, gitFileLog);
         }
 
 
@@ -164,17 +172,20 @@ namespace Insight.GitProvider
         {
             var id = Guid.NewGuid().ToString();
 
-            var gitLogString = _gitCli.Log(localPath);
+            var gitFileLog = _gitCli.Log(localPath);
 
-            //DebugWriteLogForSingleFile(gitFileLog, localPath);
+            // TODO Disable
+            // Writes logs for all files!
+            DebugWriteLogForSingleFile(gitFileLog, localPath);
 
-            var parser = new Parser(_mapper, _graph);
+            var parser = new Parser(_mapper, null);
             parser.WorkItemRegex = _workItemRegex;
 
-            var fileHistory = parser.ParseLogString(gitLogString);
+            var fileHistory = parser.ParseLogString(gitFileLog);
 
             foreach (var cs in fileHistory.ChangeSets)
             {
+                Debug.Assert(_graph.Exists(cs.Id));
                 var singleFile = cs.Items.Single();
 
                 if (singleFile.Kind == KindOfChange.Delete)
@@ -195,7 +206,7 @@ namespace Insight.GitProvider
                     }
                     else
                     {
-                        // Seen this changeset before. Add the file.
+                        // Seen this change set before. Add the file.
                         var changeSet = commits[cs.Id];
                         singleFile.Id = id;
                         changeSet.Items.Add(singleFile);
@@ -243,15 +254,24 @@ namespace Insight.GitProvider
             File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
         }
 
-        void SaveRecoveredLogToDisk(List<ChangeSet> commits)
+        void SaveRecoveredLogToDisk(List<ChangeSet> commits, Graph graph)
         {
-            Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, _graph);
+            Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, graph);
         }
 
         void UpdateHistory(IProgress progress)
-        {
+        {            
             // Git graph
             _graph = new Graph();
+
+            // TODO
+            // Build the full graph
+            var fullLog = _gitCli.Log();
+            var parser = new Parser(_mapper, _graph);
+            parser.ParseLogString(fullLog);
+
+            // Save the original log for information 
+            SaveFullLogToDisk();
 
             // Build a virtual commit history
             var localPaths = GetAllTrackedLocalFiles();
@@ -269,11 +289,8 @@ namespace Insight.GitProvider
             var json = JsonConvert.SerializeObject(new ChangeSetHistory(commits), Formatting.Indented);
             File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
 
-            // Save the original log for information 
-            //SaveFullLogToDisk();
-
             // Save the constructed log for information
-            //SaveRecoveredLogToDisk(commits);
+            SaveRecoveredLogToDisk(commits, _graph);
 
             // Just a plausibility check
             VerifyNoDuplicateServerPathsInChangeset(commits);
