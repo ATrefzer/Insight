@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Insight.Shared.Model;
 
@@ -37,25 +38,36 @@ namespace Insight.GitProvider
 
                     // Traverse graph to find all change sets where we have to delete the files
                     var nodesToProcess = new Queue<GraphNode>();
+                    var handledNodes = new HashSet<string>();
                     GraphNode node;
                     if (_graph.TryGetValue(changeSetId, out node))
                     {
                         nodesToProcess.Enqueue(node);
+                        handledNodes.Add(node.CommitHash);
                     }
 
                     while (nodesToProcess.Any())
                     {
                         node = nodesToProcess.Dequeue();
-                        var cs = lookup[node.CommitHash];
 
-                        // Remove the file from change set
-                        cs.Items.RemoveAll(i => i.Id == fileIdToRemove);
+                        if (lookup.ContainsKey(node.CommitHash))
+                        {
+                            // Note: The history of a file may skip some commits if they are not relevant.
+                            // Therefore it is possible that no changeset exists for the hash.
+                            // Remember that we follow the full graph.
+                            var cs = lookup[node.CommitHash];
 
+                            // Remove the file from change set
+                            cs.Items.RemoveAll(i => i.Id == fileIdToRemove);
+                        }
+                        
                         foreach (var parent in node.ParentHashes)
                         {
-                            if (_graph.TryGetValue(parent, out node))
+                            // Avoid cycles in case a change set is parent many others.
+                            if (!handledNodes.Contains(parent) && _graph.TryGetValue(parent, out node))
                             {
                                 nodesToProcess.Enqueue(node);
+                                handledNodes.Add(node.CommitHash);
                             }
                         }
                     }
@@ -87,6 +99,11 @@ namespace Insight.GitProvider
         public List<string> GetParents(string id)
         {
             return _graph[id].ParentHashes;
+        }
+
+        public bool Exists(string id)
+        {
+            return _graph.ContainsKey(id);
         }
     }
 }
