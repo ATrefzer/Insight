@@ -36,9 +36,9 @@ namespace Tests
             commit_parent.Items.Add(new ChangeItem { Id = "fileBId", ServerPath = "server_path" });
 
             // Which files to remove and starting from which changeset
-            var filesToRemove = new Dictionary<string, string>();
-            filesToRemove.Add("fileAId", "child");
-            filesToRemove.Add("fileBId", "child");
+            var filesToRemove = new Dictionary<string, HashSet<string>>();
+            filesToRemove.Add("fileAId", new HashSet<string> { "child" });
+            filesToRemove.Add("fileBId", new HashSet<string> { "child" });
 
             // Act
             graph.DeleteSharedHistory(commits, filesToRemove);

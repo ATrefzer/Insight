@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -29,6 +30,13 @@ namespace Visualization.Controls
 
         private int _colorIndex;
 
+        public List<string> Names
+        {
+            get
+            {
+                return _names.ToList();
+            }
+        }
 
         public ColorScheme(string[] names, Color[] colors)
         {
@@ -117,10 +125,10 @@ namespace Visualization.Controls
 
         private void CreateColors()
         {
-            /*
-            _experimential = new[]
+            
+            var experimential = new[]
             {
-                "FF000000", "FFFFFF00", "FF1CE6FF", "FFFF34FF", "FFFF4A46", "FF008941", "FF006FA6", "FFA30059",
+                /*"FF000000",*/ "FFFFFF00", "FF1CE6FF", "FFFF34FF", "FFFF4A46", "FF008941", "FF006FA6", "FFA30059",
                 "FFFFDBE5", "FF7A4900", "FF0000A6", "FF63FFAC", "FFB79762", "FF004D43", "FF8FB0FF", "FF997D87",
                 "FF5A0007", "FF809693", "FFFEFFE6", "FF1B4400", "FF4FC601", "FF3B5DFF", "FF4A3B53", "FFFF2F80",
                 "FF61615A", "FFBA0900", "FF6B7900", "FF00C2A0", "FFFFAA92", "FFFF90C9", "FFB903AA", "FFD16100",
@@ -137,7 +145,7 @@ namespace Visualization.Controls
                 "FFBF5650", "FFE83000", "FF66796D", "FFDA007C", "FFFF1A59", "FF8ADBB4", "FF1E0200", "FF5B4E51",
                 "FFC895C5", "FF320033", "FFFF6832", "FF66E1D3", "FFCFCDAC", "FFD0AC94", "FF7ED379", "FF012C58"
             };
-            */
+            
 
             // http://stackoverflow.com/questions/309149/generate-distinctly-different-rgb-colors-in-graphs
 
@@ -208,6 +216,9 @@ namespace Visualization.Controls
                                         "FF009BFF",
                                         "FFE85EBE"
                                 };
+
+            // TODO
+            _colorDefinitions = experimential;
         }
 
         private void InitializeName(string name)
@@ -230,7 +241,18 @@ namespace Visualization.Controls
                 return;
             }
 
-            var color = Color.FromArgb(int.Parse(_colorDefinitions[_colorIndex], NumberStyles.HexNumber));
+            Color color;
+
+            try
+            {
+                color = Color.FromArgb(int.Parse(_colorDefinitions[_colorIndex], NumberStyles.HexNumber));
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Too much colors!
+                color = Color.LightGray;
+                Debug.Assert(false); // Not enough colors!
+            }
 
             var brush = new SolidBrush(color);
 
