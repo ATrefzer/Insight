@@ -155,6 +155,9 @@ namespace Insight
             var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
             var scheme = new ColorScheme(mainDevelopers.ToArray());
 
+            var legend = new LegendBitmap(scheme);
+            legend.CreateLegendBitmap(Path.Combine(Project.Cache, "knowledge_color.bmp"));
+
             // Build the knowledge data
             var builder = new KnowledgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);

@@ -71,6 +71,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bitmap\LegendBitmap.cs" />
     <Compile Include="Chord\Edge.cs" />
     <Compile Include="Chord\Constants.cs" />
     <Compile Include="DataGridView.xaml.cs">

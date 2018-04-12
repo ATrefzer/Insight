@@ -2,7 +2,9 @@
 In Progress
 ---------------------------------------
 
-- File classifier for coupling not working correctly
+- Understand graph parsing problem!
+- Is there a difference on large project with git linear and git recovery.?
+
 - Classifier for names!
 - Bug evaluation
 

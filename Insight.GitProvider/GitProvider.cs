@@ -32,6 +32,11 @@ namespace Insight.GitProvider
         readonly object _lockObj = new object();
         Graph _graph;
 
+        /// <summary>
+        /// Debugging!
+        /// </summary>
+        private Dictionary<string, string> _idToLocalFile;
+
         public static string GetClass()
         {
             var type = typeof(GitProvider);
@@ -55,6 +60,7 @@ namespace Insight.GitProvider
         public void UpdateCache(IProgress progress, bool includeWorkData)
         {
             VerifyGitDirectory();
+            PrepareLogDirectory();
 
             UpdateHistory(progress);
 
@@ -65,11 +71,20 @@ namespace Insight.GitProvider
             }
         }
 
+        void PrepareLogDirectory()
+        {
+            var logPath = Path.Combine(_cachePath, "logs");
+            if (!Directory.Exists(logPath))
+            {
+                Directory.CreateDirectory(logPath);
+            }
+        }
 
-        static Dictionary<string, string> FindSharedHistory(List<ChangeSet> commits)
+
+        static Dictionary<string, HashSet<string>> FindSharedHistory(List<ChangeSet> commits)
         {
             // file id -> change set id
-            var filesToRemove = new Dictionary<string, string>();
+            var filesToRemove = new Dictionary<string, HashSet<string>>();
 
             // Find overlapping files in history.
             foreach (var cs in commits)
@@ -95,11 +110,17 @@ namespace Insight.GitProvider
                 // Pass 2: Determine the files to be deleted.
                 foreach (var item in cs.Items)
                 {
+                    // Since we deal with a graph we may have to clean several branches later.
                     if (duplicateServerPaths.Contains(item.ServerPath))
                     {
+                        // Remove the file with id=item.Id starting from change set cs.Id
                         if (!filesToRemove.ContainsKey(item.Id))
                         {
-                            filesToRemove.Add(item.Id, cs.Id);
+                            filesToRemove.Add(item.Id, new HashSet<string> { cs.Id });
+                        }
+                        else
+                        {
+                            filesToRemove[item.Id].Add(cs.Id);
                         }
                     }
                 }
@@ -112,22 +133,13 @@ namespace Insight.GitProvider
         // ReSharper disable once UnusedMember.Local
         void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
         {
-            var logPath = Path.Combine(_cachePath, "logs");
-            if (!Directory.Exists(logPath))
-            {
-                Directory.CreateDirectory(logPath);
-            }
+            var logPath = Path.Combine(_cachePath, "logs");          
 
-            var path = Path.Combine(logPath, new FileInfo(forLocalFile).Name);
+            var file = forLocalFile.Replace("\\", "_").Replace(":", "_");
+            file = Path.Combine(logPath, file);
 
             // Ensure same file stored in different directories don't override each other.
-            var index = 1;
-            while (File.Exists(path))
-            {
-                path = path + "_" + index++;
-            }
-
-            File.WriteAllText(path, gitFileLog);
+            File.WriteAllText(file, gitFileLog);
         }
 
 
@@ -171,12 +183,12 @@ namespace Insight.GitProvider
         void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> commits)
         {
             var id = Guid.NewGuid().ToString();
+            _idToLocalFile.Add(id, localPath);
 
             var gitFileLog = _gitCli.Log(localPath);
-
-            // TODO Disable
-            // Writes logs for all files!
-            DebugWriteLogForSingleFile(gitFileLog, localPath);
+            
+            // Writes logs for all files (debugging)
+            //DebugWriteLogForSingleFile(gitFileLog, localPath);
 
             var parser = new Parser(_mapper, null);
             parser.WorkItemRegex = _workItemRegex;
@@ -263,15 +275,16 @@ namespace Insight.GitProvider
         {            
             // Git graph
             _graph = new Graph();
+            _idToLocalFile = new Dictionary<string, string>();
 
-            // TODO
+            
             // Build the full graph
             var fullLog = _gitCli.Log();
             var parser = new Parser(_mapper, _graph);
             parser.ParseLogString(fullLog);
 
-            // Save the original log for information 
-            SaveFullLogToDisk();
+            // Save the original log for information (debugging)
+            //SaveFullLogToDisk();
 
             // Build a virtual commit history
             var localPaths = GetAllTrackedLocalFiles();
@@ -279,7 +292,7 @@ namespace Insight.GitProvider
             // sha1 -> commit
             var commits = RebuildHistory(localPaths, progress);
 
-            // file id -> change set id
+            // file id -> List of change set id
             var filesToRemove = FindSharedHistory(commits);
 
             // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
@@ -296,11 +309,22 @@ namespace Insight.GitProvider
             VerifyNoDuplicateServerPathsInChangeset(commits);
         }
 
-        private static void VerifyNoDuplicateServerPathsInChangeset(List<ChangeSet> commits)
+        private void VerifyNoDuplicateServerPathsInChangeset(List<ChangeSet> commits)
         {
             foreach (var cs in commits)
             {
-                cs.Items.ToDictionary(k => k.ServerPath, k => k.ServerPath);
+                try
+                {
+                    cs.Items.ToDictionary(k => k.ServerPath, k => k.ServerPath);
+                }
+                catch(Exception ex)
+                {
+                    foreach (var item in cs.Items)
+                    {
+                        Debug.WriteLine(item.Id + " -> " + item.LocalPath + "-> " + _idToLocalFile[item.Id]);
+                    }
+                    throw;
+                }
             }
         }
     }
