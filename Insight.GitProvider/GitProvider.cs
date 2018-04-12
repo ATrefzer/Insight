@@ -118,13 +118,14 @@ namespace Insight.GitProvider
                 Directory.CreateDirectory(logPath);
             }
 
-            var path = Path.Combine(logPath, new FileInfo(forLocalFile).Name);
-
+            var originalPath = Path.Combine(logPath, new FileInfo(forLocalFile).Name);
+            var path = originalPath;
+            
             // Ensure same file stored in different directories don't override each other.
             var index = 1;
             while (File.Exists(path))
             {
-                path = path + "_" + index++;
+                path = originalPath + "_" + index++;
             }
 
             File.WriteAllText(path, gitFileLog);
