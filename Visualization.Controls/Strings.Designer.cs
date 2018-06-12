@@ -97,6 +97,15 @@ namespace Visualization.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No filtering. Only highlight matching results..
+        /// </summary>
+        public static string NoFilterJustHighlight {
+            get {
+                return ResourceManager.GetString("NoFilterJustHighlight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reset.
         /// </summary>
         public static string Reset {

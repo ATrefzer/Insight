@@ -2,23 +2,37 @@
 
 namespace Visualization.Controls.Tools
 {
-    internal sealed class SearchHighlighting : IHighlighting
+    internal sealed class Highlighting : IHighlighting
     {
+        private readonly ToolViewModel _toolViewModel;
         private readonly string _pattern;
 
-        public SearchHighlighting(string pattern)
+        public Highlighting(ToolViewModel tvm)
         {
-            _pattern = pattern?.ToLowerInvariant();
+            _toolViewModel = tvm;
+            _pattern = tvm.SearchPattern?.ToLowerInvariant();
         }
 
         public bool IsHighlighted(HierarchicalData data)
         {
-            if (string.IsNullOrEmpty(_pattern))
+            bool patternMatch = false;
+            if (!string.IsNullOrEmpty(_pattern))
             {
-                return false;
+                patternMatch = data.Name.ToLowerInvariant().Contains(_pattern);
             }
 
-            return data.Name.ToLowerInvariant().Contains(_pattern);
+           
+
+            // Matching area and weight criteria is optional.
+            bool filterMatch = false;
+            if (_toolViewModel.NoFilterJustHighlight
+                && _toolViewModel.IsAreaValid(data.AreaMetric) 
+                && _toolViewModel.IsWeightValid(data.WeightMetric))
+            {
+                filterMatch = true;
+            }
+
+            return patternMatch || filterMatch;
         }
     }
 }

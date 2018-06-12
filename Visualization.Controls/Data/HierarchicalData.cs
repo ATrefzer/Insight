@@ -240,7 +240,7 @@ namespace Visualization.Controls.Data
         /// <summary>
         /// The weight metric is normalized only accross the leaf nodes.
         /// </summary>
-        public void NormalizeWeightMetrics()
+        public void NormalizeWeightMetrics(bool inverse = false)
         {
             if (_weightIsAleadyNormalized)
             {
@@ -253,7 +253,7 @@ namespace Visualization.Controls.Data
             var max = range.Max;
             var scale = max - min;
 
-            NormalizeWeightMetrics(min, scale);
+            NormalizeWeightMetrics(min, scale, inverse);
         }
 
         /// <summary>
@@ -410,16 +410,21 @@ namespace Visualization.Controls.Data
             }
         }
 
-        private void NormalizeWeightMetrics(double min, double range)
+        private void NormalizeWeightMetrics(double min, double range, bool inverse)
         {
             if (IsLeafNode)
             {
                 NormalizedWeightMetric = (WeightMetric - min) / range;
+
+                if (inverse)
+                {
+                    NormalizedWeightMetric = 1 - NormalizedWeightMetric;
+                }
             }
 
             foreach (var child in Children)
             {
-                child.NormalizeWeightMetrics(min, range);
+                child.NormalizeWeightMetrics(min, range, inverse);
             }
         }
 

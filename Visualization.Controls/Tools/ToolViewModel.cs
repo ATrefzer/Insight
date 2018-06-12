@@ -22,6 +22,8 @@ namespace Visualization.Controls.Tools
         int _minWeightIndex;
         int _maxWeightIndex;
 
+        bool _noFilteringJustHightlight;
+
         /// <summary>
         /// Min area for user feedback.
         /// </summary>
@@ -119,6 +121,24 @@ namespace Visualization.Controls.Tools
                     
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(MaxArea));
+                    OnFilterChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// If this flag is set the items are not removed when filtering but highlighted.
+        /// </summary>
+        public bool NoFilterJustHighlight
+        {
+            get => _noFilteringJustHightlight;
+            set
+            {
+                if (_noFilteringJustHightlight != value)
+                {
+                    _noFilteringJustHightlight = value;
+
+                    OnPropertyChanged();                 
                     OnFilterChanged();
                 }
             }

@@ -75,6 +75,23 @@ namespace Visualization.Controls
         protected void FilterLevelChanged(object sender, EventArgs args)
         {
             _filtered = _root.Clone();
+          
+            if (_toolViewModel.NoFilterJustHighlight)
+            {
+                // Highlighting the filter instead of removing the nodes.
+                ZoomLevelChanged(_filtered);
+                return;
+            }
+            
+            
+
+
+            
+
+
+
+          
+            _filtered = _root.Clone();
             _filtered.RemoveLeafNodes(leaf =>
                 !_toolViewModel.IsAreaValid(leaf.AreaMetric) ||
                 !_toolViewModel.IsWeightValid(leaf.WeightMetric));
@@ -226,7 +243,7 @@ namespace Visualization.Controls
             _zoomLevel = data;
             _renderer = CreateRenderer();
             _renderer.LoadData(_zoomLevel);
-            _renderer.Highlighing = new SearchHighlighting(_toolViewModel.SearchPattern);
+            _renderer.Highlighing = new Highlighting(_toolViewModel);
             GetCanvas().DataContext = _renderer;
         }
 
