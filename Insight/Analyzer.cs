@@ -96,8 +96,6 @@ namespace Insight
             return classifiedCouplings;
         }
 
-     
-
         public HierarchicalDataContext AnalyzeCodeAge()
         {
             LoadHistory();
