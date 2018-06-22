@@ -149,7 +149,7 @@
     <Compile Include="CirclePacking\Desmos.cs" />
     <Compile Include="CirclePacking\FrontChain.cs" />
     <Compile Include="Tools\IHighlighting.cs" />
-    <Compile Include="Tools\SearchHighlighting.cs" />
+    <Compile Include="Tools\Highlighting.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="TreeMap\RectangularLayoutInfo.cs" />
     <Compile Include="Drawing\DrawingCanvas.cs" />

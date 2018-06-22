@@ -83,14 +83,6 @@ namespace Visualization.Controls
                 return;
             }
             
-            
-
-
-            
-
-
-
-          
             _filtered = _root.Clone();
             _filtered.RemoveLeafNodes(leaf =>
                 !_toolViewModel.IsAreaValid(leaf.AreaMetric) ||
