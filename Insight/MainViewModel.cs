@@ -174,18 +174,6 @@ namespace Insight
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
-        // TODO
-        private async void CodeAgeClick_backup()
-        {
-            // Analyze hotspots from summary and code metrics
-            var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
-            var colorScheme = context.ColorScheme;
-
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowWarnings(_analyzer.Warnings);
-        }
-
         private async void CommentsClick()
         {
             var comments = await _backgroundExecution.ExecuteAsync(_analyzer.ExportComments);
