@@ -135,7 +135,10 @@
   <data name="Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
-    <data name="SearchPattern" xml:space="preserve">
+  <data name="SearchPattern" xml:space="preserve">
     <value>Search pattern</value>
+  </data>
+  <data name="NoFilterJustHighlight" xml:space="preserve">
+    <value>No filtering. Only highlight matching results.</value>
   </data>
 </root>

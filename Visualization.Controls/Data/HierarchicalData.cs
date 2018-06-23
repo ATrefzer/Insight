@@ -238,7 +238,7 @@ namespace Visualization.Controls.Data
         }
 
         /// <summary>
-        /// The weight metric is normalized only accross the leaf nodes.
+        /// The weight metric is normalized only across the leaf nodes.
         /// </summary>
         public void NormalizeWeightMetrics()
         {
@@ -414,7 +414,7 @@ namespace Visualization.Controls.Data
         {
             if (IsLeafNode)
             {
-                NormalizedWeightMetric = (WeightMetric - min) / range;
+                NormalizedWeightMetric = (WeightMetric - min) / range;            
             }
 
             foreach (var child in Children)
