@@ -19,7 +19,6 @@ Features and improvements
 ---------------------------------------
 - Commits pro line statt absolute 
 - Return when zooming
-- maybe PieChart
 ---------------------------------------
 Bugs
 ---------------------------------------
@@ -61,15 +60,12 @@ Chord
       
 - Sometimes edges disappear when resizing
 - Binding errors
-- Popup with Tooltip (strength of coupling)
 
 ---------------------------------------
 Low prio, fun
 ---------------------------------------
 
-
 - Refactor Svn Parser
-- Use WritableBitmap?
 
 - Warning if changed filters!
 - TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
