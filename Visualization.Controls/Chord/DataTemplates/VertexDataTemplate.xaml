@@ -29,7 +29,19 @@
                             Value="2"/>
                     <Style.Triggers>
 
-                        <DataTrigger Binding="{Binding IsSelected}"
+                            <!--<Trigger Property="IsMouseOver"
+                        Highlight der Edge fehlt.
+                                 Value="True">
+                            <Setter Property="Stroke"
+                                    Value="{StaticResource SelectedBrush}"/>
+                            <Setter Property="Fill"
+                                    Value="{StaticResource SelectedBrush}"/>
+                            <Setter Property="StrokeThickness"
+                                    Value="2"/>
+                        </Trigger>-->
+
+
+                            <DataTrigger Binding="{Binding IsSelected}"
                                      Value="True">
                             <Setter Property="Stroke"
                                     Value="{StaticResource SelectedBrush}"/>

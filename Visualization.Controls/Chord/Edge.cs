@@ -2,6 +2,8 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Input;
+using Prism.Commands;
 
 namespace Visualization.Controls.Chord
 {
@@ -75,6 +77,8 @@ namespace Visualization.Controls.Chord
                 OnPropertyChanged();
             }
         }
+
+        public ICommand SelectCommand { get; internal set; }
 
         internal void UpdateLocation(Dictionary<string, Vertex> vertexLookup)
         {

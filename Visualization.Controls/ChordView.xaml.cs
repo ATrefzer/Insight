@@ -21,12 +21,7 @@ namespace Visualization.Controls
     {
         private List<EdgeData> _edgeData;
         private List<Edge> _edgeViewModels;
-
-        /// <summary>
-        /// Click on vertex allows to keep the highlighting stable.
-        /// </summary>
-        private bool _isSelctedByClickOnVertex;
-
+       
         private List<Label> _labelViewModels;
         private MainCircle _mainCircleViewModel;
         private double _maxLabelWidth = double.NaN;
@@ -94,6 +89,11 @@ namespace Visualization.Controls
         {
             var edgeViewModel = new Edge();
 
+            edgeViewModel.SelectCommand = new DelegateCommand(() =>
+            {
+                Select(edgeViewModel);
+            });
+
             edgeViewModel.IsSelected = false;
             edgeViewModel.Node1Id = edge.Node1Id;
             edgeViewModel.Node2Id = edge.Node2Id;
@@ -159,9 +159,7 @@ namespace Visualization.Controls
             var vertexViewModel = new Vertex(nodeId, label);
             vertexViewModel.SelectCommand = new DelegateCommand(() =>
                                                                 {
-                                                                    _isSelctedByClickOnVertex = false;
                                                                     Select(vertexViewModel);
-                                                                    _isSelctedByClickOnVertex = true;
                                                                 });
 
             vertexViewModel.Radius = 4;
@@ -249,7 +247,6 @@ namespace Visualization.Controls
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // Click on any free space in the window releases the held selection.
-            _isSelctedByClickOnVertex = false;
             Select((Vertex) null);
         }
 
@@ -260,15 +257,32 @@ namespace Visualization.Controls
             Select(vertex);
         }
 
-        private void Select(Vertex vertex)
+        /// <summary>
+        /// Selects the clicked edge and its two verticies.
+        /// </summary>
+        private void Select(Edge edge)
         {
-            if (_isSelctedByClickOnVertex)
+            foreach (var vertexViewModel in _vertexViewModels)
             {
-                // Highlighting was started by click on vertex node.
-                // You have to click again on a vertex or free space in the window to release.
-                return;
+                vertexViewModel.IsSelected = false;
             }
 
+            foreach (var edgeViewModel in _edgeViewModels)
+            {
+                edgeViewModel.IsSelected = false;
+            }
+
+            // Just select the clicked edge and the two vertiecies
+            edge.IsSelected = true;
+            _vertexLookup[edge.Node1Id].IsSelected = true;
+            _vertexLookup[edge.Node2Id].IsSelected = true;
+        }
+
+        /// <summary>
+        /// Selects a vertex and all edges / vertiecies attached to it.
+        /// </summary>
+        private void Select(Vertex vertex)
+        {
             foreach (var vertexViewModel in _vertexViewModels)
             {
                 vertexViewModel.IsSelected = false;

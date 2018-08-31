@@ -18,6 +18,13 @@
                     </PathFigure>
                 </PathGeometry>
             </Path.Data>
+
+            <Path.InputBindings>
+                <MouseBinding MouseAction="LeftClick"
+                              Command="{Binding SelectCommand}"/>
+            </Path.InputBindings>
+            
+            
             <Path.Style>
                 <Style TargetType="Path">
                     <Setter Property="Stroke"
