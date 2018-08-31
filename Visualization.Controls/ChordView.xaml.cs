@@ -97,6 +97,7 @@ namespace Visualization.Controls
             edgeViewModel.IsSelected = false;
             edgeViewModel.Node1Id = edge.Node1Id;
             edgeViewModel.Node2Id = edge.Node2Id;
+            edgeViewModel.Strength = edge.Strength;
 
             _edgeViewModels.Add(edgeViewModel);
         }

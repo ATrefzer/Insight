@@ -19,6 +19,10 @@
                 </PathGeometry>
             </Path.Data>
 
+            <Path.ToolTip>
+                <ToolTip Content="{Binding Tooltip}" />
+            </Path.ToolTip>
+
             <Path.InputBindings>
                 <MouseBinding MouseAction="LeftClick"
                               Command="{Binding SelectCommand}"/>

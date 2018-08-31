@@ -14,7 +14,7 @@ namespace Visualization.Controls.Chord
         private Point _point1;
         private Point _point2;
         private Point _point3;
-        private double strength;
+        private double _strength;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -67,13 +67,21 @@ namespace Visualization.Controls.Chord
             }
         }
 
+        public string Tooltip
+        {
+            get
+            {
+                return string.Format("Strength: {0:F1}", Strength);
+            }
+        }
+
         public double Strength
         {
-            get => strength;
+            get => _strength;
 
             set
             {
-                strength = value;
+                _strength = value;
                 OnPropertyChanged();
             }
         }
