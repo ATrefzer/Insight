@@ -65,6 +65,14 @@ namespace Insight.SvnProvider
             return ExecuteCommandLine(program, args);
         }
 
+
+        public string Info(string obj)
+        {
+            var program = "svn";
+            var args = $"info {obj} --xml";
+            return ExecuteCommandLine(program, args);
+        }
+
         public string Log(Id revision)
         {
             var program = "svn";

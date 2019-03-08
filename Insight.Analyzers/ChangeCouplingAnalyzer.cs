@@ -78,6 +78,9 @@ namespace Insight.Analyzers
                     {
                         // Seen the first time means latest file.
                         idToLocalFile.Add(item.Id, item.LocalPath);
+
+                        // Do you have uncommited changes.
+                        // Do you have commit items not inside the base directory?
                         Debug.Assert(File.Exists(item.LocalPath));
                     }
                 }

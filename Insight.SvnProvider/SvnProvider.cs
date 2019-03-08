@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
-
 using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
@@ -19,54 +18,45 @@ using Newtonsoft.Json;
 namespace Insight.SvnProvider
 {
     /// <summary>
-    /// Provider for Svn changeset history.
-    /// Since Svn is only a source control system work items are not provided!
-    /// For exampe we don't know if a commit was a bug fix or not.
+    ///     Provider for Svn changeset history.
+    ///     Since Svn is only a source control system work items are not provided!
+    ///     For exampe we don't know if a commit was a bug fix or not.
     /// </summary>
     public sealed class SvnProvider : ISourceControlProvider
     {
         private string _cachePath;
+        private string _contributionFile;
+        private IFilter _fileFilter;
 
-        private string _serverRoot;
+
+        private MappingInfo _mappingInfo;
+
+        /// <summary>
+        ///     Start location. Not necessarily the root of the svn.
+        /// </summary>
+        private string _serverBase;
+
         private string _startDirectory;
 
         private SvnCommandLine _svnCli;
-        private IFilter _fileFilter;
         private string _svnHistoryExportFile;
         private MovementTracker _tracking;
         private string _workItemRegex;
-        private string _contributionFile;
-
-        public static string GetClass()
-        {
-            var type = typeof(SvnProvider);
-            return type.FullName + "," + type.Assembly.GetName().Name;
-        }
 
         /// <summary>
-        /// Returns the paths relative from the working directory
+        ///     Returns the paths relative from the working directory
         /// </summary>
         /// <returns></returns>
         public HashSet<string> GetAllTrackedFiles()
         {
             var serverPaths = _svnCli.GetAllTrackedFiles();
-            var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var all = serverPaths.Split(new[] {'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
             return new HashSet<string>(all);
         }
 
-
-        private List<string> GetAllTrackedLocalFiles()
-        {
-            var localFiles = GetAllTrackedFiles()
-                .Select(server => MapToLocalFile_ServerIsRelativeToBaseDirectory(server))
-                .Where(local => _fileFilter.IsAccepted(local) && File.Exists(local))
-                .ToList();
-            return localFiles;
-        }
-
         /// <summary>
-        /// Note: Use local path to avoid the problem that power tools are called from a non mapped directory.
-        /// Developer -> lines of code
+        ///     Note: Use local path to avoid the problem that power tools are called from a non mapped directory.
+        ///     Developer -> lines of code
         /// </summary>
         public Dictionary<string, uint> CalculateDeveloperWork(string localFile)
         {
@@ -75,7 +65,7 @@ namespace Insight.SvnProvider
             // Parse annotated file
             var workByDevelopers = new Dictionary<string, uint>();
             var changeSetRegex = new Regex(@"^\s*(?<revision>\d+)\s*(?<developerName>\S+)(?<codeLine>.*)",
-                                           RegexOptions.Compiled | RegexOptions.Multiline);
+                RegexOptions.Compiled | RegexOptions.Multiline);
 
             // Work by changesets (line by line)
             var matches = changeSetRegex.Matches(blame);
@@ -90,7 +80,7 @@ namespace Insight.SvnProvider
         }
 
         /// <summary>
-        /// Returns path to the cached file
+        ///     Returns path to the cached file
         /// </summary>
         public List<FileRevision> ExportFileHistory(string localFile)
         {
@@ -147,7 +137,7 @@ namespace Insight.SvnProvider
         }
 
         /// <summary>
-        /// You need to call UpdateCache before.
+        ///     You need to call UpdateCache before.
         /// </summary>
         public ChangeSetHistory QueryChangeSetHistory()
         {
@@ -170,7 +160,7 @@ namespace Insight.SvnProvider
             // Create directories
             GetBlameCache();
             GetHistoryCache();
-            _serverRoot = null;
+            _serverBase = null;
 
             ExportLogToDisk();
 
@@ -180,7 +170,35 @@ namespace Insight.SvnProvider
             }
         }
 
-        void UpdateContribution(IProgress progress)
+        public Dictionary<string, Contribution> QueryContribution()
+        {
+            /// The contributions are optional
+            if (!File.Exists(_contributionFile))
+            {
+                return null;
+            }
+
+            var input = File.ReadAllText(_contributionFile, Encoding.UTF8);
+            return JsonConvert.DeserializeObject<Dictionary<string, Contribution>>(input);
+        }
+
+        public static string GetClass()
+        {
+            var type = typeof(SvnProvider);
+            return type.FullName + "," + type.Assembly.GetName().Name;
+        }
+
+
+        private List<string> GetAllTrackedLocalFiles()
+        {
+            var localFiles = GetAllTrackedFiles()
+                .Select(MapToLocalFile_ServerIsRelativeToBaseDirectory)
+                .Where(local => _fileFilter.IsAccepted(local) && File.Exists(local))
+                .ToList();
+            return localFiles;
+        }
+
+        private void UpdateContribution(IProgress progress)
         {
             if (File.Exists(_contributionFile))
             {
@@ -195,34 +213,33 @@ namespace Insight.SvnProvider
             var json = JsonConvert.SerializeObject(contribution);
 
             File.WriteAllText(_contributionFile, json, Encoding.UTF8);
-
         }
 
 
         /// <summary>
-        /// Duplicate with git probvider
+        ///     Duplicate with git probvider
         /// </summary>
-        Dictionary<string, Contribution> CalculateContributionsParallel(IProgress progress, List<string> localFiles)
+        private Dictionary<string, Contribution> CalculateContributionsParallel(IProgress progress,
+            List<string> localFiles)
         {
             // Calculate main developer for each file
             var fileToContribution = new ConcurrentDictionary<string, Contribution>();
 
             var all = localFiles.Count;
-            Parallel.ForEach(localFiles, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                             file =>
-                             {
+            Parallel.ForEach(localFiles, new ParallelOptions {MaxDegreeOfParallelism = 4},
+                file =>
+                {
+                    var work = CalculateDeveloperWork(file);
+                    var contribution = new Contribution(work);
 
-                                 var work = CalculateDeveloperWork(file);
-                                 var contribution = new Contribution(work);
+                    var result = fileToContribution.TryAdd(file, contribution);
+                    Debug.Assert(result);
 
-                                 var result = fileToContribution.TryAdd(file, contribution);
-                                 Debug.Assert(result);
+                    // Progress
+                    var count = fileToContribution.Count;
 
-                                 // Progress
-                                 var count = fileToContribution.Count;
-
-                                 progress.Message($"Calculating work {count}/{all}");
-                             });
+                    progress.Message($"Calculating work {count}/{all}");
+                });
 
             return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
         }
@@ -292,21 +309,38 @@ namespace Insight.SvnProvider
         }
 
         /// <summary>
-        /// Returns the relative server path of the current working directory.
-        /// In svn we can choose any sub directory. "svn info" will return the
-        /// server path that corresponds to this directory.
+        ///     How to map a given server path to local file system
         /// </summary>
-        private string GetServerPathForBaseDirectory()
+        /// <param name="startDirectory"></param>
+        /// <returns></returns>
+        private MappingInfo GetMappingInfo(string startDirectory)
         {
-            var xml = _svnCli.Info();
+            var mappingInfo = new MappingInfo();
+
+            // Svn info for the base directory. This is where we want to start the analysis.
+            var xml = _svnCli.Info(startDirectory);
             var dom = new XmlDocument();
             dom.LoadXml(xml);
-            var url = dom.SelectSingleNode("//relative-url");
-            var value = url.InnerText;
-            var path = value.Trim('^', ' ');
+            var url = dom.SelectSingleNode("//wcroot-abspath");
+            var value = url.InnerText.Trim('^', ' ').Replace("/", "\\").TrimEnd('/', '\\');
 
-            path = Uri.UnescapeDataString(path);
-            return path;
+            // Checkout folder in local file system. It may be above the base directory.
+            var wcRoot = Uri.UnescapeDataString(value);
+            mappingInfo.AbsolutePathToCheckoutDirectory = wcRoot;
+         
+            // Svn info for the svn checkout folder
+            xml = _svnCli.Info(wcRoot);
+            dom = new XmlDocument();
+            dom.LoadXml(xml);
+            url = dom.SelectSingleNode("//relative-url");
+            value = url.InnerText.Trim('^', ' ').Replace("/", "\\").TrimEnd('/', '\\');
+            mappingInfo.RelativeUrlToStartDirectory = Uri.UnescapeDataString(value);
+
+            url = dom.SelectSingleNode("//relative-url");
+            value = url.InnerText.Trim('^', ' ').Replace("/", "\\").TrimEnd('/', '\\');
+            mappingInfo.RelativeUrlToCheckoutDirectory = Uri.UnescapeDataString(value);
+
+            return mappingInfo;
         }
 
         private string GetStringAttribute(XmlReader reader, string name)
@@ -326,19 +360,23 @@ namespace Insight.SvnProvider
             return ulong.Parse(value);
         }
 
+        /// <summary>
+        /// We obtain the server path starting with /. This corresponds to the checkout directory
+        /// So we remove the relative url of the checkout directory from the server path and replace it with the svn checkout directory path
+        /// </summary>
         private string MapToLocalFile_ServerIsAbsolute(string serverPath)
         {
-            // In svn we can select any sub directory of our working copy.
-            // GetServerPathForBaseDirectory returns an updated relative path!
-            var serverNormalized = serverPath.Replace("/", "\\");
-            if (_serverRoot == null)
+            if (_mappingInfo == null)
             {
-                // For example /
-                _serverRoot = GetServerPathForBaseDirectory();
+                _mappingInfo = GetMappingInfo(_startDirectory);
             }
 
-            var common = serverNormalized.Substring(_serverRoot.Length).Trim('\\');
-            var localPath = Path.Combine(_startDirectory, common);
+            var serverNormalized = serverPath.Replace("/", "\\").TrimEnd('\\');
+
+            var common = serverNormalized.Substring(_mappingInfo.RelativeUrlToCheckoutDirectory.Length).Trim('\\');
+
+            // Note: second part must not start with \\
+            var localPath = Path.Combine(_mappingInfo.AbsolutePathToCheckoutDirectory, common);
             return localPath;
         }
 
@@ -355,7 +393,7 @@ namespace Insight.SvnProvider
         private void ParseLogEntry(XmlReader reader, List<ChangeSet> result)
         {
             var cs = new ChangeSet();
-           
+
 
             // revision -> Id 
             var revision = ReadRevision(reader);
@@ -387,8 +425,6 @@ namespace Insight.SvnProvider
             {
                 do
                 {
-                   
-
                     var item = new ChangeItem();
 
                     var kind = reader.GetAttribute("kind");
@@ -428,9 +464,8 @@ namespace Insight.SvnProvider
                     }
                     else
                     {
-                        _tracking.TrackId(item);                     
+                        _tracking.TrackId(item);
                     }
-                
                 } while (reader.ReadToNextSibling("path"));
 
                 if (!reader.ReadToFollowing("msg"))
@@ -443,7 +478,7 @@ namespace Insight.SvnProvider
             }
 
             // Applies all change set items and sets their id
-           _tracking.ApplyChangeSet(cs.Items);
+            _tracking.ApplyChangeSet(cs.Items);
 
             result.Add(cs);
         }
@@ -465,12 +500,10 @@ namespace Insight.SvnProvider
             using (var reader = XmlReader.Create(_svnHistoryExportFile))
             {
                 while (reader.Read())
-                {
                     if (reader.IsStartElement("logentry"))
                     {
                         ParseLogEntry(reader, result);
                     }
-                }
             }
 
             // First item is latest commit because we got the by ordering
@@ -510,7 +543,6 @@ namespace Insight.SvnProvider
 
             if (action == "R")
             {
-                // For example change the location of the item in source safe.
                 return KindOfChange.Rename;
             }
 
@@ -522,23 +554,34 @@ namespace Insight.SvnProvider
         {
             if (_svnCli.HasModifications())
             {
-                // I don't want to run into merge conflicts.
                 throw new Exception("Abort. The repository has modifications.");
             }
 
             _svnCli.UpdateWorkingCopy();
         }
 
-        public Dictionary<string, Contribution> QueryContribution()
-        {
-            /// The contributions are optional
-            if (!File.Exists(_contributionFile))
-            {
-                return null;
-            }
+        /// <summary>
+        ///     Returns the relative server path of the current working directory.
+        ///     In svn we can choose any sub directory. "svn info" will return the
+        ///     server path that corresponds to this directory.
+        /// </summary>
+        //private string GetServerPathForBaseDirectory(string )
+        //{
+        //    var xml = _svnCli.Info();
+        //    var dom = new XmlDocument();
+        //    dom.LoadXml(xml);
+        //    var url = dom.SelectSingleNode("//relative-url");
+        //    var value = url.InnerText;
+        //    var path = value.Trim('^', ' ');
 
-            var input = File.ReadAllText(_contributionFile, Encoding.UTF8);
-            return JsonConvert.DeserializeObject<Dictionary<string, Contribution>>(input);
+        //    path = Uri.UnescapeDataString(path);
+        //    return path;
+        //}
+        private class MappingInfo
+        {
+            public string RelativeUrlToCheckoutDirectory;
+            public string RelativeUrlToStartDirectory;
+            public string AbsolutePathToCheckoutDirectory;
         }
     }
 }
