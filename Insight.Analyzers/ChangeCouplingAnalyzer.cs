@@ -39,6 +39,11 @@ namespace Insight.Analyzers
                 // Normally the files are already filtered when the history was created.
                 var itemIds = cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.Id).ToList();
 
+                // Do you have uncommitted changes.
+                // Do you have commit items not inside the base directory?
+                var missingFiles =itemIds.Select(id =>idToLocalFile[id]).Where(file => !File.Exists(file));
+                // TODO why is our commit history so screwed up??? Debug.Assert(!missingFiles.Any());
+                
                 IncrementCommitCount(itemIds);
 
                 for (var i = 0; i < itemIds.Count - 1; i++) // Keep one for the last pair
@@ -78,10 +83,6 @@ namespace Insight.Analyzers
                     {
                         // Seen the first time means latest file.
                         idToLocalFile.Add(item.Id, item.LocalPath);
-
-                        // Do you have uncommited changes.
-                        // Do you have commit items not inside the base directory?
-                        Debug.Assert(File.Exists(item.LocalPath));
                     }
                 }
             }

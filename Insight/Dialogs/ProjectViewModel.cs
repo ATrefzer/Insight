@@ -32,22 +32,15 @@ namespace Insight.Dialogs
                                   Name = "Svn"
                           };
 
-                var gitLinear = new ProviderDescription
-                {
-                    Class = GitProviderLinear.GetClass(),
-                    Name = "Git (Caution! Assumes a linear history)"
-                };
-
                 var git = new ProviderDescription
                           {
                                   Class = GitProvider.GitProvider.GetClass(),
-                                  Name = "Git (Recovers history file by file)"
+                                  Name = "Git (Processes history file by file - slow!)"
                           };
 
                 return new List<ProviderDescription>
                        {
-                               svn
-                               ,gitLinear,
+                               svn,
                                git
                        };
             }

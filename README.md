@@ -2,10 +2,8 @@
 
 This utility implements some of the ideas presented in Adam Tornhill's great book "Your Code as a Crime Scene".
 
-Currently, it supports Subversion. Git may not work reliably at this moment.
+Currently, it supports Subversion and Git. Note that processing a Git history is quite slow.
 Supported file types (for counting lines of code) are cs, cpp, c, h, java, xaml and xml
-
-Work is in progress ...
 
 ## Screenshots
 

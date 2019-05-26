@@ -2,17 +2,10 @@
 In Progress
 ---------------------------------------
 
-- Understand graph parsing problem!
-- Is there a difference on large project with git linear and git recovery.?
-
+- Investigate broken svn history. See CalculateChangeCouplings
 - Classifier for names!
-- Bug evaluation
-
 - Try on different git projects
-- Outer circle not correct for nunit!
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
-
-- state of tab items (werden jedes mal neu geladen, Tool settings gehen verloren)
 
 ---------------------------------------
 Features and improvements
@@ -22,7 +15,7 @@ Features and improvements
 ---------------------------------------
 Bugs
 ---------------------------------------
-- GDI+ Error when showing work fraction
+
 ---------------------------------------
 User interface
 ---------------------------------------
@@ -62,7 +55,7 @@ Chord
 - Binding errors
 
 ---------------------------------------
-Low prio, fun
+Low prio
 ---------------------------------------
 
 - Refactor Svn Parser
