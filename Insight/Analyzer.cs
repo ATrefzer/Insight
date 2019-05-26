@@ -26,10 +26,12 @@ namespace Insight
 
         ChangeSetHistory _history;
         Dictionary<string, LinesOfCode> _metrics;
+        private readonly IMetricProvider _metricsProvider;
 
-        public Analyzer(Project project)
+        public Analyzer(Project project, IMetricProvider metricProvider)
         {
             Project = project;
+            _metricsProvider = metricProvider;
         }
 
         public List<WarningMessage> Warnings { get; private set; }
@@ -199,13 +201,12 @@ namespace Insight
             var fileHistory = svnProvider.ExportFileHistory(localFile);
 
             // For each file we need to calculate the metrics
-            var provider = new MetricProvider();
 
             foreach (var file in fileHistory)
             {
                 var fileInfo = new FileInfo(file.CachePath);
-                var loc = provider.CalculateLinesOfCode(fileInfo);
-                var invertedSpace = provider.CalculateInvertedSpaceMetric(fileInfo);
+                var loc = _metricsProvider.CalculateLinesOfCode(fileInfo);
+                var invertedSpace = _metricsProvider.CalculateInvertedSpaceMetric(fileInfo);
                 trend.Add(new TrendData { Date = file.Date, Loc = loc, InvertedSpace = invertedSpace });
             }
 
@@ -301,8 +302,7 @@ namespace Insight
             progress.Message("Updating code metrics.");
 
             // Update code metrics
-            var metricProvider = new MetricProvider();
-            metricProvider.UpdateLinesOfCodeCache(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
+            _metricsProvider.UpdateLinesOfCodeCache(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
         }
 
 
@@ -401,10 +401,9 @@ namespace Insight
         void LoadMetrics()
         {
             // Get code metrics (all files from the cache!)
-            if (_metrics == null)
+            if (_metricsProvider == null)
             {
-                var metricProvider = new MetricProvider();
-                _metrics = metricProvider.QueryCachedLinesOfCode(Project.Cache);
+                _metrics = _metricsProvider.QueryCachedLinesOfCode(Project.Cache);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Insight.Metrics;
+using System.ComponentModel;
 using System.Windows;
 
 namespace Insight
@@ -16,12 +17,11 @@ namespace Insight
             var project = Application.Current.Properties["project"] as Project;
 
             var viewController = new ViewController(this);
-            var analyzer = new Analyzer(project); // TODO create on the fly?
+            var analyzer = new Analyzer(project, new MetricProvider());
             var dialogs = new DialogService();
             var progressService = new ProgressService(this);
             var backgroundExecution = new BackgroundExecution(progressService, dialogs);
 
-            // TODO too much
             var mainViewModel = new MainViewModel(viewController, dialogs, project, analyzer, backgroundExecution);
             DataContext = mainViewModel;
         }
