@@ -1,57 +1,116 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Insight.Shared;
-using Insight.Shared.Model;
+﻿using Insight.Shared.Model;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text;
 
 namespace Insight.Metrics
 {
     /// <summary>
-    /// Facade to the metrics provided in the module
+    ///     Facade to the metrics cache provided in the module.
     /// </summary>
     public sealed class MetricProvider
     {
-        private readonly string _metricsFile;
-        private readonly IEnumerable<string> _normalizedFileExtensions;
-        private readonly string _startDirectory;
+        private const string Cloc = "cloc-1.76.exe";
+        private const string ClocSubDir = "ExternalTools";
 
 
-        public MetricProvider(string projectBase, string cache, IEnumerable<string> normalizedFileExtensions)
+        public string GetPathToCloc()
         {
-            _startDirectory = projectBase;
-            _normalizedFileExtensions = normalizedFileExtensions;
-            _metricsFile = Path.Combine(cache, "metrics.json");
+            // Get path of this assembly
+            var assembly = Assembly.GetAssembly(typeof(MetricProvider));
+            var assemblyDirectory = new FileInfo(assembly.Location).Directory;
+            var thisAssemblyDirectory = assemblyDirectory?.FullName ?? "";
+            var externalToolsDirectory = Path.Combine(thisAssemblyDirectory, ClocSubDir);
+
+            VerifyClocInstalled(externalToolsDirectory);
+
+            return Path.Combine(externalToolsDirectory, Cloc);
         }
 
-        public Dictionary<string, LinesOfCode> QueryCodeMetrics()
+
+        private void VerifyClocInstalled(string externalToolsDirectory)
         {
-            if (!File.Exists(_metricsFile))
+            var pathToCloc = Path.Combine(externalToolsDirectory, Cloc);
+            if (!File.Exists(pathToCloc))
             {
-                throw new FileNotFoundException(_metricsFile);
+                var url = "https://github.com/AlDanial/cloc/releases/tag/v1.76";
+
+                var builder = new StringBuilder();
+                builder.AppendLine($"Executable not found: '{pathToCloc}'.");
+                builder.AppendLine($"Please go to '{url}' and download the file '{Cloc}'.");
+                builder.AppendLine($"Copy this file to '{externalToolsDirectory}'.");
+                throw new Exception(builder.ToString());
+            }
+        }
+
+        public LinesOfCode CalculateLinesOfCode(FileInfo file)
+        {
+            var pathToCloc = GetPathToCloc();
+
+            var metric = new LinesOfCodeMetric(pathToCloc);
+            return metric.CalculateLinesOfCode(file);
+        }
+
+        /// <summary>
+        ///     Normalized file extensions: Lower case, including the dot.
+        /// </summary>
+        public Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo rootDir,
+            IEnumerable<string> normalizedFileExtensions)
+        {
+            var pathToCloc = GetPathToCloc();
+
+            var metric = new LinesOfCodeMetric(pathToCloc);
+            return metric.CalculateLinesOfCode(rootDir, normalizedFileExtensions);
+        }
+
+
+        public InvertedSpace CalculateInvertedSpaceMetric(FileInfo file)
+        {
+            var ism = new InvertedSpaceMetric();
+            return ism.CalculateInvertedSpaceMetric(file);
+        }
+
+        /// <summary>
+        ///     Reads the cached metric file. <see cref="UpdateLinesOfCodeCache" />.
+        ///     Returns a mapping from full file path to lines of code metrics.
+        ///     Throws a FileNotFoundException if the cache file does not exist.
+        /// </summary>
+        public Dictionary<string, LinesOfCode> QueryCachedLinesOfCode(string cacheDirectory)
+        {
+            var metricsFile = Path.Combine(cacheDirectory, "metrics.json");
+            if (!File.Exists(metricsFile))
+            {
+                throw new FileNotFoundException(metricsFile);
             }
 
-            var json = File.ReadAllText(_metricsFile, Encoding.UTF8);
+            var json = File.ReadAllText(metricsFile, Encoding.UTF8);
             return JsonConvert.DeserializeObject<Dictionary<string, LinesOfCode>>(json);
         }
 
-        public void UpdateCache()
+        /// <summary>
+        ///     Rebuilds the metric cache file.
+        /// </summary>
+        public void UpdateLinesOfCodeCache(string startDirectory, string cacheDirectory,
+            IEnumerable<string> normalizedFileExtensions)
         {
-            if (File.Exists(_metricsFile))
+            var metricsFile = Path.Combine(cacheDirectory, "metrics.json");
+
+            if (File.Exists(metricsFile))
             {
-                File.Delete(_metricsFile);
+                File.Delete(metricsFile);
             }
 
-            // Query code metrics of local version
-            var metric = new CodeMetrics();
+            var metric = new LinesOfCodeMetric(GetPathToCloc());
 
             // Take every file that can we can calculate a metric for.         
-            var metrics = metric.CalculateLinesOfCode(new DirectoryInfo(_startDirectory), _normalizedFileExtensions);
+            var metrics = metric.CalculateLinesOfCode(new DirectoryInfo(startDirectory), normalizedFileExtensions);
 
-         
+
             var json = JsonConvert.SerializeObject(metrics, Formatting.Indented);
-            File.WriteAllText(_metricsFile, json, Encoding.UTF8);
-           
+            File.WriteAllText(metricsFile, json, Encoding.UTF8);
         }
     }
 }

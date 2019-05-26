@@ -41,7 +41,8 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeMetrics.cs" />
+    <Compile Include="InvertedSpaceMetric.cs" />
+    <Compile Include="LinesOfCodeMetric.cs" />
     <Compile Include="MetricProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Statistics.cs" />

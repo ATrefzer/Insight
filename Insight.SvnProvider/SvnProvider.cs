@@ -407,6 +407,8 @@ namespace Insight.SvnProvider
             }
 
             cs.Committer = reader.ReadString();
+            if (cs.Committer == "vogel")
+                cs.Committer = "kampecl";
 
             // date -> date
             if (!reader.ReadToNextSibling("date"))

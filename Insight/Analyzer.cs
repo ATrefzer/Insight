@@ -36,7 +36,7 @@ namespace Insight
 
         Project Project { get; }
 
-        static string ClassifyDirectory(string localPath)
+        private static string ClassifyDirectory(string localPath)
         {
             // Classify different source code folders
 
@@ -153,6 +153,8 @@ namespace Insight
             var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
             var scheme = new ColorScheme(mainDevelopers.ToArray());
 
+            
+
             var legend = new LegendBitmap(scheme);
             legend.CreateLegendBitmap(Path.Combine(Project.Cache, "knowledge_color.bmp"));
 
@@ -197,7 +199,7 @@ namespace Insight
             var fileHistory = svnProvider.ExportFileHistory(localFile);
 
             // For each file we need to calculate the metrics
-            var provider = new CodeMetrics();
+            var provider = new MetricProvider();
 
             foreach (var file in fileHistory)
             {
@@ -299,10 +301,9 @@ namespace Insight
             progress.Message("Updating code metrics.");
 
             // Update code metrics
-            var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
-            metricProvider.UpdateCache();
+            var metricProvider = new MetricProvider();
+            metricProvider.UpdateLinesOfCodeCache(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
         }
-
 
 
         internal void Clear()
@@ -402,8 +403,8 @@ namespace Insight
             // Get code metrics (all files from the cache!)
             if (_metrics == null)
             {
-                var metricProvider = new MetricProvider(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
-                _metrics = metricProvider.QueryCodeMetrics();
+                var metricProvider = new MetricProvider();
+                _metrics = metricProvider.QueryCachedLinesOfCode(Project.Cache);
             }
         }
     }
