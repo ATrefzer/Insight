@@ -31,11 +31,6 @@ namespace Insight.SvnProvider
 
         private MappingInfo _mappingInfo;
 
-        /// <summary>
-        ///     Start location. Not necessarily the root of the svn.
-        /// </summary>
-        private string _serverBase;
-
         private string _startDirectory;
 
         private SvnCommandLine _svnCli;
@@ -160,7 +155,6 @@ namespace Insight.SvnProvider
             // Create directories
             GetBlameCache();
             GetHistoryCache();
-            _serverBase = null;
 
             ExportLogToDisk();
 
@@ -406,9 +400,7 @@ namespace Insight.SvnProvider
                 throw new InvalidDataException("author");
             }
 
-            cs.Committer = reader.ReadString();
-            if (cs.Committer == "vogel")
-                cs.Committer = "kampecl";
+            cs.Committer = reader.ReadString();         
 
             // date -> date
             if (!reader.ReadToNextSibling("date"))

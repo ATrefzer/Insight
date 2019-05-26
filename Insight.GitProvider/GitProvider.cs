@@ -317,7 +317,7 @@ namespace Insight.GitProvider
                 {
                     cs.Items.ToDictionary(k => k.ServerPath, k => k.ServerPath);
                 }
-                catch(Exception ex)
+                catch(Exception)
                 {
                     foreach (var item in cs.Items)
                     {
