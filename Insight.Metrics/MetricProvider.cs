@@ -1,5 +1,4 @@
-﻿using Insight.Shared.Model;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,13 +10,13 @@ namespace Insight.Metrics
     /// <summary>
     ///     Facade to the metrics cache provided in the module.
     /// </summary>
-    public sealed class MetricProvider
+    public sealed class MetricProvider : IMetricProvider
     {
         private const string Cloc = "cloc-1.76.exe";
         private const string ClocSubDir = "ExternalTools";
 
 
-        public string GetPathToCloc()
+        private string GetPathToCloc()
         {
             // Get path of this assembly
             var assembly = Assembly.GetAssembly(typeof(MetricProvider));
@@ -54,9 +53,7 @@ namespace Insight.Metrics
             return metric.CalculateLinesOfCode(file);
         }
 
-        /// <summary>
-        ///     Normalized file extensions: Lower case, including the dot.
-        /// </summary>
+
         public Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo rootDir,
             IEnumerable<string> normalizedFileExtensions)
         {
@@ -73,11 +70,7 @@ namespace Insight.Metrics
             return ism.CalculateInvertedSpaceMetric(file);
         }
 
-        /// <summary>
-        ///     Reads the cached metric file. <see cref="UpdateLinesOfCodeCache" />.
-        ///     Returns a mapping from full file path to lines of code metrics.
-        ///     Throws a FileNotFoundException if the cache file does not exist.
-        /// </summary>
+
         public Dictionary<string, LinesOfCode> QueryCachedLinesOfCode(string cacheDirectory)
         {
             var metricsFile = Path.Combine(cacheDirectory, "metrics.json");
@@ -90,9 +83,6 @@ namespace Insight.Metrics
             return JsonConvert.DeserializeObject<Dictionary<string, LinesOfCode>>(json);
         }
 
-        /// <summary>
-        ///     Rebuilds the metric cache file.
-        /// </summary>
         public void UpdateLinesOfCodeCache(string startDirectory, string cacheDirectory,
             IEnumerable<string> normalizedFileExtensions)
         {

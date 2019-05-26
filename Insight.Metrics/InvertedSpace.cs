@@ -1,4 +1,4 @@
-﻿namespace Insight.Shared.Model
+﻿namespace Insight.Metrics
 {
     public sealed class InvertedSpace
     {

@@ -1,0 +1,16 @@
+@startuml
+
+'skinparam monochrome true
+hide circle 
+hide footbox
+
+interface Insight.Metrics.IMetricsProvider  #LightGreen
+class Insight.Metrics.MetricsProvider
+
+
+Insight.Metrics.MetricsProvider -up..|> Insight.Metrics.IMetricsProvider
+Insight.Metrics.MetricsProvider --> Insight.Metrics.InvertedSpaceMetric
+Insight.Metrics.MetricsProvider --> Insight.Metrics.LinesOfCodeMetric
+
+
+@enduml

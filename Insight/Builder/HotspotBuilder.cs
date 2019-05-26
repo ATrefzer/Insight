@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Insight.Analyzers;
+using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
 

@@ -1,5 +1,4 @@
-﻿using Insight.Shared.Model;
-using Insight.Shared.System;
+﻿using Insight.Shared.System;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Insight.Metrics;
+using System;
 
 namespace Insight.Shared.Model
 {

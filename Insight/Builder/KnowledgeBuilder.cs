@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-
+using Insight.Metrics;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;

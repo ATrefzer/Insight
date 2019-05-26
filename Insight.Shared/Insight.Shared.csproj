@@ -46,9 +46,7 @@
     <Compile Include="LogicalComponentMapper.cs" />
     <Compile Include="Model\Contribution.cs" />
     <Compile Include="Model\FileRevision.cs" />
-    <Compile Include="Model\InvertedSpace.cs" />
     <Compile Include="Model\NumberId.cs" />
-    <Compile Include="Model\TrendData.cs" />
     <Compile Include="System\DirectoryScanner.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\DictionaryExtension.cs" />
@@ -62,7 +60,6 @@
     <Compile Include="IFilter.cs" />
     <Compile Include="ITeamClassifier.cs" />
     <Compile Include="Model\Id.cs" />
-    <Compile Include="Model\LinesOfCode.cs" />
     <Compile Include="Model\MainDeveloper.cs" />
     <Compile Include="Model\StringId.cs" />
     <Compile Include="System\ProcessRunner.cs" />

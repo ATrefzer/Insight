@@ -1,6 +1,6 @@
 using System;
 
-namespace Insight.Shared.Model
+namespace Insight.Metrics
 {
     [Serializable]
     public class LinesOfCode

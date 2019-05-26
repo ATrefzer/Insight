@@ -1,4 +1,5 @@
-﻿using Insight.Shared.Model;
+﻿using Insight.Metrics;
+using Insight.Shared.Model;
 using System;
 using System.Collections.Generic;
 
