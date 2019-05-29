@@ -30,7 +30,7 @@ namespace Visualization.Controls.Data
     /// weight!
     /// </summary>
     [Serializable]
-    public sealed class HierarchicalData
+    public sealed partial class HierarchicalData : Interfaces.IHierarchicalData
     {
         private const string PathSeparator = "/";
 
@@ -200,6 +200,7 @@ namespace Visualization.Controls.Data
             return description;
         }
 
+        // TODO atr raus!
         public HierarchicalData Hit(HierarchicalData item, Point mousePos)
         {
             // We may find a more detailed hit deeper.
@@ -442,38 +443,6 @@ namespace Visualization.Controls.Data
 
             // During the recursive process new empty nodes may arise. So bottom to top.
             data._children.RemoveAll(x => x.IsLeafNode && (double.IsNaN(x.AreaMetric) || Math.Abs(x.AreaMetric) <= 0));
-        }
-
-
-        public sealed class DecreasingByAreaMetricSumComparer : IComparer<HierarchicalData>
-        {
-            /// <summary>
-            /// Sorts collection of hierarchical data in decreasing order of the area metric
-            /// </summary>
-            public int Compare(HierarchicalData x, HierarchicalData y)
-            {
-                if (x == null)
-                {
-                    throw new ArgumentNullException(nameof(x));
-                }
-
-                if (y == null)
-                {
-                    throw new ArgumentNullException(nameof(y));
-                }
-
-                if (x.AreaMetricSum < y.AreaMetricSum)
-                {
-                    return 1;
-                }
-
-                if (x.AreaMetricSum > y.AreaMetricSum)
-                {
-                    return -1;
-                }
-
-                return 0;
-            }
         }
     }
 }

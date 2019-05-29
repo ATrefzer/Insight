@@ -1,4 +1,5 @@
 ﻿using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.Tools
 {
@@ -17,7 +18,7 @@ namespace Visualization.Controls.Tools
             _pattern = tvm.SearchPattern?.ToLowerInvariant();
         }
 
-        public bool IsHighlighted(HierarchicalData data)
+        public bool IsHighlighted(IHierarchicalData data)
         {
             var isNameMatchingActive = !string.IsNullOrEmpty(_pattern);
             var isNameMatching = false;

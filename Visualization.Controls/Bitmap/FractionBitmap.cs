@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.Bitmap
 {
@@ -9,7 +10,7 @@ namespace Visualization.Controls.Bitmap
     public sealed class FractionBitmap
     {
         public void Create(string filename, Dictionary<string, uint> workByDevelopers,
-                           ColorScheme colorMapperMapping, bool legend)
+                           IColorScheme colorMapperMapping, bool legend)
         {
             double allWork = workByDevelopers.Values.Sum(w => w);
 

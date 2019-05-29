@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 using Visualization.Controls.Utility;
 
 namespace Visualization.Controls.CirclePacking
@@ -54,7 +55,7 @@ namespace Visualization.Controls.CirclePacking
         /// When one layer is finished the output files are deleted.
         public bool DebugEnabled { get; } = false;
 
-        public void Layout(HierarchicalData root, double actualWidth, double actualHeight)
+        public void Layout(IHierarchicalData root, double actualWidth, double actualHeight)
         {
             // actualWidth and actualHeight are not used. We render the circles independent of the sizes and scale them later.
 
@@ -77,7 +78,7 @@ namespace Visualization.Controls.CirclePacking
         /// For performance optimization we did not apply movements to children until
         /// all positions are fixed.
         /// </summary>
-        private void ApplyPendingMovements(HierarchicalData data)
+        private void ApplyPendingMovements(IHierarchicalData data)
         {
             var layout = GetLayout(data);
             var pending = layout.PendingChildrenMovement;
@@ -95,7 +96,7 @@ namespace Visualization.Controls.CirclePacking
             return Math.Sqrt(weight / (2 * Math.PI));
         }
 
-        private CircularLayoutInfo CalculateEnclosingCircle(HierarchicalData root, FrontChain frontChain)
+        private CircularLayoutInfo CalculateEnclosingCircle(IHierarchicalData root, FrontChain frontChain)
         {
             // Get extreme points by extending the vector from origin to center by the radius
             var layouts = frontChain.ToList();
@@ -159,7 +160,7 @@ namespace Visualization.Controls.CirclePacking
                                                                      });
         }
 
-        private CircularLayoutInfo GetLayout(HierarchicalData item)
+        private CircularLayoutInfo GetLayout(IHierarchicalData item)
         {
             if (item.Layout == null)
             {
@@ -236,7 +237,7 @@ namespace Visualization.Controls.CirclePacking
         /// <summary>
         /// At the beginning any leaf node is simply centered at (0,0)
         /// </summary>
-        private void InitLayoutForLeafNode(HierarchicalData data)
+        private void InitLayoutForLeafNode(IHierarchicalData data)
         {
             // Not intersted in non leaf nodes, so we can ask for area metric.
             Debug.Assert(data.AreaMetric > 0);
@@ -268,7 +269,7 @@ namespace Visualization.Controls.CirclePacking
         /// <summary>
         /// m, n, j and i refer to the paper.
         /// </summary>
-        private void Layout(HierarchicalData data)
+        private void Layout(IHierarchicalData data)
         {
             if (DebugEnabled)
             {
@@ -406,7 +407,7 @@ namespace Visualization.Controls.CirclePacking
         /// <summary>
         /// Moves the circle and records that this movement is pending for the children.
         /// </summary>
-        private void MoveCircles(HierarchicalData data, Vector offset)
+        private void MoveCircles(IHierarchicalData data, Vector offset)
         {
             var layout = GetLayout(data);
             layout.Move(offset);

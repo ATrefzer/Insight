@@ -14,6 +14,7 @@ using Insight.Shared.VersionControl;
 
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
+using Visualization.Controls.Interfaces;
 
 namespace Insight
 {
@@ -213,7 +214,7 @@ namespace Insight
             return trend;
         }
 
-        public string AnalyzeWorkOnSingleFile(string fileName, ColorScheme colorScheme)
+        public string AnalyzeWorkOnSingleFile(string fileName, IColorScheme colorScheme)
         {
             Debug.Assert(colorScheme != null);
             var provider = Project.CreateProvider();
@@ -321,7 +322,7 @@ namespace Insight
 
 
 
-        void AppendColorMappingForWork(ColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
+        void AppendColorMappingForWork(IColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
         {
             // order such that same developers get same colors regardless of order.
             foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
@@ -401,7 +402,7 @@ namespace Insight
         void LoadMetrics()
         {
             // Get code metrics (all files from the cache!)
-            if (_metricsProvider == null)
+            if (_metricsProvider != null)
             {
                 _metrics = _metricsProvider.QueryCachedLinesOfCode(Project.Cache);
             }

@@ -10,7 +10,7 @@ namespace Visualization.Controls.Interfaces
     {
         void RenderToDrawingContext(double actualWidth, double actualHeight, DrawingContext dc);
     
-        void LoadData(HierarchicalData zoomLevel);
+        void LoadData(IHierarchicalData zoomLevel);
         Point Transform(Point mousePosition);
 
         IHighlighting Highlighing { get; set; }

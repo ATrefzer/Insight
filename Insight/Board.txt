@@ -2,6 +2,12 @@
 In Progress
 ---------------------------------------
 
+- Bild malen
+- IColorScheme hat unnötige und hässliche Methoden!
+- Read, Write Hierarchical Data for UnitTests
+- UnitTests.
+- Layout umschreiben. (erst mal beide parallel laufenlassen)
+- Hit Tests raus
 - Investigate broken svn history. See CalculateChangeCouplings
 - Classifier for names!
 - Try on different git projects

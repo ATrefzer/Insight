@@ -1,10 +1,11 @@
 ﻿using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls
 {
     public sealed class HierarchicalDataContext
     {
-        public HierarchicalDataContext(HierarchicalData data, ColorScheme colorScheme)
+        public HierarchicalDataContext(IHierarchicalData data, IColorScheme colorScheme)
         {
             Data = data;
             ColorScheme = colorScheme;
@@ -21,8 +22,8 @@ namespace Visualization.Controls
             ColorScheme = new ColorScheme();
         }
 
-        public ColorScheme ColorScheme { get; }
+        public IColorScheme ColorScheme { get; }
 
-        public HierarchicalData Data { get; }
+        public IHierarchicalData Data { get; }
     }
 }

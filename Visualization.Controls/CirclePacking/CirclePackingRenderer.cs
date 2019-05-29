@@ -13,7 +13,7 @@ namespace Visualization.Controls.CirclePacking
     internal sealed class CirclePackingRenderer : IRenderer
     {
         private readonly IColorScheme _colorScheme;
-        private HierarchicalData _data;
+        private IHierarchicalData _data;
         private GeneralTransform _inverse;
         private Pen _pen;
 
@@ -24,7 +24,7 @@ namespace Visualization.Controls.CirclePacking
 
         public IHighlighting Highlighing { get; set; }
 
-        public void LoadData(HierarchicalData data)
+        public void LoadData(IHierarchicalData data)
         {
             _data = data;
 
@@ -77,7 +77,7 @@ namespace Visualization.Controls.CirclePacking
         }
 
 
-        private void Draw(DrawingContext dc, HierarchicalData data)
+        private void Draw(DrawingContext dc, IHierarchicalData data)
         {
             var brush = GetBrush(data);
 
@@ -90,7 +90,7 @@ namespace Visualization.Controls.CirclePacking
             }
         }
 
-        private SolidColorBrush GetBrush(HierarchicalData data)
+        private SolidColorBrush GetBrush(IHierarchicalData data)
         {
             if (Highlighing != null && Highlighing.IsHighlighted(data))
             {
@@ -115,7 +115,7 @@ namespace Visualization.Controls.CirclePacking
             return brush;
         }
 
-        private CircularLayoutInfo GetLayout(HierarchicalData item)
+        private CircularLayoutInfo GetLayout(IHierarchicalData item)
         {
             var layout = item.Layout as CircularLayoutInfo;
             Debug.Assert(layout != null);

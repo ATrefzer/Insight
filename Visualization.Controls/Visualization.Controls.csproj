@@ -79,6 +79,7 @@
       <DependentUpon>DataGridView.xaml</DependentUpon>
     </Compile>
     <Compile Include="DataGridViewUserCommands.cs" />
+    <Compile Include="Data\DecreasingByAreaMetricSumComparer.cs" />
     <Compile Include="Data\EdgeData.cs" />
     <Compile Include="Chord\IChordElement.cs" />
     <Compile Include="Chord\MainCircle.cs" />
@@ -128,6 +129,7 @@
     <Compile Include="ChordView.xaml.cs">
       <DependentUpon>ChordView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\IHierarchicalData.cs" />
     <Compile Include="DefaultDrawingPrimitives.cs" />
     <Compile Include="HierarchicalDataContext.cs" />
     <Compile Include="Interfaces\IColorScheme.cs" />

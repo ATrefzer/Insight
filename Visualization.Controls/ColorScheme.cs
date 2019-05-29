@@ -79,7 +79,7 @@ namespace Visualization.Controls
         }
 
         /// <summary>
-        /// TODO This is ugly. If we add keys with unknown order the colors may be different the next time.
+        /// TODO atr This is ugly. If we add keys with unknown order the colors may be different the next time.
         /// But I need it such that I can show work fractions in the knowledge map and keep the colors.
         /// 
         /// </summary>
@@ -117,7 +117,7 @@ namespace Visualization.Controls
             return _nameToMediaBrush[name];
         }      
 
-        internal Brush GetBrush(string name)
+        public Brush GetBrush(string name)
         {
             InitializeName(name);
             return _nameToBrush[name];

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.TreeMap
 {
@@ -37,7 +38,7 @@ namespace Visualization.Controls.TreeMap
 
         public bool DebugEnabled { get; set; }
 
-        public void Layout(HierarchicalData root, double width, double height)
+        public void Layout(IHierarchicalData root, double width, double height)
         {
             var rect = new Rect(new Point(0, 0), new Size(width, height));
             var layout = GetLayout(root);
@@ -45,7 +46,7 @@ namespace Visualization.Controls.TreeMap
             Squarify(rect, root);
         }
 
-        private static RectangularLayoutInfo GetLayout(HierarchicalData data)
+        private static RectangularLayoutInfo GetLayout(IHierarchicalData data)
         {
             if (data.Layout == null)
             {
@@ -55,7 +56,7 @@ namespace Visualization.Controls.TreeMap
             return data.Layout as RectangularLayoutInfo;
         }
 
-        private void Backup(List<HierarchicalData> stripMembers)
+        private void Backup(List<IHierarchicalData> stripMembers)
         {
             foreach (var item in stripMembers)
             {
@@ -81,7 +82,7 @@ namespace Visualization.Controls.TreeMap
         /// <summary>
         /// Returns the updated available space left when the strip is subtracted.
         /// </summary>
-        private Rect LayoutHorizontalStrip(Rect availableSpace, List<HierarchicalData> stripMembers, double stripProportion)
+        private Rect LayoutHorizontalStrip(Rect availableSpace, List<IHierarchicalData> stripMembers, double stripProportion)
         {
             var remainder = availableSpace;
 
@@ -126,7 +127,7 @@ namespace Visualization.Controls.TreeMap
         /// <summary>
         /// Returns the updated available space left when the strip is subtracted.
         /// </summary>
-        private Rect LayoutStrip(Rect availableSpace, List<HierarchicalData> stripMembers, double stripProportion, SplitDirection direction)
+        private Rect LayoutStrip(Rect availableSpace, List<IHierarchicalData> stripMembers, double stripProportion, SplitDirection direction)
         {
             Debug.Assert(!double.IsNaN(stripProportion));
             if (direction == SplitDirection.Vertically)
@@ -142,7 +143,7 @@ namespace Visualization.Controls.TreeMap
         /// availableSpace is all remaining space where the strip can be rendered.
         /// stripProportion Proportion of current strip within the remaining space (same as unassigned items).
         /// </summary>
-        private Rect LayoutVerticalStrip(Rect availableSpace, List<HierarchicalData> stripMembers, double stripProportion)
+        private Rect LayoutVerticalStrip(Rect availableSpace, List<IHierarchicalData> stripMembers, double stripProportion)
         {
             var remainingHeight = availableSpace.Height;
 
@@ -188,7 +189,7 @@ namespace Visualization.Controls.TreeMap
         }
 
 
-        private void Rollback(List<HierarchicalData> stripMembers)
+        private void Rollback(List<IHierarchicalData> stripMembers)
         {
             foreach (var item in stripMembers)
             {
@@ -196,11 +197,11 @@ namespace Visualization.Controls.TreeMap
             }
         }
 
-        private void Squarify(Rect availableSpace, List<HierarchicalData> itemsOrg)
+        private void Squarify(Rect availableSpace, List<IHierarchicalData> itemsOrg)
         {
             // Copy of the list. All items to render in the available space.
-            var items = new List<HierarchicalData>(itemsOrg);
-            var placed = new List<HierarchicalData>();
+            var items = new List<IHierarchicalData>(itemsOrg);
+            var placed = new List<IHierarchicalData>();
             var remainingSpace = availableSpace;
 
             while (items.Any())
@@ -222,7 +223,7 @@ namespace Visualization.Controls.TreeMap
 
                 // Remaining space after the strip is finished (aspect ration gets worse or there are no more items)
 
-                var currentStrip = new List<HierarchicalData>(items.Count);
+                var currentStrip = new List<IHierarchicalData>(items.Count);
                 var proceed = true;
                 while (proceed && items.Any())
                 {
@@ -273,7 +274,7 @@ namespace Visualization.Controls.TreeMap
             }
         }
 
-        private void Squarify(Rect availableSpace, HierarchicalData data)
+        private void Squarify(Rect availableSpace, IHierarchicalData data)
         {
             if (DebugEnabled)
             {
@@ -297,7 +298,7 @@ namespace Visualization.Controls.TreeMap
                 return;
             }
 
-            var itemsToArrange = new List<HierarchicalData>(data.Children);
+            var itemsToArrange = new List<IHierarchicalData>(data.Children);
             Squarify(availableSpace, itemsToArrange);
             _level--;
         }
@@ -306,7 +307,7 @@ namespace Visualization.Controls.TreeMap
         /// <summary>
         /// Returns the worst (largest) rectangle aspect ratio found within the strip members
         /// </summary>
-        private double WorstRatio(List<HierarchicalData> stripMembers)
+        private double WorstRatio(List<IHierarchicalData> stripMembers)
         {
             // Empty list ist worst possible
             var worst = double.MaxValue;

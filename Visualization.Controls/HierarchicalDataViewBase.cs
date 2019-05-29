@@ -20,26 +20,26 @@ namespace Visualization.Controls
                                                                                                      "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase), new PropertyMetadata(null));
 
         protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
-        protected ColorScheme _colorScheme;
+        protected IColorScheme _colorScheme;
 
         /// <summary>
         /// Filtered data
         /// </summary>
-        protected HierarchicalData _filtered;
+        protected IHierarchicalData _filtered;
 
         protected IRenderer _renderer;
 
         /// <summary>
         /// Original data, untouched
         /// </summary>
-        protected HierarchicalData _root;
+        protected IHierarchicalData _root;
 
         protected ToolViewModel _toolViewModel;
 
         /// <summary>
         /// Entry into _filtered data. This is the current level shown.
         /// </summary>
-        protected HierarchicalData _zoomLevel;
+        protected IHierarchicalData _zoomLevel;
 
         protected ToolView ToolView;
 
@@ -225,7 +225,7 @@ namespace Visualization.Controls
             }
         }
 
-        protected void ZoomLevelChanged(HierarchicalData data)
+        protected void ZoomLevelChanged(IHierarchicalData data)
         {
             if (data == null)
             {

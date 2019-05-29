@@ -15,6 +15,7 @@ using Prism.Commands;
 
 using Visualization.Controls;
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Insight
 {
@@ -133,7 +134,7 @@ namespace Insight
         }
 
 
-        public async void OnShowWork(HierarchicalData data, ColorScheme colorScheme)
+        public async void OnShowWork(HierarchicalData data, IColorScheme colorScheme)
         {
             var fileToAnalyze = data.Tag as string;
             var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme)).ConfigureAwait(true);
@@ -205,7 +206,7 @@ namespace Insight
             //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }
 
-        private HierarchicalDataCommands GetDefaultCommands(ColorScheme colorScheme)
+        private HierarchicalDataCommands GetDefaultCommands(IColorScheme colorScheme)
         {
             var commands = new HierarchicalDataCommands();
             commands.Register("Trend", OnShowTrend);
@@ -362,9 +363,9 @@ namespace Insight
             }
         }
 
-        private void Save(string fileName, HierarchicalData data)
+        private void Save(string fileName, IHierarchicalData data)
         {
-            var file = new BinaryFile<HierarchicalData>();
+            var file = new BinaryFile<IHierarchicalData>();
             file.Write(fileName, data);
         }
 

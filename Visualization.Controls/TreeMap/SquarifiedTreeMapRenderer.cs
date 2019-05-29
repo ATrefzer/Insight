@@ -10,7 +10,7 @@ namespace Visualization.Controls.TreeMap
 {
     public sealed class SquarifiedTreeMapRenderer : IRenderer
     {
-        private HierarchicalData _data;
+        private IHierarchicalData _data;
 
         // ReSharper disable once NotAccessedField.Local
         private int _level = -1;
@@ -81,7 +81,7 @@ namespace Visualization.Controls.TreeMap
         /// Enusre that SumAreaMetrics and NomrmalizeWeightMetric was called and
         /// no node has an area of 0.
         /// </summary>
-        public void LoadData(HierarchicalData data)
+        public void LoadData(IHierarchicalData data)
         {
             _data = data;
         }
@@ -108,12 +108,12 @@ namespace Visualization.Controls.TreeMap
             return mousePosition;
         }
 
-        private static RectangularLayoutInfo GetLayout(HierarchicalData data)
+        private static RectangularLayoutInfo GetLayout(IHierarchicalData data)
         {
             return data.Layout as RectangularLayoutInfo;
         }
 
-        private SolidColorBrush GetBrush(HierarchicalData data)
+        private SolidColorBrush GetBrush(IHierarchicalData data)
         {
             if (Highlighing != null && Highlighing.IsHighlighted(data))
             {
@@ -139,7 +139,7 @@ namespace Visualization.Controls.TreeMap
         }
 
 
-        private void RenderToDrawingContext(DrawingContext dc, HierarchicalData data)
+        private void RenderToDrawingContext(DrawingContext dc, IHierarchicalData data)
         {
             _level++;
             if (data.IsLeafNode)

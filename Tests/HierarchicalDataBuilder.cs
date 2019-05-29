@@ -132,7 +132,7 @@ namespace Tests
             }
             catch (Exception)
             {
-                //
+                // Cannot access file. Ignore.
             }
         }
     }

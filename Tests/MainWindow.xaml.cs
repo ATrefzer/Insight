@@ -111,7 +111,7 @@ namespace Tests
             {
                 var context = builder.CreateHierarchyFromFilesystem(fileName, true);
                 var file = new BinaryFile<HierarchicalData>();
-                file.Write(cacheFile, context.Data);
+                file.Write(cacheFile, context.Data as HierarchicalData);
                 return context;
             }
         }
