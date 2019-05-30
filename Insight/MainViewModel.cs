@@ -379,8 +379,8 @@ namespace Insight
                     }
 
                     var context = new HierarchicalDataContext(data, colorScheme);
-                    _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Loaded", context, GetDefaultCommands());
-                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), GetDefaultCommands());
+                    _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Loaded", context, null);
+                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), null);
                 }
             }
             catch (Exception ex)
