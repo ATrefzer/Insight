@@ -143,12 +143,20 @@ namespace Visualization.Controls
 
         protected abstract void InitPopup(IHierarchicalData hit);
 
+        protected virtual ContextMenu GetContextMenu(object sender)
+        {
+            var fe = sender as FrameworkElement;
+            return fe.ContextMenu;
+        }
+
         protected void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
+            // Does not tell which one.
+
             var canvas = GetCanvas();
             var pos = _renderer.Transform(Mouse.GetPosition(canvas));
             var hit = _hitTest.Hit(_zoomLevel,pos);
-            var menu = canvas.ContextMenu;
+            var menu = GetContextMenu(sender);
             if ((hit != null) & (menu != null))
             {
                 menu.Items.Clear();

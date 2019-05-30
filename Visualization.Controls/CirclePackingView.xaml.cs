@@ -1,8 +1,8 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
 using Visualization.Controls.CirclePacking;
-using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
 
@@ -33,7 +33,6 @@ namespace Visualization.Controls
         {
             return _canvasOrImage;
         }
-
 
         protected override void InitPopup(IHierarchicalData hit)
         {

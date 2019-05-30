@@ -12,13 +12,13 @@
              MouseLeave="Window_MouseLeave"
              ContextMenuOpening="OnContextMenuOpening"
              IsVisibleChanged="CirclePacking_OnIsVisibleChanged">
-    <UserControl.Resources>
-        <ContextMenu x:Key="contextMenu"/>
-        <!-- MenuItem.Click="ContextMenu_OnClick" -->
-    </UserControl.Resources>
+
+    <UserControl.ContextMenu>
+        <ContextMenu x:Name="_contextMenu" />
+    </UserControl.ContextMenu>
+
     <Grid>
-        <Drawing:DrawingCanvas x:Name="_canvasOrImage"
-                               ContextMenu="{StaticResource contextMenu}"/>
+        <Drawing:DrawingCanvas x:Name="_canvasOrImage" />
 
         <Popup AllowsTransparency="True"
                Placement="Relative"
