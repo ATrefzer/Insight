@@ -50,7 +50,7 @@ namespace Visualization.Controls.CirclePacking
     internal sealed class CirclePackingLayout
     {
         /// When one layer is finished the output files are deleted.
-        public bool DebugEnabled { get; } = true;
+        public bool DebugEnabled { get; } = false;
 
         public void Layout(IHierarchicalData root, double actualWidth, double actualHeight)
         {
