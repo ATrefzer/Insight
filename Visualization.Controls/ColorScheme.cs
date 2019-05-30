@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Media;
 
 using Visualization.Controls.Interfaces;
@@ -25,10 +27,11 @@ namespace Visualization.Controls
         /// </summary>
         private readonly Dictionary<string, SolidColorBrush> _nameToMediaBrush = new Dictionary<string, SolidColorBrush>();
 
-        private readonly bool _useGivenColors;
         private string[] _colorDefinitions;
 
-        private int _colorIndex;
+        private int _nextFreeColorIndex;
+
+        private bool _canAddColors;
 
         public List<string> Names
         {
@@ -38,20 +41,70 @@ namespace Visualization.Controls
             }
         }
 
+
+        public void Export(string file)
+        {
+            using (var stream = new FileStream(file, FileMode.Create))
+            {
+                using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                {
+
+                    writer.WriteLine(_canAddColors);
+                    writer.WriteLine(_nextFreeColorIndex);
+
+                    foreach (var name in Names)
+                    {
+                        var color = _nameToColor[name];
+                        var parts = new List<string>();
+                        parts.Add(color.ToArgb().ToString("X"));
+                        parts.Add(name);
+
+                        writer.WriteLine(string.Join(",", parts));
+                    }
+                }
+            }
+        }
+
+        public void Import(string file)
+        {
+            _names.Clear();
+            _nameToColor.Clear();
+            _nameToMediaBrush.Clear();
+            _nameToBrush.Clear();
+            _canAddColors = false;
+            _nextFreeColorIndex = 0;
+
+            using (var stream = new FileStream(file, FileMode.Open))
+            {
+                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    _canAddColors = bool.Parse(reader.ReadLine());
+                    _nextFreeColorIndex = int.Parse(reader.ReadLine());
+
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var parts = line.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                        Debug.Assert(parts.Count() == 2);
+                        var color = Color.FromArgb(int.Parse(parts[0], NumberStyles.HexNumber));
+
+                        var name = string.Join("", parts.GetRange(1, parts.Count - 1));
+                        _names.Add(name);
+                        InitColor(name, color);
+                    }
+                }
+            }
+        }
+
         public ColorScheme(string[] names, Color[] colors)
         {
-            CreateColors();
-
-            _useGivenColors = true;
+            _canAddColors = false;
             _names = names.ToList();
             for (var index = 0; index < names.Length; index++)
             {
                 var color = colors[index];
-                _nameToColor.Add(names[index], color);
-                _nameToBrush.Add(names[index], new SolidBrush(color));
-
-                var mediaBrush = ToMediaBrush(color);
-                _nameToMediaBrush.Add(names[index], mediaBrush);
+                var name = names[index];
+                InitColor(name, color);
             }
 
             // all other names get the default color: White
@@ -59,36 +112,36 @@ namespace Visualization.Controls
 
         public ColorScheme()
         {
-            CreateColors();
-            _useGivenColors = false;
+            CreateColorsDefinitions();
             _names = new List<string>();
+            _canAddColors = true;
         }
 
         public ColorScheme(string[] names)
         {
-            CreateColors();
-
-            _useGivenColors = false;
-
-            // Ensure that same color is assigned independent of order requesting the color.
-            _names = names.OrderBy(x => x).ToList();
+            CreateColorsDefinitions();
+            _names = names.ToList();
             foreach (var name in _names)
             {
-                InitializeName(name);
+                InitializeColorForName(name);
             }
+            _canAddColors = true;
         }
 
-        /// <summary>
-        /// TODO atr This is ugly. If we add keys with unknown order the colors may be different the next time.
-        /// But I need it such that I can show work fractions in the knowledge map and keep the colors.
-        /// 
-        /// </summary>
+
+
         public void AddColorKey(string name)
         {
-            if (_useGivenColors == false && _names.Contains(name) == false)
+            if (!_canAddColors)
+            {
+                Debug.Assert(false);
+                return;
+            }
+
+            if (!_names.Contains(name))
             {
                 _names.Add(name);
-                InitializeName(name);
+                InitializeColorForName(name);
             }
         }
 
@@ -99,8 +152,6 @@ namespace Visualization.Controls
                 return "White";
             }
 
-            InitializeName(name);
-
             //return _nameToColor[name].Name;
             var color = _nameToColor[name];
             return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
@@ -108,27 +159,25 @@ namespace Visualization.Controls
 
         public SolidColorBrush GetMediaBrush(string name)
         {
-            InitializeName(name);
             if (!_nameToMediaBrush.ContainsKey(name))
             {
                 return DefaultDrawingPrimitives.DefaultColor;
             }
 
             return _nameToMediaBrush[name];
-        }      
+        }
 
         public Brush GetBrush(string name)
         {
-            InitializeName(name);
             return _nameToBrush[name];
         }
 
-        private void CreateColors()
+        private void CreateColorsDefinitions()
         {
-            
+
             var experimential = new[]
             {
-                /*"FF000000",*/ "FFFFFF00", "FF1CE6FF", "FFFF34FF", "FFFF4A46", "FF008941", "FF006FA6", "FFA30059",
+                /*"FF000000", "FFFFFF00",*/ "FF1CE6FF", "FFFF34FF", "FFFF4A46", "FF008941", "FF006FA6", "FFA30059",
                 "FFFFDBE5", "FF7A4900", "FF0000A6", "FF63FFAC", "FFB79762", "FF004D43", "FF8FB0FF", "FF997D87",
                 "FF5A0007", "FF809693", "FFFEFFE6", "FF1B4400", "FF4FC601", "FF3B5DFF", "FF4A3B53", "FFFF2F80",
                 "FF61615A", "FFBA0900", "FF6B7900", "FF00C2A0", "FFFFAA92", "FFFF90C9", "FFB903AA", "FFD16100",
@@ -145,7 +194,7 @@ namespace Visualization.Controls
                 "FFBF5650", "FFE83000", "FF66796D", "FFDA007C", "FFFF1A59", "FF8ADBB4", "FF1E0200", "FF5B4E51",
                 "FFC895C5", "FF320033", "FFFF6832", "FF66E1D3", "FFCFCDAC", "FFD0AC94", "FF7ED379", "FF012C58"
             };
-            
+
 
             // http://stackoverflow.com/questions/309149/generate-distinctly-different-rgb-colors-in-graphs
 
@@ -221,14 +270,8 @@ namespace Visualization.Controls
             _colorDefinitions = experimential;
         }
 
-        private void InitializeName(string name)
+        private void InitializeColorForName(string name)
         {
-            if (_useGivenColors)
-            {
-                // Don't add any further colors, given in ctor.
-                return;
-            }
-
             if (!_names.Contains(name))
             {
                 // Default color for unknown name
@@ -245,7 +288,7 @@ namespace Visualization.Controls
 
             try
             {
-                color = Color.FromArgb(int.Parse(_colorDefinitions[_colorIndex], NumberStyles.HexNumber));
+                color = Color.FromArgb(int.Parse(_colorDefinitions[_nextFreeColorIndex], NumberStyles.HexNumber));
             }
             catch (IndexOutOfRangeException)
             {
@@ -253,7 +296,13 @@ namespace Visualization.Controls
                 color = Color.LightGray;
                 Debug.Assert(false); // Not enough colors!
             }
+            InitColor(name, color);
 
+            _nextFreeColorIndex++;
+        }
+
+        private void InitColor(string name, Color color)
+        {
             var brush = new SolidBrush(color);
 
             _nameToBrush.Add(name, brush);
@@ -261,8 +310,6 @@ namespace Visualization.Controls
 
             var mediaBrush = ToMediaBrush(color);
             _nameToMediaBrush.Add(name, mediaBrush);
-
-            _colorIndex++;
         }
 
         private SolidColorBrush ToMediaBrush(Color color)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Input;
 
@@ -134,10 +135,10 @@ namespace Insight
         }
 
 
-        public async void OnShowWork(IHierarchicalData data, IColorScheme colorScheme)
+        public async void OnShowWork(IHierarchicalData data)
         {
             var fileToAnalyze = data.Tag as string;
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme)).ConfigureAwait(true);
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze)).ConfigureAwait(true);
 
             if (path == null)
             {
@@ -170,8 +171,8 @@ namespace Insight
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands());
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands());
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
@@ -200,17 +201,17 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands());
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands());
 
             //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }
 
-        private HierarchicalDataCommands GetDefaultCommands(IColorScheme colorScheme)
+        private HierarchicalDataCommands GetDefaultCommands()
         {
             var commands = new HierarchicalDataCommands();
             commands.Register("Trend", OnShowTrend);
-            commands.Register("Work", data => OnShowWork(data, colorScheme));
+            commands.Register("Work", data => OnShowWork(data));
 
             return commands;
         }
@@ -257,8 +258,8 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands());
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands());
             _tabBuilder.ShowWarnings(_analyzer.Warnings);
         }
 
@@ -272,8 +273,8 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands(colorScheme));
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands());
+            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands());
         }
 
         private async void KnowledgeLossClick()
@@ -292,50 +293,8 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands(colorScheme));
-            _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands(colorScheme));
-        }
-
-        private void LoadDataClick()
-        {
-            try
-            {
-                var fileName = _dialogs.GetLoadFile("bin", "Load data", _project.Cache);
-                if (fileName != null)
-                {
-                    var file = new BinaryFile<HierarchicalData>();
-                    var data = file.Read(fileName);
-
-                    var keys = new List<string>();
-                    data.TraverseBottomUp(x =>
-                                          {
-                                              if (x.IsLeafNode)
-                                              {
-                                                  if (x.ColorKey != null)
-                                                  {
-                                                      keys.Add(x.ColorKey);
-                                                  }
-                                              }
-                                          });
-
-                    var colorScheme = new ColorScheme();
-
-                    // Rebuild color scheme if it was used
-                    var distinctKeys = keys.Distinct().ToArray();
-                    if (distinctKeys.Any())
-                    {
-                        colorScheme = new ColorScheme(distinctKeys);
-                    }
-
-                    var context = new HierarchicalDataContext(data, colorScheme);
-                    _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Loaded", context, GetDefaultCommands(colorScheme));
-                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), GetDefaultCommands(colorScheme));
-                }
-            }
-            catch (Exception ex)
-            {
-                _dialogs.ShowError(ex.Message);
-            }
+            _tabBuilder.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands());
+            _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands());
         }
 
         private void PredictHotspotsClick()
@@ -369,9 +328,14 @@ namespace Insight
             file.Write(fileName, data);
         }
 
-        private void SaveDataClick()
+
+        string MakeColorsFile(string fileName)
         {
-            // TODO Save other stuff
+            return fileName + ".colors";
+        }
+
+        private void SaveDataClick()
+        {         
             if (Tabs.Any() == false || SelectedIndex < 0)
             {
                 return;
@@ -386,9 +350,45 @@ namespace Insight
                 if (fileName != null)
                 {
                     Save(fileName, context.Data);
+
+                    var colorScheme = context.ColorScheme as ColorScheme;
+                    if (colorScheme != null)
+                    {
+                        colorScheme.Export(MakeColorsFile(fileName));
+                    }
                 }
             }
         }
+
+
+        private void LoadDataClick()
+        {
+            try
+            {
+                var fileName = _dialogs.GetLoadFile("bin", "Load data", _project.Cache);
+                if (fileName != null)
+                {
+                    var file = new BinaryFile<HierarchicalData>();
+                    var data = file.Read(fileName);
+
+                    var colorScheme = new ColorScheme();
+                    var colorFile = MakeColorsFile(fileName);
+                    if (File.Exists(colorFile))
+                    {
+                        colorScheme.Import(colorFile);
+                    }
+
+                    var context = new HierarchicalDataContext(data, colorScheme);
+                    _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Loaded", context, GetDefaultCommands());
+                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), GetDefaultCommands());
+                }
+            }
+            catch (Exception ex)
+            {
+                _dialogs.ShowError(ex.Message);
+            }
+        }
+
 
         private void SetupClick()
         {

@@ -3,10 +3,9 @@
 namespace Visualization.Controls.Interfaces
 {
     public interface IColorScheme
-    {
-        // TODO atr Remove this
-        void AddColorKey(string name);
+    {      
         System.Drawing.Brush GetBrush(string key);
+        string GetColorName(string name);
         SolidColorBrush GetMediaBrush(string key);
     }
 }

@@ -1,17 +1,20 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.Bitmap
 {
     public class LegendBitmap
     {
-        public ColorScheme ColorScheme { get; }
+        private readonly List<string> _names;
+        private readonly IColorScheme _colorScheme;
 
-        public LegendBitmap(ColorScheme colorScheme)
-            {
-            ColorScheme = colorScheme;
+        public LegendBitmap(List<string> names, IColorScheme colorScheme)
+        {
+            _names = names;
+            _colorScheme = colorScheme;
         }
 
         public void CreateLegendBitmap(string file)
@@ -21,10 +24,9 @@ namespace Visualization.Controls.Bitmap
 
 
             var line = 0;
-            var developersToPrint = ColorScheme.Names.ToList();
-            Debug.Assert(developersToPrint.Count > 0);
+            Debug.Assert(_names.Count > 0);
 
-            foreach (var developer in developersToPrint)
+            foreach (var name in _names)
             {
                 // Legend
                 var x = 0;
@@ -33,13 +35,13 @@ namespace Visualization.Controls.Bitmap
                 var offsetColorName = 25;
                 var offsetDeveloperName = 200;
 
-                var brush = ColorScheme.GetBrush(developer);
+                var brush = _colorScheme.GetBrush(name);
 
                 graphics.FillRectangle(brush, x, y, 20, 20);
 
-                graphics.DrawString("(" + ColorScheme.GetColorName(developer) + ")",
+                graphics.DrawString("(" + _colorScheme.GetColorName(name) + ")",
                     new Font(FontFamily.GenericSansSerif, 12), Brushes.Black, x + offsetColorName, y);
-                graphics.DrawString(developer, new Font(FontFamily.GenericSansSerif, 12), Brushes.Black,
+                graphics.DrawString(name, new Font(FontFamily.GenericSansSerif, 12), Brushes.Black,
                     x + offsetDeveloperName, y);
 
                 line++;
@@ -53,14 +55,11 @@ namespace Visualization.Controls.Bitmap
         {
             using (var file = File.CreateText(path))
             {
-                foreach (var developer in ColorScheme.Names) // dump only used developers!
+                foreach (var name in _names) // dump only used developers!
                 {
-                    file.WriteLine(developer + "\t" + ColorScheme.GetColorName(developer));
+                    file.WriteLine(name + "\t" + _colorScheme.GetColorName(name));
                 }
             }
         }
-
-     
-
     }
 }

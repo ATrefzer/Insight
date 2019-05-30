@@ -2,25 +2,19 @@
 In Progress
 ---------------------------------------
 
-- Farben sollte immer identisch sein! Benutzer soll sie alternativ festlegen können!
-  ColorEditor!
-- ProjektFormat!
-- GetBranch methode unklar
-- Bild malen
-- IColorScheme hat unnötige und hässliche Methoden zum Added!
+- Draw some UML images
 - Read, Write Hierarchical Data for UnitTests
-- UnitTests.
-- Layout umschreiben. (erst mal beide parallel laufenlassen)
-- Hit Tests raus
+- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+- Layouting for circle packaging (run against old verison)
 - Investigate broken svn history. See CalculateChangeCouplings
 - Classifier for names!
 - Try on different git projects
-- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+
 
 Factories:
 - HierarchicalData
 - ColorScheme
-- MetricProvider (Als Factory in die Metrik Klasse? Ist dann néw nicht genauso gut.)
+- MetricProvider?
 
 
 

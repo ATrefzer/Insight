@@ -11,7 +11,6 @@ using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
-
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
 using Visualization.Controls.Interfaces;
@@ -21,18 +20,20 @@ namespace Insight
     public sealed class Analyzer
     {
         /// <summary>
-        /// Local path to contribution
+        /// Local path -> contribution
         /// </summary>
         Dictionary<string, Contribution> _contributions;
 
         ChangeSetHistory _history;
         Dictionary<string, LinesOfCode> _metrics;
         private readonly IMetricProvider _metricsProvider;
+        private readonly ColorSchemeManager _colorSchemeManager;
 
         public Analyzer(Project project, IMetricProvider metricProvider)
         {
             Project = project;
             _metricsProvider = metricProvider;
+            _colorSchemeManager = new ColorSchemeManager(Project.Cache);
         }
 
         public List<WarningMessage> Warnings { get; private set; }
@@ -82,6 +83,8 @@ namespace Insight
             return sortedCouplings;
         }
 
+
+       
         private List<Coupling> AnalyzeLogicalComponentChangeCoupling(string mappingFile)
         {
             var couplingAnalyzer = new ChangeCouplingAnalyzer();
@@ -148,25 +151,38 @@ namespace Insight
             LoadHistory();
             LoadMetrics();
             LoadContributions(false);
+            LoadColorScheme();
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Assign a color to each developer
-            var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
-            var scheme = new ColorScheme(mainDevelopers.ToArray());
+            var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct().ToList();
 
-            
-
-            var legend = new LegendBitmap(scheme);
+            var legend = new LegendBitmap(mainDevelopers, _colorScheme);
             legend.CreateLegendBitmap(Path.Combine(Project.Cache, "knowledge_color.bmp"));
 
             // Build the knowledge data
             var builder = new KnowledgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
-            return new HierarchicalDataContext(hierarchicalData, scheme);
+            return new HierarchicalDataContext(hierarchicalData, _colorScheme);
         }
+
+
+        IColorScheme _colorScheme;
+
+        void LoadColorScheme()
+        {
+            if (_colorScheme != null)
+            {
+                return;
+            }
+ 
+            _colorScheme = _colorSchemeManager.GetColorScheme() ?? new ColorScheme();
+           
+        }
+
 
         /// <summary>
         /// Same as knowledge but uses a different color scheme
@@ -176,20 +192,16 @@ namespace Insight
             LoadHistory();
             LoadMetrics();
             LoadContributions(false);
+            LoadColorScheme();
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
-
-            // Assign a color to each developer
-            // Include all other developers. So we have a more consistent coloring.
-            var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct();
-            var scheme = new ColorScheme(mainDevelopers.ToArray());
 
             // Build the knowledge data
             var builder = new KnowledgeBuilder(developer);
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
-            return new HierarchicalDataContext(hierarchicalData, scheme);
+            return new HierarchicalDataContext(hierarchicalData, _colorScheme);
         }
 
         public List<TrendData> AnalyzeTrend(string localFile)
@@ -213,10 +225,11 @@ namespace Insight
 
             return trend;
         }
-
-        public string AnalyzeWorkOnSingleFile(string fileName, IColorScheme colorScheme)
+       
+        public string AnalyzeWorkOnSingleFile(string fileName)
         {
-            Debug.Assert(colorScheme != null);
+            LoadColorScheme();
+
             var provider = Project.CreateProvider();
             var workByDeveloper = provider.CalculateDeveloperWork(fileName);
 
@@ -225,12 +238,22 @@ namespace Insight
             var fi = new FileInfo(fileName);
             var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
 
-            AppendColorMappingForWork(colorScheme, workByDeveloper);
+            var orderedNames = workByDeveloper.Keys.OrderByDescending(name => workByDeveloper[name]).ToList();
 
-            bitmap.Create(path, workByDeveloper, colorScheme, true);
+            if (_colorSchemeManager.UpdateColorScheme(orderedNames))
+            {
+                // This may happen if we do not have the latest sources and a new developer occurs.
+                _colorScheme = null;
+                LoadColorScheme();
+            }
+
+
+            bitmap.Create(path, workByDeveloper, _colorScheme, true);
 
             return path;
         }
+
+    
 
         public List<DataGridFriendlyComment> ExportComments()
         {
@@ -306,6 +329,26 @@ namespace Insight
 
             // Update code metrics
             _metricsProvider.UpdateLinesOfCodeCache(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
+
+            // Don't delete, only extend if necessary
+            _colorSchemeManager.UpdateColorScheme(GetAllKnownDevelopers());
+        }
+
+        /// <summary>
+        /// Returns developers ordered by the number of commits.
+        /// </summary>
+        private List<string> GetAllKnownDevelopers()
+        {
+            LoadHistory();
+
+            // All currently known developers extracted from history
+            var dict = new Dictionary<string, uint>();
+            foreach (var cs in _history.ChangeSets)
+            {
+                dict.AddToValue(cs.Committer, 1);
+            }
+            var developersOrderedByCommits = dict.Keys.OrderBy(key => dict[key]).ToList();
+            return developersOrderedByCommits;
         }
 
 
@@ -314,6 +357,7 @@ namespace Insight
             _history = null;
             _metrics = null;
             _contributions = null;
+            _colorScheme = null;
         }
 
         internal List<string> GetMainDevelopers()
@@ -321,18 +365,6 @@ namespace Insight
             LoadContributions(false);
             return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
         }
-
-
-
-        void AppendColorMappingForWork(IColorScheme colorMapping, Dictionary<string, uint> workByDeveloper)
-        {
-            // order such that same developers get same colors regardless of order.
-            foreach (var developer in workByDeveloper.Keys.OrderBy(x => x))
-            {
-                colorMapping.AddColorKey(developer);
-            }
-        }
-
 
 
         object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)

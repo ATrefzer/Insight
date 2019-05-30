@@ -55,6 +55,7 @@ namespace Insight.Builder
 
             if (_onlyThisDeveloper != null && mainDev != _onlyThisDeveloper)
             {
+                // Null for all artifacts not provided by the developer of interest.
                 return null;
             }
 
