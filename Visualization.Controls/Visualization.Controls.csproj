@@ -154,6 +154,7 @@
     <Compile Include="CirclePacking\FrontChain.cs" />
     <Compile Include="Tools\IHighlighting.cs" />
     <Compile Include="Tools\Highlighting.cs" />
+    <Compile Include="LayoutInfo.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="TreeMap\RectangularLayoutInfo.cs" />
     <Compile Include="Drawing\DrawingCanvas.cs" />

@@ -6,12 +6,13 @@ using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder
 {
     public abstract class HierarchyBuilder
     {
-        protected HierarchicalData Build(List<Artifact> artifacts)
+        protected IHierarchicalData Build(List<Artifact> artifacts)
         {
             var data = BuildHierarchy(artifacts);
 
@@ -36,7 +37,7 @@ namespace Insight.Builder
             var found = parent.Children.FirstOrDefault(child => child.Name == branch);
             if (found == null)
             {
-                var newBranch = new HierarchicalData(branch, GetWeightIsAlreadyNormalized());
+                var newBranch = new HierarchicalData(branch);
                 parent.AddChild(newBranch);
 
                 // Call when parent relation is set.
@@ -44,7 +45,7 @@ namespace Insight.Builder
                 found = newBranch;
             }
 
-            return found;
+            return (HierarchicalData)found;
         }
 
         protected virtual string GetColorKey(Artifact item)
@@ -78,11 +79,11 @@ namespace Insight.Builder
         ///     Each part in the file path is used as a branch that contains the remaining of the file path.
         ///     The file name itself corresponds to a leaf node that holds the weight and size.
         /// </summary>
-        private HierarchicalData BuildHierarchy(List<Artifact> items)
+        private IHierarchicalData BuildHierarchy(List<Artifact> items)
         {
             // Later removed if not needed.
             // Note that the empty root node takes care that the / appears in front of every path.
-            var artificialRoot = new HierarchicalData("", GetWeightIsAlreadyNormalized());
+            var artificialRoot = new HierarchicalData("");
 
             foreach (var artifact in items)
             {
@@ -105,7 +106,7 @@ namespace Insight.Builder
         /// <summary>
         /// Gets description for a branch / folder
         /// </summary>
-        private string GetDescription(HierarchicalData branch)
+        private string GetDescription(IHierarchicalData branch)
         {
             return branch.GetPathToRoot();
         }

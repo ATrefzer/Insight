@@ -4,6 +4,7 @@ using Insight.Metrics;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder
 {
@@ -11,7 +12,7 @@ namespace Insight.Builder
     {
         private Dictionary<string, LinesOfCode> _metrics;
 
-        public HierarchicalData Build(List<Artifact> reduced, Dictionary<string, LinesOfCode> metrics)
+        public IHierarchicalData Build(List<Artifact> reduced, Dictionary<string, LinesOfCode> metrics)
         {
             _metrics = metrics;
             var data = Build(reduced);            

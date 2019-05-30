@@ -82,8 +82,7 @@ namespace Visualization.Controls
                 ZoomLevelChanged(_filtered);
                 return;
             }
-            
-            _filtered = _root.Clone();
+    
             _filtered.RemoveLeafNodes(leaf =>
                 !_toolViewModel.IsAreaValid(leaf.AreaMetric) ||
                 !_toolViewModel.IsWeightValid(leaf.WeightMetric));
@@ -96,6 +95,8 @@ namespace Visualization.Controls
             {
                 _filtered = HierarchicalData.NoData();
             }
+
+            // TODO We could keep the previous normalized weight metric such that the colors don't change
 
             // After we removed weights we have to normalize again.
             _filtered.SumAreaMetrics(); // Only TreeMapView

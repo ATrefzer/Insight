@@ -176,7 +176,7 @@ namespace Visualization.Controls.CirclePacking
         /// Note that we do not set the radius. The radius was determined for the leaf nodes before.
         /// The non leaf nodes don't reflect the sum of the children (area metric!).
         /// </summary>
-        private FrontChain InitializeFrontChain(List<HierarchicalData> children)
+        private FrontChain InitializeFrontChain(List<IHierarchicalData> children)
         {
             var frontChain = new FrontChain();
 
@@ -184,7 +184,7 @@ namespace Visualization.Controls.CirclePacking
             var right = new CircularLayoutInfo();
             var top = new CircularLayoutInfo();
 
-            HierarchicalData child;
+            IHierarchicalData child;
             if (children.Count >= 1)
             {
                 // Left

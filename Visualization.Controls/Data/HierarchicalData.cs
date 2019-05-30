@@ -30,14 +30,13 @@ namespace Visualization.Controls.Data
     /// weight!
     /// </summary>
     [Serializable]
-    public sealed partial class HierarchicalData : IHierarchicalData
+    public sealed class HierarchicalData : IHierarchicalData
     {
         private const string PathSeparator = "/";
 
         private readonly List<HierarchicalData> _children = new List<HierarchicalData>();
-        private readonly bool _weightIsAleadyNormalized;
 
-        public HierarchicalData(string name, bool weightIsAleadyNormalized = false)
+        public HierarchicalData(string name)
         {
             Name = name;
             Description = Name;
@@ -45,13 +44,12 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
-            _weightIsAleadyNormalized = weightIsAleadyNormalized;
         }
 
         /// <summary>
         /// Leaf node must provide an area metric.
         /// </summary>
-        public HierarchicalData(string name, double areaMetric, bool weightIsAleadyNormalized = false)
+        public HierarchicalData(string name, double areaMetric)
         {
             Name = name;
             Description = Name;
@@ -59,7 +57,6 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = 0.0;
             NormalizedWeightMetric = 0.0;
-            _weightIsAleadyNormalized = weightIsAleadyNormalized;
 
         }
 
@@ -71,9 +68,8 @@ namespace Visualization.Controls.Data
             AreaMetricSum = 0.0;
             WeightMetric = weightMetric;
             NormalizedWeightMetric = 0.0;
-            _weightIsAleadyNormalized = weightIsAleadyNormalized;
 
-            if (_weightIsAleadyNormalized)
+            if (weightIsAleadyNormalized)
             {
                 NormalizedWeightMetric = weightMetric;
                 if (WeightMetric < 0.0 || WeightMetric > 1)
@@ -87,7 +83,7 @@ namespace Visualization.Controls.Data
 
         public double AreaMetricSum { get; private set; }
 
-        public IReadOnlyCollection<HierarchicalData> Children => _children.AsReadOnly();
+        public IReadOnlyCollection<IHierarchicalData> Children => _children.AsReadOnly();
 
         public string ColorKey { get; set; }
 
@@ -124,11 +120,9 @@ namespace Visualization.Controls.Data
         /// <summary>
         /// No layouting information!
         /// </summary>
-        public HierarchicalData Clone()
+        public IHierarchicalData Clone()
         {
-            var root = Clone(this);
-            root.NormalizeWeightMetrics();
-            root.SumAreaMetrics();
+            var root = Clone(this);           
             return root;
         }
 
@@ -206,11 +200,6 @@ namespace Visualization.Controls.Data
         /// </summary>
         public void NormalizeWeightMetrics()
         {
-            if (_weightIsAleadyNormalized)
-            {
-                return;
-            }
-
             // Get min and max of weight metric and map to range 0...1.
             var range = GetMinMaxWeight();
             var min = range.Min;
@@ -224,7 +213,7 @@ namespace Visualization.Controls.Data
         /// Note that during the process new leaf nodes may arise.
         /// Call RemoveLeafNodesWithoutArea to remove them.
         /// </summary>
-        public void RemoveLeafNodes(Func<HierarchicalData, bool> removePredicate)
+        public void RemoveLeafNodes(Func<IHierarchicalData, bool> removePredicate)
         {
             RemoveLeafNodes(this, removePredicate);
         }
@@ -243,11 +232,11 @@ namespace Visualization.Controls.Data
             }
         }
 
-        public HierarchicalData Shrink()
+        public IHierarchicalData Shrink()
         {
-            if (Children.Count == 1)
+            if (_children.Count == 1)
             {
-                return Children.First().Shrink();
+                return _children.First().Shrink();
             }
 
             // Leaf node or more than one children.
@@ -289,7 +278,7 @@ namespace Visualization.Controls.Data
             _children.Sort(new DecreasingByAreaMetricSumComparer());
         }
 
-        public void TraverseBottomUp(Action<HierarchicalData> action)
+        public void TraverseBottomUp(Action<IHierarchicalData> action)
         {
             foreach (var child in Children)
             {
@@ -300,7 +289,7 @@ namespace Visualization.Controls.Data
             action(this);
         }
 
-        public void TraverseTopDown(Action<HierarchicalData> action)
+        public void TraverseTopDown(Action<IHierarchicalData> action)
         {
             action(this);
 
@@ -323,12 +312,14 @@ namespace Visualization.Controls.Data
 
         private HierarchicalData Clone(HierarchicalData cloneThis)
         {
-            var newData = new HierarchicalData(cloneThis.Name, cloneThis.AreaMetric, cloneThis.WeightMetric, _weightIsAleadyNormalized);
+            var newData = new HierarchicalData(cloneThis.Name, cloneThis.AreaMetric, cloneThis.WeightMetric);
             newData.Description = cloneThis.Description;
             newData.ColorKey = cloneThis.ColorKey;
             newData.Tag = cloneThis.Tag;
+            newData.AreaMetricSum = cloneThis.AreaMetricSum;
+            newData.NormalizedWeightMetric = cloneThis.NormalizedWeightMetric;
 
-            foreach (var child in cloneThis.Children)
+            foreach (var child in cloneThis._children)
             {
                 newData.AddChild(Clone(child));
             }
@@ -336,7 +327,7 @@ namespace Visualization.Controls.Data
             return newData;
         }
 
-        private void Dump(HierarchicalData item, int level)
+        private void Dump(IHierarchicalData item, int level)
         {
             Debug.WriteLine(new string(Enumerable.Repeat('\t', level).ToArray()) + item.Name + " " + item.Layout);
 
@@ -354,7 +345,7 @@ namespace Visualization.Controls.Data
                 max = Math.Max(max, AreaMetric);
             }
 
-            foreach (var child in Children)
+            foreach (HierarchicalData child in Children)
             {
                 child.GetMinMaxArea(ref min, ref max);
             }
@@ -368,7 +359,7 @@ namespace Visualization.Controls.Data
                 max = Math.Max(max, WeightMetric);
             }
 
-            foreach (var child in Children)
+            foreach (HierarchicalData child in Children)
             {
                 child.GetMinMaxWeight(ref min, ref max);
             }
@@ -381,15 +372,15 @@ namespace Visualization.Controls.Data
                 NormalizedWeightMetric = (WeightMetric - min) / range;            
             }
 
-            foreach (var child in Children)
+            foreach (HierarchicalData child in Children)
             {
                 child.NormalizeWeightMetrics(min, range);
             }
         }
 
-        private void RemoveLeafNodes(HierarchicalData root, Func<HierarchicalData, bool> removePredicate)
+        private void RemoveLeafNodes(HierarchicalData root, Func<IHierarchicalData, bool> removePredicate)
         {
-            foreach (var child in root.Children)
+            foreach (HierarchicalData child in root.Children)
             {
                 RemoveLeafNodes(child, removePredicate);
             }
@@ -399,7 +390,7 @@ namespace Visualization.Controls.Data
 
         private void RemoveLeafNodesWithoutArea(HierarchicalData data)
         {
-            foreach (var child in data.Children)
+            foreach (var child in data._children)
             {
                 RemoveLeafNodesWithoutArea(child);
             }

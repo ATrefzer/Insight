@@ -3,6 +3,7 @@ using Insight.Metrics;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder
 {
@@ -11,7 +12,7 @@ namespace Insight.Builder
         private Dictionary<string, double> _fileToFractalValue;
         private Dictionary<string, LinesOfCode> _metrics;
 
-        public HierarchicalData Build(List<Artifact> summary,
+        public IHierarchicalData Build(List<Artifact> summary,
                                       Dictionary<string, LinesOfCode> metrics,
                                       Dictionary<string, double> fileToFractalValue)
         {

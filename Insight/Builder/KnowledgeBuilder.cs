@@ -3,6 +3,7 @@ using Insight.Metrics;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder
 {
@@ -25,7 +26,7 @@ namespace Insight.Builder
             _onlyThisDeveloper = developer;
         }
 
-        public HierarchicalData Build(List<Artifact> summary,
+        public IHierarchicalData Build(List<Artifact> summary,
                                       Dictionary<string, LinesOfCode> metrics,
                                       Dictionary<string, MainDeveloper> mainDeveloper)
         {

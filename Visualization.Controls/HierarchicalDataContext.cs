@@ -13,10 +13,11 @@ namespace Visualization.Controls
 
         public HierarchicalDataContext Clone()
         {
+            // Layout info is lost
             return new HierarchicalDataContext(Data.Clone(), ColorScheme);
         }
 
-        public HierarchicalDataContext(HierarchicalData data)
+        public HierarchicalDataContext(IHierarchicalData data)
         {
             Data = data;
             ColorScheme = new ColorScheme();

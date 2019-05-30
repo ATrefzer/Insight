@@ -33,7 +33,7 @@ namespace Visualization.Controls.CirclePacking
             layout.Layout(_data, double.MaxValue, double.MaxValue);
         }
 
-        public void LoadRenderedData(HierarchicalData data)
+        public void LoadRenderedData(IHierarchicalData data)
         {
             // Skip layouting
             _data = data;

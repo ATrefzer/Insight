@@ -1,14 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Visualization.Controls.Data;
 
 namespace Visualization.Controls.Interfaces
 {
     public interface IHierarchicalData
     {
-        TreeMap.LayoutInfo Layout { get; set; }
+        /// <summary>
+        /// Attached layouting information. This proeprty is not cloned
+        /// </summary>
+        LayoutInfo Layout { get; set; }
+
         string ColorKey { get; set; }
         double AreaMetricSum { get; }
-        IReadOnlyCollection<Data.HierarchicalData> Children { get; }
+        IReadOnlyCollection<IHierarchicalData> Children { get; }
         bool IsLeafNode { get; }
         double NormalizedWeightMetric { get; }
         string Name { get; }
@@ -18,12 +23,15 @@ namespace Visualization.Controls.Interfaces
         IHierarchicalData Parent { get; set; }
         string Description { get; set; }
 
-        HierarchicalData Clone();
+        IHierarchicalData Clone();
+        int CountLeafNodes();
         string GetPathToRoot();
         void NormalizeWeightMetrics();
-        void RemoveLeafNodes(System.Func<Data.HierarchicalData, bool> removePredicate);
+        void RemoveLeafNodes(Func<IHierarchicalData, bool> removePredicate);
         void RemoveLeafNodesWithoutArea();
+        IHierarchicalData Shrink();
         void SumAreaMetrics();
-        void TraverseTopDown(System.Action<Data.HierarchicalData> action);
+        void TraverseBottomUp(Action<IHierarchicalData> action);
+        void TraverseTopDown(Action<IHierarchicalData> action);
     }
 }

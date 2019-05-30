@@ -7,6 +7,7 @@ using Insight.Shared;
 using Insight.Shared.Model;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder
 {
@@ -15,7 +16,7 @@ namespace Insight.Builder
         private Dictionary<string, LinesOfCode> _metrics;
         private HotspotCalculator _hotspotCalculator;
 
-        public HierarchicalData Build(List<Artifact> artifacts, Dictionary<string, LinesOfCode> metrics)
+        public IHierarchicalData Build(List<Artifact> artifacts, Dictionary<string, LinesOfCode> metrics)
         {
             _metrics = metrics;
             _hotspotCalculator = new HotspotCalculator(artifacts, metrics);

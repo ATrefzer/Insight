@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.CirclePacking
 {
@@ -33,7 +34,7 @@ namespace Visualization.Controls.CirclePacking
             }
         }
 
-        public static void DumpChildrenWeights(List<HierarchicalData> children)
+        public static void DumpChildrenWeights(List<IHierarchicalData> children)
         {
             var builder = new StringBuilder();
             foreach (var item in children)
