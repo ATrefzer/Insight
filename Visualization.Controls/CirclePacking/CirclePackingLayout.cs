@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Utility;
 
@@ -20,10 +19,8 @@ namespace Visualization.Controls.CirclePacking
     2. Find the circle on the front chain closest to the origin (m)
     3. Try set the next circle tangent between the circles m, n = m+1
 
-    Note
     There are two solutions to finding a tangend circle with two others.
-    (Unless the circles are too far apart) Which circle do we use? 
-    I still do not have a mathematical tool to decide. Therefore I use a set of heuristics.
+    (Unless the circles are too far apart). I chose the circle with center outside the polygon.
     See SelectCircle.
 
     4. If there is no collision place the circle on the front chain between m and n.
@@ -53,7 +50,7 @@ namespace Visualization.Controls.CirclePacking
     internal sealed class CirclePackingLayout
     {
         /// When one layer is finished the output files are deleted.
-        public bool DebugEnabled { get; } = false;
+        public bool DebugEnabled { get; } = true;
 
         public void Layout(IHierarchicalData root, double actualWidth, double actualHeight)
         {
@@ -328,7 +325,14 @@ namespace Visualization.Controls.CirclePacking
                 // Test front chain Both violate-> deltete and try to fix whole.
 
                 var solutions = FindTangentCircle(mNode.Value, nNode.Value, iLayout.Radius);
+
+                
+                var tmpCircle2 = SelectCircleExperimential(frontChain, mNode.Value, nNode.Value, solutions.Item1, solutions.Item2);
+
+                // TODO remove old implementation
                 var tmpCircle = SelectCircle(frontChain, solutions.Item1, solutions.Item2);
+
+                Debug.Assert(tmpCircle == tmpCircle2);
                 Debug.Assert(tmpCircle != null);
 
                 // Find overlappings with circles in the front chain.Does one intersect with the just calculated circle?
@@ -395,13 +399,55 @@ namespace Visualization.Controls.CirclePacking
                     if (DebugEnabled)
                     {
                         // Template for debug output
-                        // DebugHelper.WriteDebugOutput(frontChain, $"dbgOut_m_{frontChain.IndexOf(mNode)}_n_${frontChain.IndexOf(nNode)}", solutions.Item1, solutions.Item2);
-                        //DebugHelper.WriteDebugOutput(frontChain, $"dbgOut_m_{frontChain.IndexOf(mNode)}_n_{frontChain.IndexOf(nNode)}", tmpCircle);
+                        DebugHelper.WriteDebugOutput(frontChain, $"dbgOut_m_{frontChain.IndexOf(mNode)}_n_${frontChain.IndexOf(nNode)}", solutions.Item1, solutions.Item2);
+                        DebugHelper.WriteDebugOutput(frontChain, $"dbgOut_m_{frontChain.IndexOf(mNode)}_n_{frontChain.IndexOf(nNode)}", tmpCircle);
                     }
                 }
             }
 
             var enclosing = CalculateEnclosingCircle(data, frontChain);
+        }
+
+        /// <summary>
+        /// Usually we have two solutions for tangent circles. We have to decide which to use.
+        /// I assume the polygon goes always in direction m to n.
+        /// We chose the solution that is outside the polygon. I want to grow outside.
+        /// 1. Calculate segment m-n
+        /// 2. Calculate normal vector to this form
+        /// 3. Chose m as vector to the segment
+        /// 4. Use vector normal form to check if solution1 or solution2 is outside or inside.
+        /// Both scalars may be positive or negative. So I chose the larger on. Not quite sure if this is ok.
+        /// </summary>
+        private CircularLayoutInfo SelectCircleExperimential(CircularLayoutInfo m, CircularLayoutInfo n, CircularLayoutInfo circle1, CircularLayoutInfo circle2)
+        {
+            Debug.Assert(IsPointValid(circle1.Center) || IsPointValid(circle2.Center));
+
+            // If only one point is valid, take it      
+            if (IsPointValid(circle1.Center) && !IsPointValid(circle2.Center))
+            {
+                return circle1;
+            }
+
+            if (!IsPointValid(circle1.Center) && IsPointValid(circle2.Center))
+            {
+                return circle2;
+            }
+
+            // We have two solutions. Which point to chose?
+          
+            var segment_m_n = m.Center - n.Center;
+            var anyNormal = new Vector(-segment_m_n.Y, segment_m_n.X)
+                - new Vector(segment_m_n.Y, -segment_m_n.X);
+            var value1 = Vector.Multiply(circle1.Center - m.Center, (Vector)anyNormal);
+            var value2 = Vector.Multiply(circle2.Center - m.Center, (Vector)anyNormal);
+
+            if (value1 > 0 && value2 < 0)
+                return circle2;
+
+            if (value2 > 0 && value1 < 0)
+                return circle1;
+
+            return value1 > value2 ? circle2 : circle1;
         }
 
         /// <summary>

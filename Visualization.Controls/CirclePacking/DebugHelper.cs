@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
-
-using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.CirclePacking

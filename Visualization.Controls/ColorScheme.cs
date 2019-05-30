@@ -294,7 +294,7 @@ namespace Visualization.Controls
             {
                 // Too much colors!
                 color = Color.LightGray;
-                Debug.Assert(false); // Not enough colors!
+                //Debug.Assert(false); // Not enough colors!
             }
             InitColor(name, color);
 

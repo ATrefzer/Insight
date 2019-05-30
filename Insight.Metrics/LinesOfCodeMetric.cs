@@ -36,6 +36,7 @@ namespace Insight.Metrics
             _extensionToLanguage.Add(".cpp", "C++");
             _extensionToLanguage.Add(".h", "C/C++ Header");
             _extensionToLanguage.Add(".c", "C");
+            _extensionToLanguage.Add(".py", "Python");
         }
 
         private ProcessRunner CreateRunner()

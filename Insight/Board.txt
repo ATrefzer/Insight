@@ -2,10 +2,15 @@
 In Progress
 ---------------------------------------
 
+- fast.ai has more entries than the tool suggests!
 - Draw some UML images
-- Read, Write Hierarchical Data for UnitTests
-- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 - Layouting for circle packaging (run against old verison)
+- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+
+---------------------------------------
+In TODO
+---------------------------------------
+
 - Investigate broken svn history. See CalculateChangeCouplings
 - Classifier for names!
 - Try on different git projects
@@ -17,61 +22,20 @@ Factories:
 - MetricProvider?
 
 
+- Settings: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
+  after the filters are changed. More restrictive is ok!
+- Settings: When to clear the color scheme?
 
-
----------------------------------------
-Features and improvements
----------------------------------------
 - Commits pro line statt absolute 
-- Return when zooming
----------------------------------------
-Bugs
----------------------------------------
-
----------------------------------------
-User interface
----------------------------------------
-
----------------------------------------
-Git
----------------------------------------
-
----------------------------------------
-Svn
----------------------------------------
-
----------------------------------------
-Controls
----------------------------------------
 
 - Overlay texts
-- Profile both algorithms.
 
----------------------------------------
-TreeMap
----------------------------------------
 
-- TryAddToStrip, Move vertical / horizontal strip to new classes
-- Refactoring stripProportion
-- Show label (maybe)
+- TreeMap: TryAddToStrip, Move vertical / horizontal strip to new classes
+- TreeMap: Refactoring stripProportion
+- TreeMap: Show label (maybe)
 
----------------------------------------
-Circle Packing
----------------------------------------
+- Chord: Sometimes edges disappear when resizing
+- Chord: Binding errors
 
----------------------------------------
-Chord
----------------------------------------
-      
-- Sometimes edges disappear when resizing
-- Binding errors
-
----------------------------------------
-Low prio
----------------------------------------
-
-- Refactor Svn Parser
-
-- Warning if changed filters!
-- TODO Ugly: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
-  after the filters are changed. More restrictive is ok!
+- Svn: Refactor parser
