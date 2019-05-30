@@ -4,6 +4,7 @@ using System.Windows;
 
 namespace Insight
 {
+   
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>

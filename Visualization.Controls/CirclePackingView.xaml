@@ -10,8 +10,7 @@
              xmlns:local="clr-namespace:Visualization.Controls"
              MouseMove="Window_MouseMove"
              MouseLeave="Window_MouseLeave"
-             ContextMenuOpening="OnContextMenuOpening"
-             IsVisibleChanged="CirclePacking_OnIsVisibleChanged">
+             ContextMenuOpening="OnContextMenuOpening">
 
     <UserControl.ContextMenu>
         <ContextMenu x:Name="_contextMenu" />

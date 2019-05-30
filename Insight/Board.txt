@@ -2,7 +2,6 @@
 In Progress
 ---------------------------------------
 
-- fast.ai has more entries than the tool suggests!
 - Draw some UML images
 - Layouting for circle packaging (run against old verison)
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
@@ -11,7 +10,6 @@ In Progress
 In TODO
 ---------------------------------------
 
-- Toolwindow bleibt bei umschaltung offen.
 - Investigate broken svn history. See CalculateChangeCouplings
 - Classifier for names!
 - Try on different git projects

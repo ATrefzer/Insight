@@ -116,6 +116,8 @@
                     ItemsSource="{Binding Tabs, Mode=TwoWay}"
                     SelectedIndex="{Binding SelectedIndex}">
 
+            <!-- (!)DataTemplate is instantiated only once! Even if many
+            view models of same type are given in the Tabs property(!)-->
             <TabControl.Resources>
                 <DataTemplate DataType="{x:Type ViewModels:TreeMapViewModel}">
                     <controls:TreeMapView DataContext="{Binding Data}"

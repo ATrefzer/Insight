@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using Visualization.Controls.CirclePacking;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
+using Visualization.Controls.Tools;
 
 namespace Visualization.Controls
 {
@@ -17,6 +18,12 @@ namespace Visualization.Controls
         {
             InitializeComponent();
             DataContextChanged += OnDataContextChanged;
+            ToolsExtension.Instance.ToolCloseRequested += Instance_ToolCloseRequested;
+        }
+
+        private void Instance_ToolCloseRequested(object sender, object e)
+        {
+            HideToolView();
         }
 
         protected override void ClosePopup()
@@ -42,12 +49,6 @@ namespace Visualization.Controls
             _popup.Placement = PlacementMode.Mouse;
             _popup.Visibility = Visibility.Visible;
             _popup.IsOpen = true;
-        }
-
-
-        private void CirclePacking_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            HideToolView();
         }
     }
 }

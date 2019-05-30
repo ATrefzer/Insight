@@ -17,6 +17,7 @@ using Prism.Commands;
 using Visualization.Controls;
 using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
+using Visualization.Controls.Tools;
 
 namespace Insight
 {
@@ -87,6 +88,7 @@ namespace Insight
             get => _selectedIndex;
             set
             {
+                ToolsExtension.Instance.CloseToolWindow();
                 _selectedIndex = value;
                 OnPropertyChanged();
             }

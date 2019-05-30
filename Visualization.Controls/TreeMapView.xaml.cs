@@ -1,10 +1,9 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
+using Visualization.Controls.Tools;
 using Visualization.Controls.TreeMap;
 
 namespace Visualization.Controls
@@ -18,6 +17,12 @@ namespace Visualization.Controls
         {
             InitializeComponent();
             DataContextChanged += OnDataContextChanged;
+            ToolsExtension.Instance.ToolCloseRequested += Instance_ToolCloseRequested;
+        }
+
+        private void Instance_ToolCloseRequested(object sender, object e)
+        {
+            HideToolView();
         }
 
         protected override void ClosePopup()
@@ -44,12 +49,6 @@ namespace Visualization.Controls
             _popup.Placement = PlacementMode.Mouse;
             _popup.Visibility = Visibility.Visible;
             _popup.IsOpen = true;
-        }
-
-
-        private void TreeMap_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            HideToolView();
         }
     }
 }
