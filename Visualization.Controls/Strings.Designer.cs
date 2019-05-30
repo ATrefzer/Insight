@@ -61,6 +61,15 @@ namespace Visualization.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum:.
+        /// </summary>
+        public static string Maximum {
+            get {
+                return ResourceManager.GetString("Maximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum area.
         /// </summary>
         public static string MaximumArea {
@@ -75,6 +84,15 @@ namespace Visualization.Controls {
         public static string MaximumWeight {
             get {
                 return ResourceManager.GetString("MaximumWeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum:.
+        /// </summary>
+        public static string Minimum {
+            get {
+                return ResourceManager.GetString("Minimum", resourceCulture);
             }
         }
         

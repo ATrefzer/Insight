@@ -112,7 +112,10 @@ namespace Insight
 
             var builder = new CodeAgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
-            return new HierarchicalDataContext(hierarchicalData);
+            var dataContext = new HierarchicalDataContext(hierarchicalData);
+            dataContext.AreaSemantic = Strings.LinesOfCode;
+            dataContext.WeightSemantic = Strings.CodeAge_Days;
+            return dataContext;
         }
 
         /// <summary>
@@ -130,7 +133,10 @@ namespace Insight
             var builder = new FragmentationBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, fileToFractalValue);
 
-            return new HierarchicalDataContext(hierarchicalData);
+            var dataContext = new HierarchicalDataContext(hierarchicalData);
+            dataContext.AreaSemantic = Strings.LinesOfCode;
+            dataContext.WeightSemantic = Strings.Fragmentation;
+            return dataContext;
         }
 
         public HierarchicalDataContext AnalyzeHotspots()
@@ -143,7 +149,10 @@ namespace Insight
 
             var builder = new HotspotBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
-            return new HierarchicalDataContext(hierarchicalData);
+            var dataContext = new HierarchicalDataContext(hierarchicalData);
+            dataContext.AreaSemantic = Strings.LinesOfCode;
+            dataContext.WeightSemantic = Strings.NumberOfCommits;
+            return dataContext;
         }
 
         public HierarchicalDataContext AnalyzeKnowledge()
@@ -166,7 +175,10 @@ namespace Insight
             var builder = new KnowledgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
-            return new HierarchicalDataContext(hierarchicalData, _colorScheme);
+            var dataContext = new HierarchicalDataContext(hierarchicalData, _colorScheme);
+            dataContext.AreaSemantic = Strings.LinesOfCode;
+            dataContext.WeightSemantic = Strings.NotAvailable;
+            return dataContext;
         }
 
 
@@ -201,7 +213,10 @@ namespace Insight
             var builder = new KnowledgeBuilder(developer);
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
-            return new HierarchicalDataContext(hierarchicalData, _colorScheme);
+            var dataContext = new HierarchicalDataContext(hierarchicalData, _colorScheme);
+            dataContext.AreaSemantic = Strings.LinesOfCode;
+            dataContext.WeightSemantic = Strings.NotAvailable;
+            return dataContext;
         }
 
         public List<TrendData> AnalyzeTrend(string localFile)

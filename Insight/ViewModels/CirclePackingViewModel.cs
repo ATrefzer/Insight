@@ -6,6 +6,9 @@ namespace Insight.ViewModels
     {
         private HierarchicalDataCommands _commands;
 
+        /// <summary>
+        /// Note: Not every TabContentViewModel has HierarchicalDataCommands (for example: Summary Table)
+        /// </summary>
         public HierarchicalDataCommands Commands
         {
             get => _commands;
@@ -15,5 +18,7 @@ namespace Insight.ViewModels
                 OnPropertyChanged();
             }
         }
+
+     
     }
 }

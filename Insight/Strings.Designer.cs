@@ -106,6 +106,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Days since last modification.
+        /// </summary>
+        public static string CodeAge_Days {
+            get {
+                return ResourceManager.GetString("CodeAge_Days", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Comments {
@@ -188,6 +197,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragmentation.
+        /// </summary>
+        public static string Fragmentation {
+            get {
+                return ResourceManager.GetString("Fragmentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Future Hotspots.
         /// </summary>
         public static string FutureHotspots {
@@ -247,6 +265,33 @@ namespace Insight {
         public static string Load {
             get {
                 return ResourceManager.GetString("Load", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lines of Code.
+        /// </summary>
+        public static string LOC {
+            get {
+                return ResourceManager.GetString("LOC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -.
+        /// </summary>
+        public static string NotAvailable {
+            get {
+                return ResourceManager.GetString("NotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of Commits.
+        /// </summary>
+        public static string NumberOfCommits {
+            get {
+                return ResourceManager.GetString("NumberOfCommits", resourceCulture);
             }
         }
         

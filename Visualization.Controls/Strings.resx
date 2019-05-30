@@ -141,4 +141,10 @@
   <data name="NoFilterJustHighlight" xml:space="preserve">
     <value>No filtering. Only highlight matching results.</value>
   </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>Maximum:</value>
+  </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>Minimum:</value>
+  </data>
 </root>

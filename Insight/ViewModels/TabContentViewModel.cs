@@ -3,12 +3,18 @@
 namespace Insight.ViewModels
 {
     /// <summary>
-    /// Base class for all view models that describe a tab item.
+    /// ViewModel base class for all views we put into the tab control in the main window.
     /// </summary>
     public class TabContentViewModel : ViewModelBase
     {
         private object _data;
 
+        /// <summary>
+        /// The data context that is passed to the UserControl in Visualization.Controls.
+        /// See MainWindow.xaml
+        /// 
+        /// We have different views like TreeMapView, ChordView etc. Therefore this is an object.
+        /// </summary>
         public object Data
         {
             get => _data;

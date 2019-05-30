@@ -8,6 +8,11 @@ namespace Visualization.Controls.Tools
     public sealed class ToolViewModel : INotifyPropertyChanged
     {
         /// <summary>
+        /// Round all double numbers shown to the user.
+        /// </summary>
+        private const int Digits = 4;
+
+        /// <summary>
         /// Sorted list of all areas occurring in the data.
         /// </summary>
         List<double> _areas;
@@ -31,7 +36,7 @@ namespace Visualization.Controls.Tools
         {
             get
             {
-                return _areas[_minAreaIndex];
+                return Math.Round(_areas[_minAreaIndex], Digits);
             }
         }
 
@@ -42,7 +47,7 @@ namespace Visualization.Controls.Tools
         {
             get
             {
-                return _areas[_maxAreaIndex];
+                return Math.Round(_areas[_maxAreaIndex], Digits);
             }
         }
 
@@ -53,9 +58,11 @@ namespace Visualization.Controls.Tools
         {
             get
             {
-                return _weights[_minWeightIndex];
+                return Math.Round(_weights[_minWeightIndex], Digits);
             }
         }
+
+       
 
         /// <summary>
         /// Max weighta for user feedback.
@@ -64,7 +71,7 @@ namespace Visualization.Controls.Tools
         {
             get
             {
-                return _weights[_maxWeightIndex];
+                return Math.Round(_weights[_maxWeightIndex], Digits);
             }
         }
 
@@ -203,6 +210,9 @@ namespace Visualization.Controls.Tools
                 }
             }
         }
+
+        public string WeightSemantic { get; set; } = "Area";
+        public string AreaSemantic { get; set; } = "Weight";
 
         public bool IsAreaValid(double area)
         {

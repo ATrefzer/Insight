@@ -264,4 +264,19 @@ Do you want to proceed?</value>
   <data name="Predictions" xml:space="preserve">
     <value>Predictions</value>
   </data>
+  <data name="CodeAge_Days" xml:space="preserve">
+    <value>Days since last modification</value>
+  </data>
+  <data name="Fragmentation" xml:space="preserve">
+    <value>Fragmentation</value>
+  </data>
+  <data name="LOC" xml:space="preserve">
+    <value>Lines of Code</value>
+  </data>
+  <data name="NotAvailable" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="NumberOfCommits" xml:space="preserve">
+    <value>Number of Commits</value>
+  </data>
 </root>

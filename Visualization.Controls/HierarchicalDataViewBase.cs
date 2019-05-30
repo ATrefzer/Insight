@@ -116,7 +116,7 @@ namespace Visualization.Controls
         }
 
 
-        protected void InitializeTools()
+        protected void InitializeTools(string areaSemantic, string weightSemantic)
         {
             var area = new HashSet<double>();
             var weight = new HashSet<double>();
@@ -136,6 +136,9 @@ namespace Visualization.Controls
             var weightList = weight.OrderBy(x => x).ToList();
 
             _toolViewModel = new ToolViewModel(areaList, weightList);
+            _toolViewModel.AreaSemantic = areaSemantic;
+            _toolViewModel.WeightSemantic = weightSemantic;
+
             _toolViewModel.FilterChanged += FilterLevelChanged;
             _toolViewModel.SearchPatternChanged += ChangeSearchHighlightingCommand;
         }
@@ -187,17 +190,19 @@ namespace Visualization.Controls
                 // This is called once with the wrong context.
                 return;
             }
-
+            
             _colorScheme = context.ColorScheme;
             _root = context.Data;
 
-            InitializeTools();
+            InitializeTools(context.AreaSemantic, context.WeightSemantic);
 
             // Initially no filtering so skip removing nodes.
             _filtered = _root;
             ZoomLevelChanged(_filtered);
         }
 
+        
+      
 
         protected void ShowToolsCommand()
         {

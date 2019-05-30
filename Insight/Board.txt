@@ -11,9 +11,13 @@ In Progress
 In TODO
 ---------------------------------------
 
+- Toolwindow bleibt bei umschaltung offen.
 - Investigate broken svn history. See CalculateChangeCouplings
 - Classifier for names!
 - Try on different git projects
+- Settings: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
+  after the filters are changed. More restrictive is ok!
+- Settings: Ask user to clear Colors.txt when he changes the base directory in the settings window.
 
 
 Factories:
@@ -22,9 +26,7 @@ Factories:
 - MetricProvider?
 
 
-- Settings: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
-  after the filters are changed. More restrictive is ok!
-- Settings: When to clear the color scheme?
+
 
 - Commits pro line statt absolute 
 
