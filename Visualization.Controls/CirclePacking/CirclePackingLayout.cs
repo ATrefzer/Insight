@@ -327,7 +327,7 @@ namespace Visualization.Controls.CirclePacking
                 var solutions = FindTangentCircle(mNode.Value, nNode.Value, iLayout.Radius);
 
                 
-                var tmpCircle2 = SelectCircleExperimential(frontChain, mNode.Value, nNode.Value, solutions.Item1, solutions.Item2);
+                var tmpCircle2 = SelectCircleExperimential(mNode.Value, nNode.Value, solutions.Item1, solutions.Item2);
 
                 // TODO remove old implementation
                 var tmpCircle = SelectCircle(frontChain, solutions.Item1, solutions.Item2);
