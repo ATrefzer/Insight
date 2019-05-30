@@ -34,7 +34,7 @@ namespace Insight.SvnProvider
         private string _startDirectory;
 
         private SvnCommandLine _svnCli;
-        private string _svnHistoryExportFile;
+        private string _historyFile;
         private MovementTracker _tracking;
         private string _workItemRegex;
 
@@ -125,7 +125,7 @@ namespace Insight.SvnProvider
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
-            _svnHistoryExportFile = Path.Combine(cachePath, @"svn_history.log");
+            _historyFile = Path.Combine(cachePath, @"svn_history.log");
             _contributionFile = Path.Combine(cachePath, @"contribution.json");
             _svnCli = new SvnCommandLine(_startDirectory);
             _fileFilter = fileFilter;
@@ -136,9 +136,9 @@ namespace Insight.SvnProvider
         /// </summary>
         public ChangeSetHistory QueryChangeSetHistory()
         {
-            if (!File.Exists(_svnHistoryExportFile))
+            if (!File.Exists(_historyFile))
             {
-                var msg = $"Log export file '{_svnHistoryExportFile}' not found. You have to 'Sync' first.";
+                var msg = $"Log export file '{_historyFile}' not found. You have to 'Sync' first.";
                 throw new FileNotFoundException(msg);
             }
 
@@ -149,6 +149,9 @@ namespace Insight.SvnProvider
 
         public void UpdateCache(IProgress progress, bool includeWorkData)
         {
+            // Including work
+            DeleteAllCaches();
+
             // Important: svn log returns the revisions in a different order 
             // than the {revision:HEAD} version.
 
@@ -192,15 +195,22 @@ namespace Insight.SvnProvider
             return localFiles;
         }
 
-        private void UpdateContribution(IProgress progress)
+        private void DeleteAllCaches()
         {
             if (File.Exists(_contributionFile))
             {
                 File.Delete(_contributionFile);
             }
 
-            var localFiles = GetAllTrackedLocalFiles();
+            if (File.Exists(_historyFile))
+            {
+                File.Delete(_historyFile);
+            }
+        }
 
+        private void UpdateContribution(IProgress progress)
+        {
+            var localFiles = GetAllTrackedLocalFiles();
 
             var contribution = CalculateContributionsParallel(progress, localFiles.ToList());
 
@@ -263,7 +273,7 @@ namespace Insight.SvnProvider
             var log = _svnCli.Log();
 
             // Override existing file
-            File.WriteAllText(_svnHistoryExportFile, log);
+            File.WriteAllText(_historyFile, log);
         }
 
         private string GetBlameCache()
@@ -491,7 +501,7 @@ namespace Insight.SvnProvider
             _tracking = new MovementTracker();
             var result = new List<ChangeSet>();
 
-            using (var reader = XmlReader.Create(_svnHistoryExportFile))
+            using (var reader = XmlReader.Create(_historyFile))
             {
                 while (reader.Read())
                     if (reader.IsStartElement("logentry"))

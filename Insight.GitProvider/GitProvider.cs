@@ -50,15 +50,30 @@ namespace Insight.GitProvider
             _workItemRegex = workItemRegex;
             _fileFilter = fileFilter;
 
-            _gitHistoryExportFile = Path.Combine(cachePath, "git_history.json");
+            _historyFile = Path.Combine(cachePath, "git_history.json");
             _contributionFile = Path.Combine(cachePath, "contribution.json");
             _gitCli = new GitCommandLine(_startDirectory);
 
             _mapper = new PathMapper(_startDirectory);
         }
 
+        private void DeleteAllCaches()
+        {
+            if (File.Exists(_contributionFile))
+            {
+                File.Delete(_contributionFile);
+            }
+
+            if (File.Exists(_historyFile))
+            {
+                File.Delete(_historyFile);
+            }
+        }
+
         public void UpdateCache(IProgress progress, bool includeWorkData)
         {
+            DeleteAllCaches();
+
             VerifyGitDirectory();
             PrepareLogDirectory();
 
@@ -300,7 +315,7 @@ namespace Insight.GitProvider
 
             // Write history file
             var json = JsonConvert.SerializeObject(new ChangeSetHistory(commits), Formatting.Indented);
-            File.WriteAllText(_gitHistoryExportFile, json, Encoding.UTF8);
+            File.WriteAllText(_historyFile, json, Encoding.UTF8);
 
             // Save the constructed log for information
             SaveRecoveredLogToDisk(commits, _graph);

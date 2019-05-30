@@ -20,7 +20,7 @@ namespace Insight.GitProvider
         protected string _cachePath;
         protected IFilter _fileFilter;
         protected GitCommandLine _gitCli;
-        protected string _gitHistoryExportFile;
+        protected string _historyFile;
         protected string _contributionFile;
 
         protected string _lastLine;
@@ -164,9 +164,9 @@ namespace Insight.GitProvider
 
         protected void VerifyHistoryIsCached()
         {
-            if (!File.Exists(_gitHistoryExportFile))
+            if (!File.Exists(_historyFile))
             {
-                var msg = $"Log export file '{_gitHistoryExportFile}' not found. You have to 'Sync' first.";
+                var msg = $"Log export file '{_historyFile}' not found. You have to 'Sync' first.";
                 throw new FileNotFoundException(msg);
             }
         }
@@ -217,7 +217,7 @@ namespace Insight.GitProvider
         public ChangeSetHistory QueryChangeSetHistory()
         {
             VerifyHistoryIsCached();
-            var json = File.ReadAllText(_gitHistoryExportFile, Encoding.UTF8);
+            var json = File.ReadAllText(_historyFile, Encoding.UTF8);
             return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
         }
 

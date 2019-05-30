@@ -424,8 +424,7 @@ namespace Insight
             var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
 
             await _backgroundExecution.ExecuteWithProgressAsync(progress => _analyzer.UpdateCache(progress, includeContributions));
-
-            _analyzer.Clear();
+           
             _tabs.Clear();
         }
     }

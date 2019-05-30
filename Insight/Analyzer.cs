@@ -293,12 +293,14 @@ namespace Insight
 
         public void UpdateCache(Progress progress, bool includeContributions)
         {
+            Clear();
+
             progress.Message("Updating source control history.");
 
             // Note: You should have the latest code locally such that history and metrics match!
             // Update svn history
-            var svnProvider = Project.CreateProvider();
-            svnProvider.UpdateCache(progress, includeContributions);
+            var provider = Project.CreateProvider();
+            provider.UpdateCache(progress, includeContributions);
 
             progress.Message("Updating code metrics.");
 
