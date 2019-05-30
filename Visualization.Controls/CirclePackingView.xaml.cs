@@ -35,7 +35,7 @@ namespace Visualization.Controls
         }
 
 
-        protected override void InitPopup(HierarchicalData hit)
+        protected override void InitPopup(IHierarchicalData hit)
         {
             _popupText.Text = hit.Description;
 

@@ -3,7 +3,7 @@ In Progress
 ---------------------------------------
 
 - Bild malen
-- IColorScheme hat unnötige und hässliche Methoden!
+- IColorScheme hat unnötige und hässliche Methoden zum Added!
 - Read, Write Hierarchical Data for UnitTests
 - UnitTests.
 - Layout umschreiben. (erst mal beide parallel laufenlassen)
@@ -12,6 +12,14 @@ In Progress
 - Classifier for names!
 - Try on different git projects
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+
+Factories:
+- HierarchicalData
+- ColorScheme
+- MetricProvider (Als Factory in die Metrik Klasse? Ist dann néw nicht genauso gut.)
+
+
+
 
 ---------------------------------------
 Features and improvements

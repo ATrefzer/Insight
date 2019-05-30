@@ -117,7 +117,7 @@ namespace Insight
             }
         }
 
-        public async void OnShowTrend(HierarchicalData data)
+        public async void OnShowTrend(IHierarchicalData data)
         {
             var localFile = data.Tag as string;
             Debug.Assert(!string.IsNullOrEmpty(localFile));
@@ -134,7 +134,7 @@ namespace Insight
         }
 
 
-        public async void OnShowWork(HierarchicalData data, IColorScheme colorScheme)
+        public async void OnShowWork(IHierarchicalData data, IColorScheme colorScheme)
         {
             var fileToAnalyze = data.Tag as string;
             var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme)).ConfigureAwait(true);

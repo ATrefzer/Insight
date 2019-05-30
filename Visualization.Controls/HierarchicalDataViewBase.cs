@@ -18,7 +18,7 @@ namespace Visualization.Controls
     {
         public static readonly DependencyProperty UserCommandsProperty = DependencyProperty.Register(
                                                                                                      "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase), new PropertyMetadata(null));
-
+        private HitTest _hitTest = new HitTest();
         protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
         protected IColorScheme _colorScheme;
 
@@ -58,7 +58,7 @@ namespace Visualization.Controls
             ZoomLevelChanged(_zoomLevel);
         }
 
-        protected void ChangeZoomLevelCommand(HierarchicalData item)
+        protected void ChangeZoomLevelCommand(IHierarchicalData item)
         {
             if (item == null)
             {
@@ -140,13 +140,13 @@ namespace Visualization.Controls
         }
 
 
-        protected abstract void InitPopup(HierarchicalData hit);
+        protected abstract void InitPopup(IHierarchicalData hit);
 
         protected void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             var canvas = GetCanvas();
             var pos = _renderer.Transform(Mouse.GetPosition(canvas));
-            var hit = _zoomLevel.Hit(pos);
+            var hit = _hitTest.Hit(_zoomLevel,pos);
             var menu = canvas.ContextMenu;
             if ((hit != null) & (menu != null))
             {
@@ -218,7 +218,7 @@ namespace Visualization.Controls
             // Circle packing renderer uses transformations. So we have to translate the mouse position
             // into the coordinates of the circles.
             var pos = _renderer.Transform(e.GetPosition(GetCanvas()));
-            var hit = _zoomLevel.Hit(pos);
+            var hit = _hitTest.Hit(_zoomLevel,pos);
             if (hit != null)
             {
                 InitPopup(hit);
@@ -239,7 +239,7 @@ namespace Visualization.Controls
             GetCanvas().DataContext = _renderer;
         }
 
-        private void AddZoomLevel(ContextMenu menu, HierarchicalData data)
+        private void AddZoomLevel(ContextMenu menu, IHierarchicalData data)
         {
             var header = data.GetPathToRoot();
             var menuItem = new MenuItem { Header = header };
@@ -247,7 +247,7 @@ namespace Visualization.Controls
             menu.Items.Add(menuItem);
         }
 
-        private void FillZoomLevels(ContextMenu menu, HierarchicalData hit)
+        private void FillZoomLevels(ContextMenu menu, IHierarchicalData hit)
         {
             // From the current item (exclusive) up the the root 
             // add an context menu entry for each zoom level.

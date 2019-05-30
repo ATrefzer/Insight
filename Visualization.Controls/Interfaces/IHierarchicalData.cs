@@ -14,9 +14,12 @@ namespace Visualization.Controls.Interfaces
         string Name { get; }
         double AreaMetric { get; }
         double WeightMetric { get; }
+        object Tag { get; set; }
+        IHierarchicalData Parent { get; set; }
+        string Description { get; set; }
 
         HierarchicalData Clone();
-        HierarchicalData Hit(System.Windows.Point mousePos);
+        string GetPathToRoot();
         void NormalizeWeightMetrics();
         void RemoveLeafNodes(System.Func<Data.HierarchicalData, bool> removePredicate);
         void RemoveLeafNodesWithoutArea();

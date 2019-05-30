@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
-
+using Visualization.Controls.Interfaces;
 using Visualization.Controls.TreeMap;
 using Visualization.Controls.Utility;
 
@@ -30,7 +30,7 @@ namespace Visualization.Controls.Data
     /// weight!
     /// </summary>
     [Serializable]
-    public sealed partial class HierarchicalData : Interfaces.IHierarchicalData
+    public sealed partial class HierarchicalData : IHierarchicalData
     {
         private const string PathSeparator = "/";
 
@@ -100,7 +100,7 @@ namespace Visualization.Controls.Data
 
         public double NormalizedWeightMetric { get; private set; }
 
-        public HierarchicalData Parent { get; set; }
+        public IHierarchicalData Parent { get; set; }
 
         /// <summary>
         /// Needs to be serializable
@@ -180,7 +180,7 @@ namespace Visualization.Controls.Data
         public string GetPathToRoot()
         {
             var path = new List<string>();
-            var current = this;
+            IHierarchicalData current = this;
             while (current != null)
             {
                 path.Add(current.Name);
@@ -200,43 +200,6 @@ namespace Visualization.Controls.Data
             return description;
         }
 
-        // TODO atr raus!
-        public HierarchicalData Hit(HierarchicalData item, Point mousePos)
-        {
-            // We may find a more detailed hit deeper.
-            HierarchicalData best = null;
-            if (item.Layout == null)
-            {
-                return null;
-            }
-
-            if (item.Layout.IsHit(mousePos))
-            {
-                best = item;
-                if (item.IsLeafNode)
-                {
-                    return item;
-                }
-            }
-
-            foreach (var child in item.Children)
-            {
-                if (child.Layout.IsHit(mousePos))
-                {
-                    return Hit(child, mousePos);
-                }
-            }
-
-            return best;
-        }
-
-        /// <summary>
-        /// Layout must have been called
-        /// </summary>
-        public HierarchicalData Hit(Point mousePos)
-        {
-            return Hit(this, mousePos);
-        }
 
         /// <summary>
         /// The weight metric is normalized only across the leaf nodes.

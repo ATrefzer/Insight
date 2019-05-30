@@ -129,6 +129,7 @@
     <Compile Include="ChordView.xaml.cs">
       <DependentUpon>ChordView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HitTest.cs" />
     <Compile Include="Interfaces\IHierarchicalData.cs" />
     <Compile Include="DefaultDrawingPrimitives.cs" />
     <Compile Include="HierarchicalDataContext.cs" />

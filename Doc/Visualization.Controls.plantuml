@@ -40,7 +40,9 @@ HierarchicalDataViewBase -up--> UserControl
 HierarchicalDataViewBase --> HierachicalDataContext : DataContext
 
 CirclePackingView -up--|> HierarchicalDataViewBase
+CirclePackingView --> DrawingCanvas
 TreeMapView -up--|> HierarchicalDataViewBase
+TreeMapView --> DrawingCanvas
 
 
 SquarifiedTreeMapRenderer -up--|> IRenderer

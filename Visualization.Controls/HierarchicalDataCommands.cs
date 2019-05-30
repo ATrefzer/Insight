@@ -6,14 +6,15 @@ using System.Windows.Controls;
 using Prism.Commands;
 
 using Visualization.Controls.Data;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls
 {
     public sealed class HierarchicalDataCommands
     {
-        private readonly Dictionary<MenuItem, Action<HierarchicalData>> _menuItemToAction = new Dictionary<MenuItem, Action<HierarchicalData>>();
+        private readonly Dictionary<MenuItem, Action<IHierarchicalData>> _menuItemToAction = new Dictionary<MenuItem, Action<IHierarchicalData>>();
 
-        public bool Fill(ContextMenu menu, HierarchicalData data)
+        public bool Fill(ContextMenu menu, IHierarchicalData data)
         {
             if (!_menuItemToAction.Any())
             {
@@ -35,14 +36,14 @@ namespace Visualization.Controls
             return true;
         }
 
-        public void Register(string title, Action<HierarchicalData> action)
+        public void Register(string title, Action<IHierarchicalData> action)
         {
             var item = new MenuItem { Header = title };
 
             _menuItemToAction[item] = action;
         }
 
-        private void OnMenuClick(MenuItem item, HierarchicalData data)
+        private void OnMenuClick(MenuItem item, IHierarchicalData data)
         {
             // Invoke subscriber with clicked data item.
             _menuItemToAction[item].Invoke(data);
