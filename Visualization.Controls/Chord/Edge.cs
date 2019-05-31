@@ -29,6 +29,9 @@ namespace Visualization.Controls.Chord
             }
         }
 
+        public DelegateCommand MouseEnterCommand { get; internal set; }
+        public DelegateCommand MouseLeaveCommand { get; internal set; }
+
 
         public string Name { get; set; }
         public string Node1Id { get; set; }
@@ -86,7 +89,7 @@ namespace Visualization.Controls.Chord
             }
         }
 
-        public ICommand SelectCommand { get; internal set; }
+        public ICommand ClickCommand { get; internal set; }
 
         internal void UpdateLocation(Dictionary<string, Vertex> vertexLookup)
         {

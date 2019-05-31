@@ -42,7 +42,8 @@ namespace Insight.Shared
 
         public bool IsAccepted(string path)
         {
-            return _acceptedFiles.Contains(path.ToLower());
+            var accepted = _acceptedFiles.Contains(path.ToLower());
+            return accepted;
         }
     }
 
@@ -60,7 +61,8 @@ namespace Insight.Shared
 
         public bool IsAccepted(string path)
         {
-            return _allowedExtensions.Any(path.ToLowerInvariant().EndsWith);
+            var accepted = _allowedExtensions.Any(path.ToLowerInvariant().EndsWith);
+            return accepted;
         }
     }
 
@@ -97,7 +99,8 @@ namespace Insight.Shared
         {
             // One disallowed path is enough to reject.
             var reject = _disallowedPaths.Any(path.ToLowerInvariant().Contains);
-            return !reject;
+            var accepted = !reject;
+            return accepted;
         }
     }
 
@@ -142,7 +145,8 @@ namespace Insight.Shared
     {
         public bool IsAccepted(string path)
         {
-            return path.Contains("UnitTest") && path.Contains("_") && path.EndsWith(".cs");
+            var accepted = path.Contains("UnitTest") && path.Contains("_") && path.EndsWith(".cs");
+            return accepted;
         }
     }
 }

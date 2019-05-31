@@ -36,7 +36,7 @@
       <Value Profile="(Default)">300</Value>
     </Setting>
     <Setting Name="MinCouplingForChangeCoupling" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">20</Value>
+      <Value Profile="(Default)">3</Value>
     </Setting>
     <Setting Name="MinDegreeForChangeCoupling" Type="System.Double" Scope="User">
       <Value Profile="(Default)">40</Value>

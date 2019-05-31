@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Prism.Commands;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -57,7 +58,9 @@ namespace Visualization.Controls.Chord
         }
 
         public double Radius { get; set; }
-        public ICommand SelectCommand { get; set; }
+        public ICommand ClickCommand { get; set; }
+        public DelegateCommand MouseEnterCommand { get; internal set; }
+        public DelegateCommand MouseLeaveCommand { get; internal set; }
 
         public override bool Equals(object obj)
         {

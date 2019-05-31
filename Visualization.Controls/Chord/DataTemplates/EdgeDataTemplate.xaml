@@ -1,6 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:ChordViewModels="clr-namespace:Visualization.Controls.Chord">
+                    xmlns:ChordViewModels="clr-namespace:Visualization.Controls.Chord"
+                    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity">
 
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="Styles.xaml"/>
@@ -23,9 +24,19 @@
                 <ToolTip Content="{Binding Tooltip}" />
             </Path.ToolTip>
 
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseEnter">
+                    <i:InvokeCommandAction Command="{Binding MouseEnterCommand}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="MouseLeave">
+                    <i:InvokeCommandAction Command="{Binding MouseLeaveCommand}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+
+            
             <Path.InputBindings>
                 <MouseBinding MouseAction="LeftClick"
-                              Command="{Binding SelectCommand}"/>
+                              Command="{Binding ClickCommand}"/>
             </Path.InputBindings>
             
             
@@ -36,11 +47,13 @@
                     <Setter Property="StrokeThickness"
                             Value="2"/>
                     <Style.Triggers>
+                        <!--
+                        Use interaction triggers to update the IsSelected Property
                         <Trigger Property="IsMouseOver"
                                  Value="True">
                             <Setter Property="StrokeThickness"
                                     Value="4"/>
-                        </Trigger>
+                        </Trigger>-->
                         <DataTrigger Binding="{Binding IsSelected}"
                                      Value="True">
                             <Setter Property="StrokeThickness"

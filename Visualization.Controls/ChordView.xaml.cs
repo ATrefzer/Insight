@@ -1,15 +1,12 @@
-﻿using System;
+﻿using Prism.Commands;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-
-using Prism.Commands;
-
 using Visualization.Controls.Chord;
 using Visualization.Controls.Data;
-
 using Label = Visualization.Controls.Chord.Label;
 
 namespace Visualization.Controls
@@ -21,13 +18,14 @@ namespace Visualization.Controls
     {
         private List<EdgeData> _edgeData;
         private List<Edge> _edgeViewModels;
-       
+
         private List<Label> _labelViewModels;
         private MainCircle _mainCircleViewModel;
         private double _maxLabelWidth = double.NaN;
 
         private Dictionary<string, Vertex> _vertexLookup;
         private List<Vertex> _vertexViewModels;
+        private bool _isSelectionLocked;
 
         public ChordView()
         {
@@ -89,10 +87,15 @@ namespace Visualization.Controls
         {
             var edgeViewModel = new Edge();
 
-            edgeViewModel.SelectCommand = new DelegateCommand(() =>
+            
+            edgeViewModel.ClickCommand = new DelegateCommand(() =>
             {
-                Select(edgeViewModel);
+                _isSelectionLocked = false;
+                HighlightEdgeOnly(edgeViewModel);
+                _isSelectionLocked = true;
             });
+            edgeViewModel.MouseEnterCommand = new DelegateCommand(() => HighlightEdgeOnly(edgeViewModel));
+            edgeViewModel.MouseLeaveCommand = new DelegateCommand(() => ClearSelection());
 
             edgeViewModel.IsSelected = false;
             edgeViewModel.Node1Id = edge.Node1Id;
@@ -100,6 +103,8 @@ namespace Visualization.Controls
             edgeViewModel.Strength = edge.Strength;
 
             _edgeViewModels.Add(edgeViewModel);
+
+          
         }
 
         private void CreateEdgeViewModels()
@@ -107,6 +112,30 @@ namespace Visualization.Controls
             foreach (var edge in _edgeData)
             {
                 CreateEdgeViewModel(edge);
+            }
+        }
+
+        private void ClearSelection(bool force = false)
+        {
+            if (_isSelectionLocked && !force)
+            {
+                return;
+            }
+            _isSelectionLocked = false;
+
+            foreach (var vertex in _vertexViewModels)
+            {
+                vertex.IsSelected = false;
+            }
+
+            foreach (var edge in _edgeViewModels)
+            {
+                edge.IsSelected = false;
+            }
+
+            foreach (var label in _labelViewModels)
+            {
+                label.IsSelected = false;
             }
         }
 
@@ -126,8 +155,8 @@ namespace Visualization.Controls
         private void CreateLabelViewModel(string vertexId, string label, double angle, Size size)
         {
             var labelViewModel = new Label(vertexId, label, angle, size);
-            labelViewModel.MouseEnterCommand = new DelegateCommand(() => Select(labelViewModel));
-            labelViewModel.MouseLeaveCommand = new DelegateCommand(() => Select((Vertex) null));
+            labelViewModel.MouseEnterCommand = new DelegateCommand(() => HighlightVertexAndAllConnectedElements(labelViewModel));
+            labelViewModel.MouseLeaveCommand = new DelegateCommand(() => ClearSelection());
             _labelViewModels.Add(labelViewModel);
         }
 
@@ -158,15 +187,22 @@ namespace Visualization.Controls
         private void CreateVertexViewModel(string nodeId, string label, double angle)
         {
             var vertexViewModel = new Vertex(nodeId, label);
-            vertexViewModel.SelectCommand = new DelegateCommand(() =>
+
+            // Click holds the selection
+            vertexViewModel.ClickCommand = new DelegateCommand(() =>
                                                                 {
-                                                                    Select(vertexViewModel);
+                                                                    _isSelectionLocked = false;
+                                                                    HighlightVertexAndAllConnectedElements(vertexViewModel);
+                                                                    _isSelectionLocked = true;
                                                                 });
+            // Hover
+            vertexViewModel.MouseEnterCommand = new DelegateCommand(() => HighlightVertexAndAllConnectedElements(vertexViewModel));
+            vertexViewModel.MouseLeaveCommand = new DelegateCommand(() => ClearSelection());
 
             vertexViewModel.Radius = 4;
             vertexViewModel.Angle = angle;
             _vertexViewModels.Add(vertexViewModel);
-        }       
+        }
 
         private double GetRadiusOfMainCircle(double longestLabelWidth)
         {
@@ -248,46 +284,53 @@ namespace Visualization.Controls
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // Click on any free space in the window releases the held selection.
-            Select((Vertex) null);
+            ClearSelection(true);
         }
 
-        private void Select(Label labelViewModel)
+        private void HighlightVertexAndAllConnectedElements(Label labelViewModel)
         {
-            // Finde vertex
+            // Same as vertex
             var vertex = _vertexLookup[labelViewModel.VertexId];
-            Select(vertex);
+            HighlightVertexAndAllConnectedElements(vertex);
         }
 
         /// <summary>
-        /// Selects the clicked edge and its two verticies.
+        /// When we hover over an edge we highlight the edge itself the two verticies and
+        /// the two labels.
         /// </summary>
-        private void Select(Edge edge)
+        private void HighlightEdgeOnly(Edge edge)
         {
-            foreach (var vertexViewModel in _vertexViewModels)
+            if (_isSelectionLocked)
             {
-                vertexViewModel.IsSelected = false;
+                return;
             }
 
-            foreach (var edgeViewModel in _edgeViewModels)
-            {
-                edgeViewModel.IsSelected = false;
-            }
+            ClearSelection();
 
             // Just select the clicked edge and the two vertiecies
             edge.IsSelected = true;
             _vertexLookup[edge.Node1Id].IsSelected = true;
             _vertexLookup[edge.Node2Id].IsSelected = true;
+
+            // Select label if node is selected and vice versa
+            foreach (var labelViewModel in _labelViewModels)
+            {
+                labelViewModel.IsSelected = _vertexLookup[labelViewModel.VertexId].IsSelected;
+            }
         }
 
         /// <summary>
-        /// Selects a vertex and all edges / vertiecies attached to it.
+        /// Highlights a vertex and all edges / vertiecies attached to it.
+        /// This is called only when clicking the vertex.
         /// </summary>
-        private void Select(Vertex vertex)
+        private void HighlightVertexAndAllConnectedElements(Vertex vertex)
         {
-            foreach (var vertexViewModel in _vertexViewModels)
+            if (_isSelectionLocked)
             {
-                vertexViewModel.IsSelected = false;
+                return;
             }
+
+            ClearSelection();
 
             foreach (var edge in _edgeViewModels)
             {
@@ -298,10 +341,6 @@ namespace Visualization.Controls
                     _vertexLookup[edge.Node1Id].IsSelected = true;
                     _vertexLookup[edge.Node2Id].IsSelected = true;
                 }
-                else
-                {
-                    edge.IsSelected = false;
-                }
             }
 
             // Select label if node is selected and vice versa
@@ -309,6 +348,8 @@ namespace Visualization.Controls
             {
                 labelViewModel.IsSelected = _vertexLookup[labelViewModel.VertexId].IsSelected;
             }
+
+            
         }
 
         private void UpdateSize()
