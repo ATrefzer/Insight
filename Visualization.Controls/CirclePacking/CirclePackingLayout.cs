@@ -47,7 +47,7 @@ namespace Visualization.Controls.CirclePacking
     directly the next overlapping circle. That is ok.
     See Examples\why_we_end_up_with_a_collision_again.html
     */
-    internal sealed class CirclePackingLayout
+    public sealed class CirclePackingLayout
     {
         /// When one layer is finished the output files are deleted.
         public bool DebugEnabled { get; } = false;
@@ -65,7 +65,7 @@ namespace Visualization.Controls.CirclePacking
 
             // Center root node to screen. Move to (0,0)
             var rootLayout = GetLayout(root);
-            MoveCircles(root, -(Vector) rootLayout.Center);
+            MoveCircles(root, -(Vector)rootLayout.Center);
 
             ApplyPendingMovements(root);
         }
@@ -88,16 +88,16 @@ namespace Visualization.Controls.CirclePacking
             }
         }
 
-        private double AreaToRadius(double weight)
+        private double AreaToRadius(double area)
         {
-            return Math.Sqrt(weight / (2 * Math.PI));
+            return Math.Sqrt(area / (2 * Math.PI));
         }
 
         private CircularLayoutInfo CalculateEnclosingCircle(IHierarchicalData root, FrontChain frontChain)
         {
             // Get extreme points by extending the vector from origin to center by the radius
             var layouts = frontChain.ToList();
-            var points = layouts.Select(x => MathHelper.MovePointAlongLine(new Point(), x.Center, x.Radius)).ToList();
+            var points = layouts.Select(x => Geometry.MovePointAlongLine(new Point(), x.Center, x.Radius)).ToList();
 
             var layout = GetLayout(root);
             Debug.Assert(layout.Center == new Point()); // Since we process bottom up this node was not considered yet.
@@ -113,7 +113,7 @@ namespace Visualization.Controls.CirclePacking
             else
             {
                 // 2 and 3 points seem to be handled correctly.
-                MathHelper.FindMinimalBoundingCircle(points, out center, out radius);
+                Geometry.FindMinimalBoundingCircle(points, out center, out radius);
             }
 
             layout.Center = center;
@@ -128,7 +128,7 @@ namespace Visualization.Controls.CirclePacking
 
         private double DistanceToOrigin(Node node)
         {
-            return ((Vector) node.Value.Center).Length;
+            return ((Vector)node.Value.Center).Length;
         }
 
         private Node FindOverlappingCircleOnFrontChain(FrontChain frontChain, CircularLayoutInfo tmpCircle)
@@ -141,7 +141,7 @@ namespace Visualization.Controls.CirclePacking
         /// </summary>
         private Tuple<CircularLayoutInfo, CircularLayoutInfo> FindTangentCircle(CircularLayoutInfo circle1, CircularLayoutInfo circle2, double radiusOfTangentCircle)
         {
-            var solutions = MathHelper.FindCircleCircleIntersections(circle1.Center, circle1.Radius + radiusOfTangentCircle,
+            var solutions = Geometry.FindCircleCircleIntersections(circle1.Center, circle1.Radius + radiusOfTangentCircle,
                                                                      circle2.Center, circle2.Radius + radiusOfTangentCircle, out var solution1
                                                                      , out var solution2);
 
@@ -149,11 +149,11 @@ namespace Visualization.Controls.CirclePacking
 
             return new Tuple<CircularLayoutInfo, CircularLayoutInfo>(
                                                                      new CircularLayoutInfo
-                                                                             { Center = solution1, Radius = radiusOfTangentCircle },
+                                                                     { Center = solution1, Radius = radiusOfTangentCircle },
                                                                      new CircularLayoutInfo
                                                                      {
-                                                                             Center = solution2,
-                                                                             Radius = radiusOfTangentCircle
+                                                                         Center = solution2,
+                                                                         Radius = radiusOfTangentCircle
                                                                      });
         }
 
@@ -189,7 +189,7 @@ namespace Visualization.Controls.CirclePacking
                 left = GetLayout(child);
 
                 // If child has children its origin is not (0,0) any more. So move this node to origin first.               
-                var displacement = -(Vector) left.Center + new Vector(-left.Radius, 0);
+                var displacement = -(Vector)left.Center + new Vector(-left.Radius, 0);
                 left.Move(displacement);
             }
 
@@ -200,7 +200,7 @@ namespace Visualization.Controls.CirclePacking
                 right = GetLayout(child);
 
                 // If child has children its origin is not (0,0) any more. So move this node to origin first.          
-                var displacement = -(Vector) right.Center + new Vector(right.Radius, 0);
+                var displacement = -(Vector)right.Center + new Vector(right.Radius, 0);
                 right.Move(displacement);
             }
 
@@ -210,7 +210,7 @@ namespace Visualization.Controls.CirclePacking
                 child = children[2];
                 top = GetLayout(child);
 
-                var solutions = MathHelper.FindCircleCircleIntersections(
+                var solutions = Geometry.FindCircleCircleIntersections(
                                                                          left.Center, left.Radius + top.Radius,
                                                                          right.Center, right.Radius + top.Radius,
                                                                          out var solution1, out var solution2);
@@ -219,7 +219,7 @@ namespace Visualization.Controls.CirclePacking
                 Debug.Assert(solutions == 2);
                 var solution = solution1.Y > solution2.Y ? solution1 : solution2;
 
-                var displacement = -(Vector) top.Center + (Vector) solution;
+                var displacement = -(Vector)top.Center + (Vector)solution;
                 top.Move(displacement);
             }
 
@@ -236,7 +236,7 @@ namespace Visualization.Controls.CirclePacking
         /// </summary>
         private void InitLayoutForLeafNode(IHierarchicalData data)
         {
-            // Not intersted in non leaf nodes, so we can ask for area metric.
+            // Not interested in non leaf nodes, so we can ask for area metric.
             Debug.Assert(data.AreaMetric > 0);
             var layout = GetLayout(data);
             layout.Radius = AreaToRadius(data.AreaMetric);
@@ -251,7 +251,7 @@ namespace Visualization.Controls.CirclePacking
                 return true;
             }
 
-            var intersections = MathHelper.FindCircleCircleIntersections(layout1.Center, layout1.Radius,
+            var intersections = Geometry.FindCircleCircleIntersections(layout1.Center, layout1.Radius,
                                                                          layout2.Center, layout2.Radius, out var intersection1, out var intersection2);
 
             // Two solutions or one circle inside the other.
@@ -326,13 +326,8 @@ namespace Visualization.Controls.CirclePacking
 
                 var solutions = FindTangentCircle(mNode.Value, nNode.Value, iLayout.Radius);
 
-                
-                var tmpCircle2 = SelectCircleExperimential(mNode.Value, nNode.Value, solutions.Item1, solutions.Item2);
+                var tmpCircle = SelectCircleExperimential(mNode.Value, nNode.Value, solutions.Item1, solutions.Item2);
 
-                // TODO remove old implementation
-                var tmpCircle = SelectCircle(frontChain, solutions.Item1, solutions.Item2);
-
-                Debug.Assert(tmpCircle == tmpCircle2);
                 Debug.Assert(tmpCircle != null);
 
                 // Find overlappings with circles in the front chain.Does one intersect with the just calculated circle?
@@ -434,7 +429,7 @@ namespace Visualization.Controls.CirclePacking
             }
 
             // We have two solutions. Which point to chose?
-          
+
             var segment_m_n = m.Center - n.Center;
             var anyNormal = new Vector(-segment_m_n.Y, segment_m_n.X)
                 - new Vector(segment_m_n.Y, -segment_m_n.X);
@@ -442,10 +437,14 @@ namespace Visualization.Controls.CirclePacking
             var value2 = Vector.Multiply(circle2.Center - m.Center, (Vector)anyNormal);
 
             if (value1 > 0 && value2 < 0)
+            {
                 return circle2;
+            }
 
             if (value2 > 0 && value1 < 0)
+            {
                 return circle1;
+            }
 
             return value1 > value2 ? circle2 : circle1;
         }
@@ -457,147 +456,6 @@ namespace Visualization.Controls.CirclePacking
         {
             var layout = GetLayout(data);
             layout.Move(offset);
-        }
-
-        /// <summary>
-        /// Usually we have two solutions for tangent circles. We have to decide which to use.
-        /// Theoretically that is the one that is outside the front chain polygon.
-        /// However there are many edge cases. So I do not have an exact mathematical solution to this problem.
-        /// Therefore I use different heuristics.
-        /// </summary>
-        private CircularLayoutInfo SelectCircle(FrontChain frontChain, CircularLayoutInfo circle1, CircularLayoutInfo circle2)
-        {
-            var poly = frontChain.ToList().Select(x => x.Center).ToList();
-
-            Debug.Assert(IsPointValid(circle1.Center) || IsPointValid(circle2.Center));
-
-            // ----------------------------------------------------------------------------
-            // If exactly one of the two points is valid that is the solution.
-            // ----------------------------------------------------------------------------
-
-            if (IsPointValid(circle1.Center) && !IsPointValid(circle2.Center))
-            {
-                return circle1;
-            }
-
-            if (!IsPointValid(circle1.Center) && IsPointValid(circle2.Center))
-            {
-                return circle2;
-            }
-
-            // We have two solutions. Which point to chose?
-
-            // ----------------------------------------------------------------------------
-            // If one center is inside and one outside the polygon take the outside.
-            // ----------------------------------------------------------------------------
-
-            var center1Inside = MathHelper.PointInPolygon(poly, circle1.Center.X, circle1.Center.Y);
-            var center2Inside = MathHelper.PointInPolygon(poly, circle2.Center.X, circle2.Center.Y);
-
-            if (center1Inside && !center2Inside)
-            {
-                return circle2;
-            }
-
-            if (!center1Inside && center2Inside)
-            {
-                return circle1;
-            }
-
-            // Both centers outside: Examples\Both_centers_outside_polygon.html.
-            // Note that the purple circle (center) may also be inside the polygon if it was a little bit smaller.
-            // Debug.Assert(center2Inside && center2Inside);
-
-            // Both centers inside: Examples\Both_centers_inside_polygon.html
-            // Happens when centers are on the polygon edges.
-            // Debug.Assert(!center2Inside && !center2Inside);
-
-            // ----------------------------------------------------------------------------
-            // If one circle is crossed by an polygon edge and the other is not, 
-            // take the other.
-            // ----------------------------------------------------------------------------
-            var circle1HitByEdge = false;
-            var circle2HitByEdge = false;
-            var iter = frontChain.Head;
-            while (iter != null)
-            {
-                var first = iter.Value;
-                var second = iter.Next.Value;
-
-                Point intersect1;
-                Point intersect2;
-
-                // Note we consider a line here, not a line segment
-                var solutions = MathHelper.FindLineCircleIntersections(circle1.Center.X,
-                                                                       circle1.Center.Y, circle1.Radius, first.Center, second.Center, out intersect1, out intersect2);
-
-                if (solutions > 0)
-                {
-                    circle1HitByEdge |= MathHelper.PointOnLineSegment(first.Center, second.Center, intersect1);
-                }
-
-                if (solutions > 1)
-                {
-                    circle1HitByEdge |= MathHelper.PointOnLineSegment(first.Center, second.Center, intersect2);
-                }
-
-                solutions = MathHelper.FindLineCircleIntersections(circle2.Center.X,
-                                                                   circle2.Center.Y, circle2.Radius, first.Center, second.Center, out intersect1, out intersect2);
-
-                if (solutions > 0)
-                {
-                    circle2HitByEdge |= MathHelper.PointOnLineSegment(first.Center, second.Center, intersect1);
-                }
-
-                if (solutions > 1)
-                {
-                    circle2HitByEdge |= MathHelper.PointOnLineSegment(first.Center, second.Center, intersect2);
-                }
-
-                iter = iter.Next;
-                if (iter == frontChain.Head)
-                {
-                    // Ensure that the segment from tail to head is also processed.
-                    iter = null;
-                }
-            }
-
-            if (circle1HitByEdge && !circle2HitByEdge)
-            {
-                return circle2;
-            }
-
-            if (!circle1HitByEdge && circle2HitByEdge)
-            {
-                return circle1;
-            }
-
-            if (DebugEnabled)
-            {
-                DebugHelper.WriteDebugOutput(frontChain, "not_sure_which_circle", circle1, circle2);
-            }
-
-            // Still inconclusive which solution to take.
-            // I choose the one with the largst distance from the origin.
-            // Background is following example: Inconclusive_solution.html
-            // I need to get rid of the inner (green) circle If I want to grow outwards.
-
-            // In my understanding this inner node is always m. We chose it because it had the smallest distance to the origin.
-            // My hope is that the selected solution leads to removal of m. Cannot prove it, but I think so.
-            return SelectCircleWithLargerDistanceFromOrigin(circle1, circle2);
-        }
-
-        private CircularLayoutInfo SelectCircleWithLargerDistanceFromOrigin(CircularLayoutInfo circle1, CircularLayoutInfo circle2)
-        {
-            Debug.Assert(IsPointValid(circle1.Center) && IsPointValid(circle2.Center));
-            Debug.Assert(circle1.Radius.Equals(circle2.Radius));
-
-            if (((Vector) circle1.Center).Length > ((Vector) circle2.Center).Length)
-            {
-                return circle1;
-            }
-
-            return circle2;
         }
     }
 }

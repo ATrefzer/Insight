@@ -1,17 +1,18 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-
-using Visualization.Controls;
 using Visualization.Controls.Data;
 
 namespace Tests
 {
-    internal sealed class HierarchicalDataBuilder
+    /// <summary>
+    /// Random hierarchical test data-
+    /// </summary>
+    public class HierarchicalDataBuilder
     {
-        private readonly Random _random = new Random(355);
+        private Random _random = new Random(DateTime.Now.Millisecond);
 
-        public HierarchicalDataContext CreateHierarchyFromFilesystem(string path, bool subDirs)
+
+        public HierarchicalData CreateHierarchyFromFilesystem(string path, bool subDirs)
         {
             var item = new HierarchicalData(path);
             FillChildren(item, subDirs);
@@ -20,78 +21,7 @@ namespace Tests
             item.SumAreaMetrics();
             item.NormalizeWeightMetrics();
 
-            Debug.WriteLine("Nodes: " + item.CountLeafNodes());
-            return new HierarchicalDataContext(item);
-        }
-
-        public HierarchicalDataContext GetColoredNestedExample()
-        {
-            var root = new HierarchicalData("root");
-            var scheme = new ColorScheme(new[] { "c1", "c2", "c3" });
-
-            HierarchicalData child;
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "c1";
-            root.AddChild(child);
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "c2";
-            root.AddChild(child);
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "c3";
-            root.AddChild(child);
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "unknown";
-            root.AddChild(child);
-
-            root.SumAreaMetrics();
-            Console.WriteLine(root.CountLeafNodes());
-            return new HierarchicalDataContext(root, scheme);
-        }
-
-        public HierarchicalDataContext GetFlatExample()
-        {
-            var root = new HierarchicalData("");
-            root.AddChild(new HierarchicalData("6", 300, 8));
-            root.AddChild(new HierarchicalData("6", 60, 7));
-            root.AddChild(new HierarchicalData("4", 40, 6));
-            root.AddChild(new HierarchicalData("3", 30, 6));
-            root.AddChild(new HierarchicalData("1", 10, 6));
-            root.AddChild(new HierarchicalData("2", 20, 200));
-            root.AddChild(new HierarchicalData("2", 20, 1));
-
-            var child = new HierarchicalData("3", 30, 1);
-            root.AddChild(child);
-            root.SumAreaMetrics();
-            root.NormalizeWeightMetrics();
-            return new HierarchicalDataContext(root);
-        }
-
-        public HierarchicalDataContext ShowCollisionWithLastElementProblem()
-        {
-            var root = new HierarchicalData("");
-            root.AddChild(new HierarchicalData("6", 10));
-            root.AddChild(new HierarchicalData("6", 10));
-            root.AddChild(new HierarchicalData("4", 10));
-            root.AddChild(new HierarchicalData("3", 10));
-            root.AddChild(new HierarchicalData("1", 10));
-            root.AddChild(new HierarchicalData("3", 10));
-            root.AddChild(new HierarchicalData("1", 10));
-            root.AddChild(new HierarchicalData("3", 10));
-            root.AddChild(new HierarchicalData("1", 10));
-            root.SumAreaMetrics();
-            return new HierarchicalDataContext(root);
-        }
-
-        internal HierarchicalData GetNumberOfCircles(int circles, int radius)
-        {
-            var root = new HierarchicalData("");
-            for (var i = 0; i < circles; i++)
-            {
-                root.AddChild(new HierarchicalData("i", radius));
-            }
-
-            root.SumAreaMetrics();
-            return root;
+            return item;
         }
 
         private void FillChildren(HierarchicalData root, bool recursive)
@@ -112,10 +42,10 @@ namespace Tests
             }
             catch (Exception)
             {
-                // 
+                // Ignore file access rights.
             }
 
-            if (recursive == false)
+            if (!recursive)
             {
                 return;
             }
@@ -132,8 +62,67 @@ namespace Tests
             }
             catch (Exception)
             {
-                // Cannot access file. Ignore.
+                // Ignore file access rights.
             }
+        }
+
+        // Assume root has always at least one child!
+        public HierarchicalData GenerateRandomHierarchy()
+        {
+            var root = new HierarchicalData("root");
+
+            var depth = GetRandomDepth();
+
+            // At least one child
+            FillChildren(root, GetRandmomNumberOfChildren(), depth);
+
+            return root;
+        }
+
+
+        private void FillChildren(HierarchicalData data, int numChildren, int depth)
+        {
+            depth--;
+            for (int i = 0; i < numChildren; i++)
+            {
+                HierarchicalData newChild;
+                if (GetRandomIsLeaf() || depth <= 0)
+                {
+                    newChild = new HierarchicalData("leaf", GetRandomArea());
+                }
+                else
+                {
+                    newChild = new HierarchicalData("folder");
+                    FillChildren(newChild, GetRandmomNumberOfChildren(), depth);
+                }
+                data.AddChild(newChild);
+            }
+        }
+
+        /// <summary>
+        /// At least 1. When we call this it is already decided that we are a parent node.
+        /// </summary>
+        int GetRandmomNumberOfChildren()
+        {
+            return _random.Next(1, 10);
+        }
+
+        double GetRandomArea()
+        {
+            var value = _random.NextDouble() * _random.Next(1, 100000);
+            return Math.Ceiling(value);
+        }
+
+        private int GetRandomDepth()
+        {
+            return _random.Next(0, 10);
+        }
+
+        bool GetRandomIsLeaf()
+        {
+            // Probability of being a leaf node = 0.2
+            var value = _random.NextDouble();
+            return value < 0.2;
         }
     }
 }

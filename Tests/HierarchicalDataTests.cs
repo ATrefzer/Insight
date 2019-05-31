@@ -1,8 +1,6 @@
-﻿using System;
+﻿using NUnit.Framework;
+using System;
 using System.Linq;
-
-using NUnit.Framework;
-
 using Visualization.Controls.Data;
 
 namespace Tests
@@ -77,12 +75,12 @@ namespace Tests
             var a = new HierarchicalData("a");
             var b = new HierarchicalData("b");
             var c = new HierarchicalData("c");
-          
+
             a.AddChild(b);
             b.AddChild(c);
 
             // c is leaf node
-         
+
             var data = a.Shrink();
             Assert.AreEqual("c", data.Name);
         }

@@ -14,6 +14,7 @@ namespace Insight.ViewModels
         /// See MainWindow.xaml
         /// 
         /// We have different views like TreeMapView, ChordView etc. Therefore this is an object.
+        /// Data is for example HierarchicalDataContext, List<EdgeData/>
         /// </summary>
         public object Data
         {

@@ -15,6 +15,12 @@ using Color = System.Drawing.Color;
 
 namespace Visualization.Controls
 {
+    /// <summary>
+    /// Maps color keys to brushes.
+    /// You can provide the mappings in the constructor or
+    /// add keys. This will assign (limited) number of known colors
+    /// to the next key.
+    /// </summary>
     [Serializable]
     public sealed class ColorScheme : IColorScheme
     {
@@ -40,7 +46,6 @@ namespace Visualization.Controls
                 return _names.ToList();
             }
         }
-
 
         public void Export(string file)
         {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Insight.GitProvider;
-using Insight.Shared.System;
 using NUnit.Framework;
 
 using Decoder = Insight.GitProvider.Decoder;
@@ -33,17 +33,21 @@ namespace Tests
             Assert.AreEqual(expected, decoded);
         }
 
+        // Accesses file system
         [Test]
-        [Ignore("Accesses file system")]
         public void FixEncoding2()
         {
             // We have to tell about the process output encoding.
             // Much more reasonable than starting to recode strings
 
+            var assembly = Assembly.GetAssembly(this.GetType());
+            var directory = new FileInfo(assembly.Location).Directory.FullName;
+            var resources = Path.Combine(directory, @"..\Tests\Resources");
+
+
             var expected = "äöü";
-            var cmd = "git log Tests/Resources/file_with_umlauts_äöü.cs";
-            var cli = new GitCommandLine(@"d:\Git Repositories\Insight");
-            var result = cli.Log(@"d:\Git Repositories\Insight\Tests\Resources\file_with_umlauts_äöü.cs");
+            var cli = new GitCommandLine(Path.Combine(directory, ".."));
+            var result = cli.Log(Path.Combine(resources, "file_with_umlauts_äöü.cs"));
 
             Assert.IsTrue(result.Contains(expected));
 

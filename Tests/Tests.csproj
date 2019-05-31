@@ -68,30 +68,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CirclePackingLayoutTests.cs" />
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="DecoderTests.cs" />
     <Compile Include="FractalValueTests.cs" />
     <Compile Include="GraphTests.cs" />
+    <Compile Include="HierarchicalDataBuilder.cs" />
+    <Compile Include="HierarchicalTestExamples.cs" />
     <Compile Include="MovementTrackerTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="RangeTests.cs" />
     <Compile Include="IdTests.cs" />
+    <Compile Include="TreeMapLayoutingTests.cs" />
     <Compile Include="WorkItemExtractorTests.cs" />
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="FrontChainTests.cs" />
     <Compile Include="HierarchicalDataTests.cs" />
-    <Compile Include="HierarchicalDataBuilder.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

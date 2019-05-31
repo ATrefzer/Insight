@@ -11,7 +11,7 @@ namespace Visualization.Controls.Utility
     // http://csharphelper.com/blog/2014/07/determine-whether-a-point-is-inside-a-polygon-in-c/
     // http://csharphelper.com/blog/2014/08/find-a-minimal-bounding-circle-of-a-set-of-points-in-c/
 
-    internal static class MathHelper
+    internal static class Geometry
     {
         public static double Epsilon = 0.0000001;
 

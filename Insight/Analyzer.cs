@@ -106,7 +106,7 @@ namespace Insight
         {
             LoadHistory();
             LoadMetrics();
-
+          
             // Get summary of all files
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
 

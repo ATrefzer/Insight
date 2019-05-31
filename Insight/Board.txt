@@ -18,13 +18,6 @@ In TODO
 - Settings: Ask user to clear Colors.txt when he changes the base directory in the settings window.
 
 
-Factories:
-- HierarchicalData
-- ColorScheme
-- MetricProvider?
-
-
-
 
 - Commits pro line statt absolute 
 

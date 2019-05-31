@@ -5,6 +5,16 @@ namespace Insight.Shared.Model
     [Serializable]
     public abstract class Id
     {
+        /// <summary>
+        /// Define in derived class
+        /// </summary>
+        public abstract override int GetHashCode();
+
+        /// <summary>
+        /// Define in derived class
+        /// </summary>
+        public abstract override bool Equals(object obj);
+
         public static bool operator ==(Id obj1, Id obj2)
         {
             if (ReferenceEquals(obj1, obj2))

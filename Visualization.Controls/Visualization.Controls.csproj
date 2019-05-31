@@ -157,13 +157,13 @@
     <Compile Include="Tools\IHighlighting.cs" />
     <Compile Include="Tools\Highlighting.cs" />
     <Compile Include="LayoutInfo.cs" />
+    <Compile Include="Utility\Geometry.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="TreeMap\RectangularLayoutInfo.cs" />
     <Compile Include="Drawing\DrawingCanvas.cs" />
     <Compile Include="Drawing\GradientStopCollectionExtension.cs" />
     <Compile Include="Data\HierarchicalData.cs" />
     <Compile Include="Interfaces\IRenderer.cs" />
-    <Compile Include="Utility\MathHelper.cs" />
     <Compile Include="TreeMap\SplitDirection.cs" />
     <Compile Include="TreeMap\SquarifiedTreeMapLayout.cs" />
     <Compile Include="TreeMap\SquarifiedTreeMapRenderer.cs" />

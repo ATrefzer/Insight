@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
-
-using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.TreeMap
@@ -32,7 +30,7 @@ namespace Visualization.Controls.TreeMap
     Ensure that no items with 0 length area metric are in the data!
     Call SumAreaMetrics!
     */
-    internal sealed class SquarifiedTreeMapLayout
+    public sealed class SquarifiedTreeMapLayout
     {
         private int _level = -1;
 
@@ -172,7 +170,7 @@ namespace Visualization.Controls.TreeMap
 
                 // Update layout render information
                 item.Layout = item.Layout ?? new RectangularLayoutInfo();
-                var layout = (RectangularLayoutInfo) item.Layout;
+                var layout = (RectangularLayoutInfo)item.Layout;
                 layout.Rect.Width = stripWidth;
                 layout.Rect.Height = itemHeight;
                 layout.Rect.X = availableSpace.X;

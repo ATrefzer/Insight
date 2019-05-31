@@ -53,11 +53,11 @@ namespace Visualization.Controls
         {
             Clear();
 
-            var idToLabel = new Dictionary<string, string>();
-            var labelToSize = new Dictionary<string, Size>();
-            InitializeLabels(idToLabel, labelToSize);
+            var nodeIdToLabel = new Dictionary<string, string>();
+            var nodeLabelToSize = new Dictionary<string, Size>();
+            InitializeLabels(nodeIdToLabel, nodeLabelToSize);
 
-            CreateVertexAndLabelViewModels(idToLabel, labelToSize);
+            CreateVertexAndLabelViewModels(nodeIdToLabel, nodeLabelToSize);
             CreateEdgeViewModels();
             CreateMainCircleViewModel();
             CreateItemSource();
@@ -234,7 +234,7 @@ namespace Visualization.Controls
             }
         }
 
-        private void InitializeLabels(Dictionary<string, string> distinctLabels, Dictionary<string, Size> labelToSize)
+        private void InitializeLabels(Dictionary<string, string> nodeIdToLabel, Dictionary<string, Size> labelToSize)
         {
             foreach (var edge in _edgeData)
             {
@@ -242,14 +242,14 @@ namespace Visualization.Controls
                 var label2 = edge.Node2DisplayName;
 
                 // I asssume that for same ids the same display name is given!
-                if (!distinctLabels.ContainsKey(edge.Node1Id))
+                if (!nodeIdToLabel.ContainsKey(edge.Node1Id))
                 {
-                    distinctLabels.Add(edge.Node1Id, label1);
+                    nodeIdToLabel.Add(edge.Node1Id, label1);
                 }
 
-                if (!distinctLabels.ContainsKey(edge.Node2Id))
+                if (!nodeIdToLabel.ContainsKey(edge.Node2Id))
                 {
-                    distinctLabels.Add(edge.Node2Id, label2);
+                    nodeIdToLabel.Add(edge.Node2Id, label2);
                 }
 
                 // Measure all labels in advance such that we can calculate the radius.

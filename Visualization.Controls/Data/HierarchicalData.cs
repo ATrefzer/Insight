@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows;
+using System.Text;
 using Visualization.Controls.Interfaces;
-using Visualization.Controls.TreeMap;
 using Visualization.Controls.Utility;
 
 namespace Visualization.Controls.Data
@@ -122,7 +121,7 @@ namespace Visualization.Controls.Data
         /// </summary>
         public IHierarchicalData Clone()
         {
-            var root = Clone(this);           
+            var root = Clone(this);
             return root;
         }
 
@@ -145,9 +144,11 @@ namespace Visualization.Controls.Data
             return count;
         }
 
-        public void Dump()
+        public string Dump()
         {
-            Dump(this, 0);
+            var builder = new StringBuilder();
+            Dump(this, 0, builder);
+            return builder.ToString();
         }
 
 
@@ -327,13 +328,13 @@ namespace Visualization.Controls.Data
             return newData;
         }
 
-        private void Dump(IHierarchicalData item, int level)
+        private void Dump(IHierarchicalData item, int level, StringBuilder builder)
         {
-            Debug.WriteLine(new string(Enumerable.Repeat('\t', level).ToArray()) + item.Name + " " + item.Layout);
+            builder.AppendLine(new string(Enumerable.Repeat('\t', level).ToArray()) + item.Name + " " + item.Layout);
 
             foreach (var child in item.Children)
             {
-                Dump(child, level + 1);
+                Dump(child, level + 1, builder);
             }
         }
 
@@ -369,7 +370,7 @@ namespace Visualization.Controls.Data
         {
             if (IsLeafNode)
             {
-                NormalizedWeightMetric = (WeightMetric - min) / range;            
+                NormalizedWeightMetric = (WeightMetric - min) / range;
             }
 
             foreach (HierarchicalData child in Children)
