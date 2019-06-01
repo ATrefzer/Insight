@@ -100,7 +100,7 @@ namespace Visualization.Controls.CirclePacking
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {
-                return _colorScheme.GetMediaBrush(data.ColorKey);
+                return _colorScheme.GetBrush(data.ColorKey);
             }
             else
             {

@@ -123,7 +123,7 @@ namespace Visualization.Controls.TreeMap
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {
-                brush = _colorScheme.GetMediaBrush(data.ColorKey);
+                brush = _colorScheme.GetBrush(data.ColorKey);
             }
             else
             {

@@ -356,7 +356,8 @@ namespace Insight
                     var colorScheme = context.ColorScheme as ColorScheme;
                     if (colorScheme != null)
                     {
-                        colorScheme.Export(MakeColorsFile(fileName));
+                        var json = new JsonFile<ColorScheme>();
+                        json.Write(MakeColorsFile(fileName), colorScheme);
                     }
                 }
             }
@@ -370,14 +371,17 @@ namespace Insight
                 var fileName = _dialogs.GetLoadFile("bin", "Load data", _project.Cache);
                 if (fileName != null)
                 {
+                    // Read hierarchical data
                     var file = new BinaryFile<HierarchicalData>();
                     var data = file.Read(fileName);
 
+                    // Read coloring
                     var colorScheme = new ColorScheme();
                     var colorFile = MakeColorsFile(fileName);
                     if (File.Exists(colorFile))
                     {
-                        colorScheme.Import(colorFile);
+                        var json = new JsonFile<ColorScheme>();
+                        colorScheme = json.Read(colorFile);
                     }
 
                     var context = new HierarchicalDataContext(data, colorScheme);

@@ -17,6 +17,12 @@ namespace Visualization.Controls.Bitmap
             _colorScheme = colorScheme;
         }
 
+
+        public static System.Drawing.Brush ToDrawingBrush(System.Windows.Media.SolidColorBrush mediaBrush)
+        {
+            return new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(mediaBrush.Color.A, mediaBrush.Color.R, mediaBrush.Color.G, mediaBrush.Color.B));
+        }
+
         public void CreateLegendBitmap(string file)
         {
             var bitmap = new System.Drawing.Bitmap(2000, 2000);
@@ -35,7 +41,7 @@ namespace Visualization.Controls.Bitmap
                 var offsetColorName = 25;
                 var offsetDeveloperName = 200;
 
-                var brush = _colorScheme.GetBrush(name);
+                var brush = ToDrawingBrush(_colorScheme.GetBrush(name));
 
                 graphics.FillRectangle(brush, x, y, 20, 20);
 

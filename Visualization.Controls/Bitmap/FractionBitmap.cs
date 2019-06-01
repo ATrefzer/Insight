@@ -9,8 +9,13 @@ namespace Visualization.Controls.Bitmap
     // TODO Separate calculation from visualization.
     public sealed class FractionBitmap
     {
+        public static System.Drawing.Brush ToDrawingBrush(System.Windows.Media.SolidColorBrush mediaBrush)
+        {
+            return new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(mediaBrush.Color.A, mediaBrush.Color.R, mediaBrush.Color.G, mediaBrush.Color.B));
+        }
+
         public void Create(string filename, Dictionary<string, uint> workByDevelopers,
-                           IColorScheme colorMapperMapping, bool legend)
+                           IColorScheme colorMapper, bool legend)
         {
             double allWork = workByDevelopers.Values.Sum(w => w);
 
@@ -36,7 +41,7 @@ namespace Visualization.Controls.Bitmap
             var index = 0;
             foreach (var developersWork in sorted)
             {
-                var brush = colorMapperMapping.GetBrush(developersWork.Key);
+                var brush = ToDrawingBrush(colorMapper.GetBrush(developersWork.Key));
 
                 if (legend)
                 {
@@ -59,7 +64,7 @@ namespace Visualization.Controls.Bitmap
 
                 if (vertical)
                 {
-                    var widthOfWork = (int) Math.Round(pixelArea / remainingHeight);
+                    var widthOfWork = (int)Math.Round(pixelArea / remainingHeight);
                     graphics.FillRectangle(brush, x, y, widthOfWork, remainingHeight);
 
                     graphics.DrawRectangle(Pens.Black, x, y, widthOfWork, remainingHeight);
@@ -69,7 +74,7 @@ namespace Visualization.Controls.Bitmap
                 }
                 else
                 {
-                    var heightOfWork = (int) Math.Round(pixelArea / remainingWidth);
+                    var heightOfWork = (int)Math.Round(pixelArea / remainingWidth);
                     graphics.FillRectangle(brush, x, y, remainingWidth, heightOfWork);
 
                     graphics.DrawRectangle(Pens.Black, x, y, remainingWidth, heightOfWork);

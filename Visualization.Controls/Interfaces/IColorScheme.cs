@@ -4,8 +4,7 @@ namespace Visualization.Controls.Interfaces
 {
     public interface IColorScheme
     {      
-        System.Drawing.Brush GetBrush(string key);
         string GetColorName(string name);
-        SolidColorBrush GetMediaBrush(string key);
+        SolidColorBrush GetBrush(string key);
     }
 }

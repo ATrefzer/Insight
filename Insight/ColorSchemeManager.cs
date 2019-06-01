@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Insight.Shared;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Visualization.Controls;
@@ -48,7 +49,7 @@ namespace Insight
                 {
                     foreach (var newName in missingNames)
                     {
-                        scheme.AddColorKey(newName);
+                        scheme.AddColorFor(newName);
                     }
                     updated = true;
                 }
@@ -56,7 +57,8 @@ namespace Insight
 
             if (updated)
             {
-                WriteColorSchemeFile(scheme);
+                var json = new JsonFile<ColorScheme>();
+                json.Write(GetColorFile(), scheme);
             }
             return updated;
         }
@@ -68,19 +70,15 @@ namespace Insight
                 return null;
             }
 
-            var scheme = new ColorScheme();
-            scheme.Import(GetColorFile());
+            var json = new JsonFile<ColorScheme>();
+            var scheme = json.Read(GetColorFile());
+
             return scheme;
         }
 
         private string GetColorFile()
         {
-            return Path.Combine(_projectCache, "colors.txt");
-        }
-
-        private void WriteColorSchemeFile(ColorScheme scheme)
-        {
-            scheme.Export(GetColorFile());
+            return Path.Combine(_projectCache, "colors.json");
         }
 
         internal IColorScheme GetColorScheme()

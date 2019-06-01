@@ -3,11 +3,12 @@ using System.Windows.Media;
 
 namespace Visualization.Controls
 {
-    internal static class DefaultDrawingPrimitives
+    public static class DefaultDrawingPrimitives
     {
         public static readonly SolidColorBrush HighlightBrush = Brushes.Yellow;
         public static readonly Pen BlackPen = new Pen(Brushes.Black, 1.0);
-        public static readonly SolidColorBrush DefaultColor = Brushes.LightGray;
+        public static readonly SolidColorBrush DefaultBrush = Brushes.LightGray;
+        public static readonly Color DefaultColor = Colors.LightGray;
         public static readonly GradientBrush RedToWhiteGradient;
         public static readonly GradientBrush WhiteToRedGradient;
 

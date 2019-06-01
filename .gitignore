@@ -288,3 +288,9 @@ __pycache__/
 *.xsd.cs
 Binaries/
 /Cache
+Tests/Resources/large_hierarchical_example_treemap2.bin
+Tests/Resources/large_hierarchical_example_circle2.bin
+Tests/Resources/large_hierarchical_example_circle1.bin
+Tests/Resources/large_hierarchical_example_treemap3.bin
+Tests/Resources/large_hierarchical_example_circle3.bin
+Tests/Resources/large_hierarchical_example_treemap1.bin

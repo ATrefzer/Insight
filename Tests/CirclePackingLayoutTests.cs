@@ -116,7 +116,7 @@ namespace Tests
         public void ReferenceLayout_LargeHierarchicalExample3()
         {
             // Loads a HierarchicalData bin file that includes the layout information and checks
-            // By uncommenting GenerateTestHierarchicalReferenceFile you can generate new reference test data.
+            // if the layouting still produces the same result.
 
             double width = 100;
             double height = 300;

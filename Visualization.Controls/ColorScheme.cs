@@ -1,186 +1,88 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
 using System.Windows.Media;
 
 using Visualization.Controls.Interfaces;
 
-using Brush = System.Drawing.Brush;
-using Color = System.Drawing.Color;
+
 
 namespace Visualization.Controls
 {
     /// <summary>
     /// Maps color keys to brushes.
     /// You can provide the mappings in the constructor or
-    /// add keys. This will assign (limited) number of known colors
+    /// add keys on the fly. This will assign (limited) number of known colors
     /// to the next key.
     /// </summary>
-    [Serializable]
+    [DataContract]
     public sealed class ColorScheme : IColorScheme
     {
-        private readonly List<string> _names;
-        private readonly Dictionary<string, Brush> _nameToBrush = new Dictionary<string, Brush>();
-        private readonly Dictionary<string, Color> _nameToColor = new Dictionary<string, Color>();
+        /// <summary>
+        /// All known names an the associated color argb
+        /// </summary>
+        [DataMember]
+        private readonly Dictionary<string, int> _nameToArgb = new Dictionary<string, int>();
 
         /// <summary>
         /// Additionally store System.Windows.Media.SolidColorBrushes for Wpf application.
         /// </summary>
-        private readonly Dictionary<string, SolidColorBrush> _nameToMediaBrush = new Dictionary<string, SolidColorBrush>();
+        private Dictionary<int, SolidColorBrush> _argbToBrushCache;
 
-        private string[] _colorDefinitions;
+        public List<string> Names { get { return _nameToArgb.Keys.ToList(); } }
+        SolidColorBrush GetBrushFromCache(string name)
+        {
+            if (_argbToBrushCache == null)
+            {
+                _argbToBrushCache = new Dictionary<int, SolidColorBrush>();
+            }
 
-        private int _nextFreeColorIndex;
+            if (!_nameToArgb.ContainsKey(name))
+            {
+                return DefaultDrawingPrimitives.DefaultBrush;
+            }
 
+            SolidColorBrush brush;
+            var argb = _nameToArgb[name];
+            if (!_argbToBrushCache.ContainsKey(argb))
+            {
+                var color = FromArgb(argb);
+                brush = CreateBrushFromColor(color);
+                _argbToBrushCache.Add(argb, brush);
+            }
+            else
+            {
+                brush = _argbToBrushCache[argb];
+            }
+
+            return brush;
+
+        }
+
+        private static SolidColorBrush CreateBrushFromColor(Color color)
+        {
+            SolidColorBrush brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+
+        [DataMember]
+        private int[] _defaultColors;
+
+        [DataMember]
         private bool _canAddColors;
 
-        public List<string> Names
-        {
-            get
-            {
-                return _names.ToList();
-            }
-        }
 
-        public void Export(string file)
-        {
-            using (var stream = new FileStream(file, FileMode.Create))
-            {
-                using (var writer = new StreamWriter(stream, Encoding.UTF8))
-                {
-
-                    writer.WriteLine(_canAddColors);
-                    writer.WriteLine(_nextFreeColorIndex);
-
-                    foreach (var name in Names)
-                    {
-                        var color = _nameToColor[name];
-                        var parts = new List<string>();
-                        parts.Add(color.ToArgb().ToString("X"));
-                        parts.Add(name);
-
-                        writer.WriteLine(string.Join(",", parts));
-                    }
-                }
-            }
-        }
-
-        public void Import(string file)
-        {
-            _names.Clear();
-            _nameToColor.Clear();
-            _nameToMediaBrush.Clear();
-            _nameToBrush.Clear();
-            _canAddColors = false;
-            _nextFreeColorIndex = 0;
-
-            using (var stream = new FileStream(file, FileMode.Open))
-            {
-                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-                {
-                    _canAddColors = bool.Parse(reader.ReadLine());
-                    _nextFreeColorIndex = int.Parse(reader.ReadLine());
-
-                    while (!reader.EndOfStream)
-                    {
-                        var line = reader.ReadLine();
-                        var parts = line.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                        Debug.Assert(parts.Count() == 2);
-                        var color = Color.FromArgb(int.Parse(parts[0], NumberStyles.HexNumber));
-
-                        var name = string.Join("", parts.GetRange(1, parts.Count - 1));
-                        _names.Add(name);
-                        InitColor(name, color);
-                    }
-                }
-            }
-        }
-
-        public ColorScheme(string[] names, Color[] colors)
-        {
-            _canAddColors = false;
-            _names = names.ToList();
-            for (var index = 0; index < names.Length; index++)
-            {
-                var color = colors[index];
-                var name = names[index];
-                InitColor(name, color);
-            }
-
-            // all other names get the default color: White
-        }
-
-        public ColorScheme()
-        {
-            CreateColorsDefinitions();
-            _names = new List<string>();
-            _canAddColors = true;
-        }
-
-        public ColorScheme(string[] names)
-        {
-            CreateColorsDefinitions();
-            _names = names.ToList();
-            foreach (var name in _names)
-            {
-                InitializeColorForName(name);
-            }
-            _canAddColors = true;
-        }
-
-
-
-        public void AddColorKey(string name)
-        {
-            if (!_canAddColors)
-            {
-                Debug.Assert(false);
-                return;
-            }
-
-            if (!_names.Contains(name))
-            {
-                _names.Add(name);
-                InitializeColorForName(name);
-            }
-        }
-
-        public string GetColorName(string name)
-        {
-            if (!_names.Contains(name))
-            {
-                return "White";
-            }
-
-            //return _nameToColor[name].Name;
-            var color = _nameToColor[name];
-            return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
-        }
-
-        public SolidColorBrush GetMediaBrush(string name)
-        {
-            if (!_nameToMediaBrush.ContainsKey(name))
-            {
-                return DefaultDrawingPrimitives.DefaultColor;
-            }
-
-            return _nameToMediaBrush[name];
-        }
-
-        public Brush GetBrush(string name)
-        {
-            return _nameToBrush[name];
-        }
-
+        /// <summary>
+        /// Defines a predefined set of colors that can be distinguished by the eye.
+        /// However the colors may not be enough. So a default color is assigned to all remaining keys.
+        /// </summary>
         private void CreateColorsDefinitions()
         {
 
-            var experimential = new[]
+            var paletteA = new[]
             {
                 /*"FF000000", "FFFFFF00",*/ "FF1CE6FF", "FFFF34FF", "FFFF4A46", "FF008941", "FF006FA6", "FFA30059",
                 "FFFFDBE5", "FF7A4900", "FF0000A6", "FF63FFAC", "FFB79762", "FF004D43", "FF8FB0FF", "FF997D87",
@@ -203,125 +105,117 @@ namespace Visualization.Controls
 
             // http://stackoverflow.com/questions/309149/generate-distinctly-different-rgb-colors-in-graphs
 
-            _colorDefinitions = new[]
+            var paletteB = new[]
                                 {
-                                        // "FF000000",
-                                        "FF00FF00",
-                                        "FF0000FF",
-                                        "FFFF0000",
-                                        "FF01FFFE",
-                                        "FFFFA6FE",
-                                        "FFFFDB66",
-                                        "FF006401",
-                                        "FF010067",
-                                        "FF95003A",
-                                        "FF007DB5",
-                                        "FFFF00F6",
-                                        "FFFFEEE8",
-                                        "FF774D00",
-                                        "FF90FB92",
-                                        "FF0076FF",
-                                        "FFD5FF00",
-                                        "FFFF937E",
-                                        "FF6A826C",
-                                        "FFFF029D",
-                                        "FFFE8900",
-                                        "FF7A4782",
-                                        "FF7E2DD2",
-                                        "FF85A900",
-                                        "FFFF0056",
-                                        "FFA42400",
-                                        "FF00AE7E",
-                                        "FF683D3B",
-                                        "FFBDC6FF",
-                                        "FF263400",
-                                        "FFBDD393",
-                                        "FF00B917",
-                                        "FF9E008E",
-                                        "FF001544",
-                                        "FFC28C9F",
-                                        "FFFF74A3",
-                                        "FF01D0FF",
-                                        "FF004754",
-                                        "FFE56FFE",
-                                        "FF788231",
-                                        "FF0E4CA1",
-                                        "FF91D0CB",
-                                        "FFBE9970",
-                                        "FF968AE8",
-                                        "FFBB8800",
-                                        "FF43002C",
-                                        "FFDEFF74",
-                                        "FF00FFC6",
-                                        "FFFFE502",
-                                        "FF620E00",
-                                        "FF008F9C",
-                                        "FF98FF52",
-                                        "FF7544B1",
-                                        "FFB500FF",
-                                        "FF00FF78",
-                                        "FFFF6E41",
-                                        "FF005F39",
-                                        "FF6B6882",
-                                        "FF5FAD4E",
-                                        "FFA75740",
-                                        "FFA5FFD2",
-                                        "FFFFB167",
-                                        "FF009BFF",
-                                        "FFE85EBE"
-                                };
+                /*"FF000000," */ "FF00FF00", "FF0000FF", "FFFF0000","FF01FFFE","FFFFA6FE", "FFFFDB66", "FF006401",
+                "FF010067", "FF95003A", "FF007DB5", "FFFF00F6", "FFFFEEE8", "FF774D00", "FF90FB92", "FF0076FF",
+                "FFD5FF00", "FFFF937E", "FF6A826C", "FFFF029D", "FFFE8900", "FF7A4782", "FF7E2DD2", "FF85A900",
+                "FFFF0056", "FFA42400", "FF00AE7E", "FF683D3B", "FFBDC6FF", "FF263400", "FFBDD393", "FF00B917",
+                "FF9E008E", "FF001544", "FFC28C9F", "FFFF74A3", "FF01D0FF", "FF004754", "FFE56FFE", "FF788231",
+                "FF0E4CA1", "FF91D0CB", "FFBE9970", "FF968AE8", "FFBB8800", "FF43002C", "FFDEFF74", "FF00FFC6",
+                "FFFFE502", "FF620E00", "FF008F9C", "FF98FF52", "FF7544B1", "FFB500FF", "FF00FF78", "FFFF6E41",
+                "FF005F39", "FF6B6882", "FF5FAD4E", "FFA75740", "FFA5FFD2", "FFFFB167", "FF009BFF", "FFE85EBE"};
 
-            // TODO
-            _colorDefinitions = experimential;
+            _defaultColors = paletteA.Select(argb => int.Parse(argb, NumberStyles.HexNumber)).ToArray();
         }
 
-        private void InitializeColorForName(string name)
+
+        public static int ToArgb(Color color)
         {
-            if (!_names.Contains(name))
-            {
-                // Default color for unknown name
-                return;
-            }
+            int argb = (color.A << 24) | (color.R << 16) | (color.G << 8) | color.B;
+            return argb;
 
-            if (_nameToColor.ContainsKey(name))
-            {
-                // Already known
-                return;
-            }
-
-            Color color;
-
-            try
-            {
-                color = Color.FromArgb(int.Parse(_colorDefinitions[_nextFreeColorIndex], NumberStyles.HexNumber));
-            }
-            catch (IndexOutOfRangeException)
-            {
-                // Too much colors!
-                color = Color.LightGray;
-                //Debug.Assert(false); // Not enough colors!
-            }
-            InitColor(name, color);
-
-            _nextFreeColorIndex++;
+            //byte[] bytes = new byte[] { color.A, color.R, color.G, color.B };
+            //return BitConverter.ToInt32(bytes, 0);
         }
 
-        private void InitColor(string name, Color color)
+        public static Color FromArgb(int argb)
         {
-            var brush = new SolidBrush(color);
+            // Format is little endian
+            byte a = (byte)((argb & 0xff000000) >> 24);
+            byte r = (byte)((argb & 0x00ff0000) >> 16);
+            byte g = (byte)((argb & 0x0000ff00) >> 8);
+            byte b = (byte)(argb & 0x000000ff);
 
-            _nameToBrush.Add(name, brush);
-            _nameToColor.Add(name, color);
 
-            var mediaBrush = ToMediaBrush(color);
-            _nameToMediaBrush.Add(name, mediaBrush);
+            var color = Color.FromArgb(a, r, g, b);
+            return color;
         }
 
-        private SolidColorBrush ToMediaBrush(Color color)
+        public ColorScheme(string[] names, Color[] colors)
         {
-            var mediaBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
-            mediaBrush.Freeze();
-            return mediaBrush;
+            _canAddColors = false;
+            for (var index = 0; index < names.Length; index++)
+            {
+                _nameToArgb[names[index]] = ToArgb(colors[index]);
+            }
+        }
+
+        public ColorScheme()
+        {
+            CreateColorsDefinitions();
+            _canAddColors = true;
+        }
+
+        public ColorScheme(string[] names)
+        {
+            CreateColorsDefinitions();
+            _canAddColors = true;
+            foreach (var name in names)
+            {
+                AddColorFor(name);
+            }
+           
+        }
+
+        /// <summary>
+        /// Returns false if the name got a default color assigned.
+        /// There are enough colors.
+        /// </summary>
+        public bool AddColorFor(string name)
+        {
+            var uniqueColor = false;
+            if (!_canAddColors)
+            {
+                throw new Exception("Color schem is locked!");
+            }
+
+            if (_nameToArgb.ContainsKey(name))
+            {
+                throw new Exception("Name already exists");
+            }
+
+
+            var freeColors = _defaultColors.Except(_nameToArgb.Values);
+            if (freeColors.Any())
+            {
+                _nameToArgb[name] = freeColors.First();
+                uniqueColor = true;
+            }
+            else
+            {
+                // Not enough colors!
+                _nameToArgb[name] = ToArgb(DefaultDrawingPrimitives.DefaultColor);
+            }
+
+
+            return uniqueColor;
+        }
+
+        public string GetColorName(string name)
+        {
+            var argb = ToArgb(DefaultDrawingPrimitives.DefaultColor);
+            if (_nameToArgb.ContainsKey(name))
+            {
+                argb = _nameToArgb[name];
+            }
+
+            return "#" + argb.ToString("X");
+        }
+
+        public SolidColorBrush GetBrush(string key)
+        {
+            return GetBrushFromCache(key);
         }
     }
 }
