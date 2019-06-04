@@ -61,8 +61,7 @@ namespace Insight
             var cp = new CirclePackingViewModel();
             cp.Commands = commands;
             cp.Data = context;
-            cp.Title = title + " (Circle)";
-            cp.Commands = commands;
+            cp.Title = title + " (Circle)";  
             ShowTab(cp, false);
         }
 
@@ -77,8 +76,7 @@ namespace Insight
             var tm = new TreeMapViewModel();
             tm.Commands = commands;
             tm.Data = context;
-            tm.Title = title + " (Treemap)";
-            tm.Commands = commands;
+            tm.Title = title + " (Treemap)";  
             ShowTab(tm, true);
         }
 

@@ -384,7 +384,7 @@ namespace Insight
 
         object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
         {
-            var linesOfCode = (int)hotspotCalculator.GetArea(artifact);
+            var linesOfCode = (int)hotspotCalculator.GetLinesOfCode(artifact);
             if (_contributions != null)
             {
                 var result = new DataGridFriendlyArtifact();
@@ -398,7 +398,7 @@ namespace Insight
                 result.LOC = linesOfCode;
                 result.WorkItems = artifact.WorkItems.Count;
                 result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
-                result.Hotspot = hotspotCalculator.GetHotspot(artifact);
+                result.Hotspot = hotspotCalculator.GetHotspotValue(artifact);
 
                 // Work related information
                 result.FractalValue = artifactContribution.CalculateFractalValue();
@@ -416,7 +416,7 @@ namespace Insight
                 result.LOC = linesOfCode;
                 result.WorkItems = artifact.WorkItems.Count;
                 result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
-                result.Hotspot = hotspotCalculator.GetHotspot(artifact);
+                result.Hotspot = hotspotCalculator.GetHotspotValue(artifact);
                 return result;
             }
         }

@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using Insight.Analyzers;
 using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder
 {
     public sealed class HotspotBuilder : HierarchyBuilder
     {
-        private Dictionary<string, LinesOfCode> _metrics;
         private HotspotCalculator _hotspotCalculator;
 
         public IHierarchicalData Build(List<Artifact> artifacts, Dictionary<string, LinesOfCode> metrics)
         {
-            _metrics = metrics;
             _hotspotCalculator = new HotspotCalculator(artifacts, metrics);
          
             return Build(artifacts);
@@ -26,22 +22,22 @@ namespace Insight.Builder
 
         protected override double GetArea(Artifact item)
         {
-            return _hotspotCalculator.GetArea(item);
+            return _hotspotCalculator.GetLinesOfCode(item);
         }
 
         protected override string GetDescription(Artifact item)
         {
-            var hotspot = _hotspotCalculator.GetHotspot(item);
+            var hotspot = _hotspotCalculator.GetHotspotValue(item);
             return item.ServerPath 
                 + "\nCommits: " 
                 + item.Commits + "\nLOC: " 
-                + _hotspotCalculator.GetArea(item) + "\nHotspot: " 
+                + _hotspotCalculator.GetLinesOfCode(item) + "\nHotspot: " 
                 + hotspot.ToString("F5", CultureInfo.InvariantCulture);
         }
 
         protected override double GetWeight(Artifact item)
         {
-            return _hotspotCalculator.GetWeight(item);
+            return _hotspotCalculator.GetCommits(item);
         }
 
         protected override bool IsAccepted(Artifact item)
