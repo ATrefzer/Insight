@@ -1,5 +1,8 @@
 ﻿namespace Insight.Metrics
 {
+    /// <summary>
+    /// Inverted space metric for a single file.
+    /// </summary>
     public sealed class InvertedSpace
     {
         public int Max { get; set; }

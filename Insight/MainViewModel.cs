@@ -5,15 +5,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
-
 using Insight.Analyzers;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.ViewModels;
 using Insight.WpfCore;
-
 using Prism.Commands;
-
 using Visualization.Controls;
 using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
@@ -33,7 +30,8 @@ namespace Insight
         private int _selectedIndex = -1;
         private ObservableCollection<TabContentViewModel> _tabs = new ObservableCollection<TabContentViewModel>();
 
-        public MainViewModel(ViewController viewController, DialogService dialogs, Project project, Analyzer analyzer, BackgroundExecution backgroundExecution)
+        public MainViewModel(ViewController viewController, DialogService dialogs, Project project, Analyzer analyzer,
+            BackgroundExecution backgroundExecution)
         {
             _tabBuilder = new TabBuilder(this);
             _viewController = viewController;
@@ -56,6 +54,7 @@ namespace Insight
             ChangeCouplingCommand = new DelegateCommand(ChangeCouplingClick);
             AboutCommand = new DelegateCommand(AboutClick);
             PredictHotspotsCommand = new DelegateCommand(PredictHotspotsClick);
+            EditColorsCommand = new DelegateCommand(EditColorsClick);
         }
 
         public ICommand AboutCommand { get; set; }
@@ -66,6 +65,8 @@ namespace Insight
         public ICommand CodeAgeCommand { get; set; }
 
         public ICommand CommentsCommand { get; set; }
+
+        public ICommand EditColorsCommand { get; set; }
 
         public ICommand FragmentationCommand { get; set; }
 
@@ -110,6 +111,11 @@ namespace Insight
 
         public ICommand UpdateCommand { get; set; }
 
+        private void EditColorsClick()
+        {
+            _viewController.ShowColorEditorViewViewer();
+        }
+
         public void OnShowChangeCouplingChord(List<Coupling> args)
         {
             if (args.Any())
@@ -127,10 +133,8 @@ namespace Insight
 
             var trendData = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeTrend(localFile));
             if (trendData == null)
-            {
                 // Exception was handled but there is not data.
                 return;
-            }
 
             var ordered = trendData.OrderBy(x => x.Date).ToList();
             _viewController.ShowTrendViewer(ordered);
@@ -140,12 +144,10 @@ namespace Insight
         public async void OnShowWork(IHierarchicalData data)
         {
             var fileToAnalyze = data.Tag as string;
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze)).ConfigureAwait(true);
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze))
+                .ConfigureAwait(true);
 
-            if (path == null)
-            {
-                return;
-            }
+            if (path == null) return;
 
             _viewController.ShowImageViewer(path);
         }
@@ -187,19 +189,16 @@ namespace Insight
         private EdgeData CreateEdgeData(Coupling coupling)
         {
             return new EdgeData(coupling.Item1, coupling.Item2, coupling.Degree)
-                   {
-                           Node1DisplayName = GetVertexName(coupling.Item1),
-                           Node2DisplayName = GetVertexName(coupling.Item2)
-                   };
+            {
+                Node1DisplayName = GetVertexName(coupling.Item1),
+                Node2DisplayName = GetVertexName(coupling.Item2)
+            };
         }
 
         private async void FragmentationClick()
         {
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
-            if (context == null)
-            {
-                return;
-            }
+            if (context == null) return;
 
             var colorScheme = context.ColorScheme;
 
@@ -241,10 +240,7 @@ namespace Insight
             var lastSlash = path.LastIndexOf('/');
 
             var index = Math.Max(lastBackSlash, lastSlash);
-            if (index < 0)
-            {
-                return path;
-            }
+            if (index < 0) return path;
 
             return path.Substring(index + 1);
         }
@@ -253,10 +249,7 @@ namespace Insight
         {
             // Analyze hotspots from summary and code metrics
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
-            if (context == null)
-            {
-                return;
-            }
+            if (context == null) return;
 
             var colorScheme = context.ColorScheme;
 
@@ -268,10 +261,7 @@ namespace Insight
         private async void KnowledgeClick()
         {
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());
-            if (context == null)
-            {
-                return;
-            }
+            if (context == null) return;
 
             var colorScheme = context.ColorScheme;
 
@@ -282,16 +272,10 @@ namespace Insight
         private async void KnowledgeLossClick()
         {
             var forDeveloper = GetDeveloperForKnowledgeLoss();
-            if (forDeveloper == null)
-            {
-                return;
-            }
+            if (forDeveloper == null) return;
 
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper));
-            if (context == null)
-            {
-                return;
-            }
+            if (context == null) return;
 
             var colorScheme = context.ColorScheme;
 
@@ -302,15 +286,9 @@ namespace Insight
         private void PredictHotspotsClick()
         {
             var oldFile = _dialogs.GetLoadFile("csv", "Load old summary", _project.Cache);
-            if (oldFile == null)
-            {
-                return;
-            }
+            if (oldFile == null) return;
             var newFile = _dialogs.GetLoadFile("csv", "Load current summary", _project.Cache);
-            if (newFile == null)
-            {
-                return;
-            }
+            if (newFile == null) return;
 
             try
             {
@@ -331,17 +309,14 @@ namespace Insight
         }
 
 
-        string MakeColorsFile(string fileName)
+        private string MakeColorsFile(string fileName)
         {
             return fileName + ".colors";
         }
 
         private void SaveDataClick()
-        {         
-            if (Tabs.Any() == false || SelectedIndex < 0)
-            {
-                return;
-            }
+        {
+            if (Tabs.Any() == false || SelectedIndex < 0) return;
 
             var descr = Tabs.ElementAt(SelectedIndex);
 
@@ -421,16 +396,14 @@ namespace Insight
             // The functions to update or pull are implemented in SvnProvider and GitProvider.
             // But actually that is not the task of this tool. Give it an updated repository.
 
-            if (!_dialogs.AskYesNoQuestion(Strings.SyncInstructions, Strings.Confirm))
-            {
-                return;
-            }
+            if (!_dialogs.AskYesNoQuestion(Strings.SyncInstructions, Strings.Confirm)) return;
 
             // Contributions may be too much if using svn.
             var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
 
-            await _backgroundExecution.ExecuteWithProgressAsync(progress => _analyzer.UpdateCache(progress, includeContributions));
-           
+            await _backgroundExecution.ExecuteWithProgressAsync(progress =>
+                _analyzer.UpdateCache(progress, includeContributions));
+
             _tabs.Clear();
         }
     }

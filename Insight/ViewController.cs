@@ -46,6 +46,19 @@ namespace Insight
             viewer.ShowDialog();
         }
 
+        public void ShowColorEditorViewViewer()
+        {
+            // Show image
+            var view = new ColorEditorView();
+            var viewModel = new ColorEditorViewModel();
+            view.Owner = _mainWindow;
+            view.DataContext = viewModel;
+            view.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            view.SizeToContent = SizeToContent.WidthAndHeight;
+            //view.ResizeMode = ResizeMode.NoResize;
+            view.ShowDialog();
+        }
+
         public void ShowTrendViewer(List<TrendData> trendOrderedByDate)
         {
             var details = new TrendView();

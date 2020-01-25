@@ -115,6 +115,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Colors.
+        /// </summary>
+        public static string Colors {
+            get {
+                return ResourceManager.GetString("Colors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Comments {
@@ -147,6 +156,15 @@ namespace Insight {
         public static string Diagrams {
             get {
                 return ResourceManager.GetString("Diagrams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Colors.
+        /// </summary>
+        public static string EditColors {
+            get {
+                return ResourceManager.GetString("EditColors", resourceCulture);
             }
         }
         
@@ -229,6 +247,15 @@ namespace Insight {
         public static string Hotspots {
             get {
                 return ResourceManager.GetString("Hotspots", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Info.
+        /// </summary>
+        public static string Info {
+            get {
+                return ResourceManager.GetString("Info", resourceCulture);
             }
         }
         

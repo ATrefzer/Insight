@@ -8,42 +8,12 @@ using System.Text;
 namespace Insight.Metrics
 {
     /// <summary>
-    ///     Facade to the metrics cache provided in the module.
+    ///     Facade to the metrics provided by this assembly.
     /// </summary>
     public sealed class MetricProvider : IMetricProvider
     {
-        private const string Cloc = "cloc-1.76.exe";
+        private const string Cloc = "cloc-1.84.exe";
         private const string ClocSubDir = "ExternalTools";
-
-
-        private string GetPathToCloc()
-        {
-            // Get path of this assembly
-            var assembly = Assembly.GetAssembly(typeof(MetricProvider));
-            var assemblyDirectory = new FileInfo(assembly.Location).Directory;
-            var thisAssemblyDirectory = assemblyDirectory?.FullName ?? "";
-            var externalToolsDirectory = Path.Combine(thisAssemblyDirectory, ClocSubDir);
-
-            VerifyClocInstalled(externalToolsDirectory);
-
-            return Path.Combine(externalToolsDirectory, Cloc);
-        }
-
-
-        private void VerifyClocInstalled(string externalToolsDirectory)
-        {
-            var pathToCloc = Path.Combine(externalToolsDirectory, Cloc);
-            if (!File.Exists(pathToCloc))
-            {
-                var url = "https://github.com/AlDanial/cloc/releases/tag/v1.76";
-
-                var builder = new StringBuilder();
-                builder.AppendLine($"Executable not found: '{pathToCloc}'.");
-                builder.AppendLine($"Please go to '{url}' and download the file '{Cloc}'.");
-                builder.AppendLine($"Copy this file to '{externalToolsDirectory}'.");
-                throw new Exception(builder.ToString());
-            }
-        }
 
         public LinesOfCode CalculateLinesOfCode(FileInfo file)
         {
@@ -55,7 +25,7 @@ namespace Insight.Metrics
 
 
         public Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo rootDir,
-            IEnumerable<string> normalizedFileExtensions)
+                                                                    IEnumerable<string> normalizedFileExtensions)
         {
             var pathToCloc = GetPathToCloc();
 
@@ -84,7 +54,7 @@ namespace Insight.Metrics
         }
 
         public void UpdateLinesOfCodeCache(string startDirectory, string cacheDirectory,
-            IEnumerable<string> normalizedFileExtensions)
+                                           IEnumerable<string> normalizedFileExtensions)
         {
             var metricsFile = Path.Combine(cacheDirectory, "metrics.json");
 
@@ -101,6 +71,34 @@ namespace Insight.Metrics
 
             var json = JsonConvert.SerializeObject(metrics, Formatting.Indented);
             File.WriteAllText(metricsFile, json, Encoding.UTF8);
+        }
+
+        private string GetPathToCloc()
+        {
+            // Get path of this assembly
+            var assembly = Assembly.GetAssembly(typeof(MetricProvider));
+            var assemblyDirectory = new FileInfo(assembly.Location).Directory;
+            var thisAssemblyDirectory = assemblyDirectory?.FullName ?? "";
+            var externalToolsDirectory = Path.Combine(thisAssemblyDirectory, ClocSubDir);
+
+            VerifyClocInstalled(externalToolsDirectory);
+
+            return Path.Combine(externalToolsDirectory, Cloc);
+        }
+
+        private void VerifyClocInstalled(string externalToolsDirectory)
+        {
+            var pathToCloc = Path.Combine(externalToolsDirectory, Cloc);
+            if (!File.Exists(pathToCloc))
+            {
+                var url = "https://github.com/AlDanial/cloc/releases";
+
+                var builder = new StringBuilder();
+                builder.AppendLine($"Executable not found: '{pathToCloc}'.");
+                builder.AppendLine($"Please go to '{url}' and download the file '{Cloc}'.");
+                builder.AppendLine($"Copy this file to '{externalToolsDirectory}'.");
+                throw new Exception(builder.ToString());
+            }
         }
     }
 }

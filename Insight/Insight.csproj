@@ -102,6 +102,10 @@
     <Compile Include="Builder\CodeAgeBuilder.cs" />
     <Compile Include="Builder\FragmentationBuilder.cs" />
     <Compile Include="ColorSchemeManager.cs" />
+    <Compile Include="Dialogs\ColorEditorView.xaml.cs">
+      <DependentUpon>ColorEditorView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ColorEditorViewModel.cs" />
     <Compile Include="Dto\DataGridFriendlyArtifactBasic.cs" />
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
     <Compile Include="Progress.cs" />
@@ -147,6 +151,10 @@
     <Compile Include="WpfCore\NotifyDataErrorInfoBase.cs" />
     <Compile Include="WpfCore\ViewModelBase.cs" />
     <Page Include="AboutView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\ColorEditorView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -319,6 +327,9 @@
   <ItemGroup>
     <Resource Include="Resources\crystal-ball_16.png" />
     <Resource Include="Resources\crystal-ball_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\edit_colors_16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

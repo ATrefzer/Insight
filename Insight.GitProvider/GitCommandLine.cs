@@ -8,7 +8,7 @@ namespace Insight.GitProvider
     public sealed class GitCommandLine
     {
         /// <summary>
-        /// %H   Hash (abbrebiated is %h)
+        /// %H   Hash (abbreviated is %h)
         /// %n   Newline
         /// %aN  Author name
         /// %cN  Committer name

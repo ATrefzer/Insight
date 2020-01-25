@@ -1,4 +1,5 @@
-﻿using Insight.Calculation;
+﻿
+using Insight.Calculation;
 using System;
 using System.Collections.Generic;
 using System.Linq;

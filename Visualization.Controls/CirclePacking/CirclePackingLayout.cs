@@ -11,7 +11,7 @@ namespace Visualization.Controls.CirclePacking
 {
     /*
     Algorithm:
-    Implementation based on the paper:  Visualization of large Hierarchical Data by Circle Packing
+    Implementation based on the paper: Visualization of large Hierarchical Data by Circle Packing
     
     Basic idea
     1. On each level we start with arranging three circles. This gives the original front chain.
@@ -19,7 +19,7 @@ namespace Visualization.Controls.CirclePacking
     2. Find the circle on the front chain closest to the origin (m)
     3. Try set the next circle tangent between the circles m, n = m+1
 
-    There are two solutions to finding a tangend circle with two others.
+    There are two solutions to finding a tangent circle with two others.
     (Unless the circles are too far apart). I chose the circle with center outside the polygon.
     See SelectCircle.
 

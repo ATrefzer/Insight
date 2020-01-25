@@ -279,4 +279,13 @@ Do you want to proceed?</value>
   <data name="NumberOfCommits" xml:space="preserve">
     <value>Number of Commits</value>
   </data>
+  <data name="EditColors" xml:space="preserve">
+    <value>Edit Colors</value>
+  </data>
+  <data name="Colors" xml:space="preserve">
+    <value>Colors</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
 </root>
