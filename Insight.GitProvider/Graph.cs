@@ -20,7 +20,7 @@ namespace Insight.GitProvider
         Dictionary<string, GraphNode> _graph = new Dictionary<string, GraphNode>();
 
         /// <summary>
-        /// Empty merge commits are removed implicitely
+        /// Empty merge commits are removed implicitly
         /// In each commit remove the files that share the same history
         /// For each file to remove we traverse the whole graph from the starting commit.
         /// </summary>

@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 namespace Insight.GitProvider
 {
     /// <summary>
-    /// Provides higher level funtions and queries on a git repository.
+    /// Provides higher level functions and queries on a git repository.
     /// Strategy for getting a history
     /// 1. Ask git for all tracked (local) files
     /// 2. For each file request the history. Each commit record has a single file
@@ -23,7 +23,7 @@ namespace Insight.GitProvider
     /// 3. Rebuild a change set history. Because a file can have a common ancestor
     ///    it is possible to have change sets containing more than one id for the same server path.
     /// 4. Remove all entries for files that share the same part of the history.
-    /// So I track all renamings of a file until the file starts sharing history with another file.
+    /// So I track all renaming of a file until the file starts sharing history with another file.
     /// This allows me to use unique file ids but not losing too much of the history.
     /// The approach is easier to handle but is very slow for larger repositories.
     /// </summary>

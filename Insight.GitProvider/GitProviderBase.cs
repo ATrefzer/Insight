@@ -98,7 +98,7 @@ namespace Insight.GitProvider
             var workByDevelopers = new Dictionary<string, uint>();
             var changeSetRegex = new Regex(@"^\S+\t\(\s*(?<developerName>[^\t]+).*", RegexOptions.Multiline | RegexOptions.Compiled);
 
-            // Work by changesets (line by line)
+            // Work by change sets (line by line)
             var matches = changeSetRegex.Matches(annotate);
             foreach (Match match in matches)
             {
@@ -114,9 +114,9 @@ namespace Insight.GitProvider
         {
             var result = new List<FileRevision>();
 
-            var xml = _gitCli.Log(localFile);
+            var log = _gitCli.Log(localFile);
 
-            var historyOfSingleFile = ParseLogString(xml);
+            var historyOfSingleFile = ParseLogString(log);
             foreach (var cs in historyOfSingleFile.ChangeSets)
             {
                 var changeItem = cs.Items.First();

@@ -223,10 +223,10 @@ namespace Insight
         {
             var trend = new List<TrendData>();
 
-            var svnProvider = Project.CreateProvider();
+            var provider = Project.CreateProvider();
 
-            // Svn log on this file to get all revisions
-            var fileHistory = svnProvider.ExportFileHistory(localFile);
+            // Log on this file to get all revisions
+            var fileHistory = provider.ExportFileHistory(localFile);
 
             // For each file we need to calculate the metrics
 
