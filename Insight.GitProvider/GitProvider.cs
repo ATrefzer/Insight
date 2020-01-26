@@ -16,16 +16,30 @@ namespace Insight.GitProvider
 {
     /// <summary>
     /// Provides higher level functions and queries on a git repository.
-    /// Strategy for getting a history
+    /// 
+    /// Problem:
+    /// Git tracks content and does not have a unique Id for a file. I want to to have a unique Id, however. 
+    /// 
+    /// So I create a simplified commit history where each local file is tracked by a unique Id.
+    /// This means I have to stop tracking a file as soon it gets the ancestor of multiple other files.
+    /// In this case I can no longer track a unique Id.
+    /// 
+    /// Another key point is that git log for a single file by default is simplified.
+    /// A commit for example that is deleted in one branch and modified later 
+    /// in another branch before merged is simply removed.
+    /// 
+    /// Algorithm
     /// 1. Ask git for all tracked (local) files
     /// 2. For each file request the history. Each commit record has a single file
-    ///    in it. We can assign a unique id for the file.
-    /// 3. Rebuild a change set history. Because a file can have a common ancestor
-    ///    it is possible to have change sets containing more than one id for the same server path.
-    /// 4. Remove all entries for files that share the same part of the history.
+    ///    in it. I assign a unique id for the file. This history is already simplified by git(!)
+    /// 3. Reconstruct a simplified change set history. 
+    ///    Because a file (server path) can be the common ancestor of many other files it is possible to find 
+    ///    changesets containing files with different Ids but same server path.
+    /// 4. Remove all these items that represent shared history for more than one tracked file.
+    /// 
     /// So I track all renaming of a file until the file starts sharing history with another file.
     /// This allows me to use unique file ids but not losing too much of the history.
-    /// The approach is easier to handle but is very slow for larger repositories.
+    /// This approach is easy to handle but is very slow for larger repositories.
     /// </summary>
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
@@ -95,23 +109,21 @@ namespace Insight.GitProvider
             }
         }
 
-
-        static Dictionary<string, HashSet<string>> FindSharedHistory(List<ChangeSet> commits)
+        /// <summary>
+        /// file Id -> change set ids where to remove the file
+        /// </summary>
+        static Dictionary<string, HashSet<string>> FindSharedHistory(List<ChangeSet> historyOrderedByDate)
         {
             // file id -> change set id
             var filesToRemove = new Dictionary<string, HashSet<string>>();
 
             // Find overlapping files in history.
-            foreach (var cs in commits)
+            foreach (var cs in historyOrderedByDate)
             {
-                // Commits are ordered by date
-
-                // Server path
-
                 var serverPaths = new HashSet<string>();
                 var duplicateServerPaths = new HashSet<string>();
 
-                // Pass 1: Find which server paths are used more than once in the change set
+                // Pass 1: Find which server paths are used more than once in the current changeset
                 foreach (var item in cs.Items)
                 {
                     // Remember the files to be deleted.
@@ -195,7 +207,7 @@ namespace Insight.GitProvider
             }
         }
 
-        void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> commits)
+        void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> history)
         {
             var id = Guid.NewGuid().ToString();
             _idToLocalFile.Add(id, localPath);
@@ -220,21 +232,21 @@ namespace Insight.GitProvider
                     // File was deleted and maybe added later again.
                     // Stop following this file. Do not add current version to
                     // history. Analyzer.LoadHistory will kill all deleted items
-                    // and the file will not be part of the summary
+                    // and the file will not be part of the summary anyway.
                     break;
                 }
 
                 lock (_lockObj)
                 {
-                    if (!commits.ContainsKey(cs.Id))
+                    if (!history.ContainsKey(cs.Id))
                     {
                         singleFile.Id = id;
-                        commits.Add(cs.Id, cs);
+                        history.Add(cs.Id, cs);
                     }
                     else
                     {
                         // Seen this change set before. Add the file.
-                        var changeSet = commits[cs.Id];
+                        var changeSet = history[cs.Id];
                         singleFile.Id = id;
                         changeSet.Items.Add(singleFile);
                     }
@@ -259,8 +271,8 @@ namespace Insight.GitProvider
             var count = localPaths.Count;
             var counter = 0;
 
-            // id -> cs
-            var commits = new Dictionary<string, ChangeSet>();
+            // hash -> cs
+            var history = new Dictionary<string, ChangeSet>();
 
             Parallel.ForEach(localPaths,
                              localPath =>
@@ -269,10 +281,10 @@ namespace Insight.GitProvider
                                  Interlocked.Increment(ref counter);
                                  progress.Message($"Rebuilding history {counter}/{count}");
 
-                                 ProcessHistoryForFile(localPath, commits);
+                                 ProcessHistoryForFile(localPath, history);
                              });
 
-            return commits.Values.OrderByDescending(x => x.Date).ToList();
+            return history.Values.OrderByDescending(x => x.Date).ToList();
         }
 
         void SaveFullLogToDisk()
@@ -303,26 +315,96 @@ namespace Insight.GitProvider
 
             // Build a virtual commit history
             var localPaths = GetAllTrackedLocalFiles();
-
-            // sha1 -> commit
-            var commits = RebuildHistory(localPaths, progress);
+         
+            var history = RebuildHistory(localPaths, progress);
 
             // file id -> List of change set id
-            var filesToRemove = FindSharedHistory(commits);
+            var filesToRemove = FindSharedHistory(history);
 
             // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
-            _graph.DeleteSharedHistory(commits, filesToRemove);
+            // The history may skip some commits so we use the full graph to traverse everything.
+            DeleteSharedHistory(history, filesToRemove);
 
             // Write history file
-            var json = JsonConvert.SerializeObject(new ChangeSetHistory(commits), Formatting.Indented);
+            var json = JsonConvert.SerializeObject(new ChangeSetHistory(history), Formatting.Indented);
             File.WriteAllText(_historyFile, json, Encoding.UTF8);
 
             // Save the constructed log for information
-            SaveRecoveredLogToDisk(commits, _graph);
+            SaveRecoveredLogToDisk(history, _graph);
 
             // Just a plausibility check
-            VerifyNoDuplicateServerPathsInChangeset(commits);
+            VerifyNoDuplicateServerPathsInChangeset(history);
         }
+
+        /// <summary>
+        /// Empty merge commits are removed implicitly
+        /// In each commit remove the files that are ancestors for more than one file.
+        /// For each file to remove we traverse the whole graph from the starting commit.
+        /// TODO raus aus dieser Klasse.
+        /// </summary>
+        public void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove)
+        {
+            lock (_lockObj)
+            {
+                // filesToRemove: 
+                // fileId -> commit hash (change set id) where we start removing the file
+                var idToChangeSet = historyToModify.ToDictionary(x => x.Id, x => x);
+
+
+                foreach (var fileToRemove in filesToRemove)
+                {
+                    var fileIdToRemove = fileToRemove.Key;
+                    var changeSetIds = fileToRemove.Value;
+
+                    // Traverse graph to find all change sets where we have to delete the files
+                    var nodesToProcess = new Queue<GraphNode>();
+                    var handledNodes = new HashSet<string>();
+                    GraphNode node;
+
+                    foreach (var csId in changeSetIds)
+                    {
+                        if (_graph.TryGetValue(csId, out node))
+                        {
+                            nodesToProcess.Enqueue(node);
+                            handledNodes.Add(node.CommitHash);
+                        }
+                        else
+                        {
+                            Debug.Assert(false);
+                        }
+                    }
+
+
+                    while (nodesToProcess.Any())
+                    {
+                        node = nodesToProcess.Dequeue();
+
+                        if (idToChangeSet.ContainsKey(node.CommitHash))
+                        {
+                            // Note: The history of a file may skip some commits if they are not relevant.
+                            // Therefore it is possible that no changeset exists for the hash.
+                            // Remember that we follow the full graph.
+                            var cs = idToChangeSet[node.CommitHash];
+
+                            // Remove the file from change set
+                            cs.Items.RemoveAll(i => i.Id == fileIdToRemove);
+                        }
+
+                        // Delete the current file also in all parents
+                        foreach (var parent in node.ParentHashes)
+                        {
+                            // Avoid cycles in case a change set is parent of many others.
+                            if (!handledNodes.Contains(parent) && _graph.TryGetValue(parent, out node))
+                            {
+                                nodesToProcess.Enqueue(node);
+                                handledNodes.Add(node.CommitHash);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
 
         private void VerifyNoDuplicateServerPathsInChangeset(List<ChangeSet> commits)
         {
