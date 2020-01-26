@@ -1,4 +1,4 @@
-﻿# Insight - An commit history analyzer.
+# Insight - An commit history analyzer.
 
 This utility implements some of the ideas presented in Adam Tornhill's great book "Your Code as a Crime Scene".
 
@@ -62,8 +62,8 @@ This visualization allows you to see how the knowledge is distributed over the p
 
 # How to build
 
-* To count lines of code an external tool is used. Download cloc-1.76.exe from https://github.com/AlDanial/cloc/releases/tag/v1.76 and copy it to the directory Binaries\ExternalTools.
-* Build Insight.sln (I use Visual Studio 2017). All output is generated in the Binaries directory.
+* To count lines of code an external tool is used. Download cloc-1.84.exe from https://github.com/AlDanial/cloc/releases/ and copy it to the directory Binaries\ExternalTools.
+* Build Insight.sln (I use Visual Studio 2019). All output is generated in the Binaries directory.
 
 # How to use
 
