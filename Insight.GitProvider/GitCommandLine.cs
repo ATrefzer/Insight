@@ -98,6 +98,9 @@ namespace Insight.GitProvider
             return result.StdOut;
         }
 
+        /// <summary>
+        /// Git by default simplifies the history for a single file. This means the parent relationships may be incomplete.
+        /// </summary>
         public string Log(string localPath)
         {
             localPath = localPath.Replace("\\", "/");

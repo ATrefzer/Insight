@@ -340,13 +340,18 @@ namespace Insight.GitProvider
         /// Empty merge commits are removed implicitly
         /// In each commit remove the files that are ancestors for more than one file.
         /// For each file to remove we traverse the whole graph from the starting commit.
-        /// TODO raus aus dieser Klasse.
         /// </summary>
         public void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove)
         {
             lock (_lockObj)
             {
-                // filesToRemove: 
+                DeleteSharedHistory(historyToModify, filesToRemove, _graph);
+            }
+        }
+
+        public static void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove, Graph graph)
+        {
+             // filesToRemove: 
                 // fileId -> commit hash (change set id) where we start removing the file
                 var idToChangeSet = historyToModify.ToDictionary(x => x.Id, x => x);
 
@@ -357,13 +362,14 @@ namespace Insight.GitProvider
                     var changeSetIds = fileToRemove.Value;
 
                     // Traverse graph to find all change sets where we have to delete the files
+                    // Note: The simplified history is incomplete.
                     var nodesToProcess = new Queue<GraphNode>();
                     var handledNodes = new HashSet<string>();
                     GraphNode node;
 
                     foreach (var csId in changeSetIds)
                     {
-                        if (_graph.TryGetValue(csId, out node))
+                        if (graph.TryGetValue(csId, out node))
                         {
                             nodesToProcess.Enqueue(node);
                             handledNodes.Add(node.CommitHash);
@@ -394,7 +400,7 @@ namespace Insight.GitProvider
                         foreach (var parent in node.ParentHashes)
                         {
                             // Avoid cycles in case a change set is parent of many others.
-                            if (!handledNodes.Contains(parent) && _graph.TryGetValue(parent, out node))
+                            if (!handledNodes.Contains(parent) && graph.TryGetValue(parent, out node))
                             {
                                 nodesToProcess.Enqueue(node);
                                 handledNodes.Add(node.CommitHash);
@@ -402,7 +408,6 @@ namespace Insight.GitProvider
                         }
                     }
                 }
-            }
         }
 
 

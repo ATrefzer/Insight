@@ -33,7 +33,7 @@ namespace Tests
             file.Write(path, root);
         }
 
-        [Test]
+        [Ignore("Don't want to store the large binary test data in the repo. Generate new one via GenerateTestHierarchicalReferenceFile"), Test]
         public void ReferenceLayout_LargeHierarchicalExample1()
         {
             // Loads a HierarchicalData bin file that includes the layout information and checks
@@ -72,7 +72,7 @@ namespace Tests
             Assert.AreEqual(reference, result);
         }
 
-        [Test]
+        [Ignore("Don't want to store the large binary test data in the repo. Generate new one via GenerateTestHierarchicalReferenceFile"), Test]
         public void ReferenceLayout_LargeHierarchicalExample2()
         {
             // Loads a HierarchicalData bin file that includes the layout information and checks
@@ -93,7 +93,7 @@ namespace Tests
             AssertLayouting(path, width, height);
         }
 
-        [Test]
+        [Ignore("Don't want to store the large binary test data in the repo. Generate new one via GenerateTestHierarchicalReferenceFile"), Test]
         public void ReferenceLayout_LargeHierarchicalExample3()
         {
             // Loads a HierarchicalData bin file that includes the layout information and checks
