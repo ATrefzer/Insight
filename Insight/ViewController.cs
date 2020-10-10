@@ -16,9 +16,30 @@ namespace Insight
             _mainWindow = mainWindow;
         }      
 
+
+        public Project ShowNewProject()
+        {
+            var project = new Project();
+
+            var viewModel = new ProjectViewModel(project, new DialogService(), ProjectViewModel.Mode.Create);
+
+            
+            viewModel.EnableImmutableProperties = true;
+            var view = new ProjectView();
+            view.DataContext = viewModel;
+            view.Owner = _mainWindow;
+            var result = view.ShowDialog();
+            if (result.GetValueOrDefault())
+            {
+                return project;
+            }
+
+            return null;
+        }
+
         public bool ShowProjectSettings(Project project)
         {
-            var viewModel = new ProjectViewModel(project, new DialogService());
+            var viewModel = new ProjectViewModel(project, new DialogService(), ProjectViewModel.Mode.Update);
             var view = new ProjectView();
             view.DataContext = viewModel;
             view.Owner = _mainWindow;

@@ -34,16 +34,31 @@
 
 
                 <RibbonGroup Header="{x:Static local:Strings.SourceControl}">
+
+                    <RibbonButton Label="{x:Static local:Strings.NewProject}"
+                                  LargeImageSource="Resources/plus_64.png"
+                                  SmallImageSource="Resources/plus_16.png"
+                                  Command="{Binding NewProjectCommand}" />
+
+                    <RibbonButton Label="{x:Static local:Strings.Load}"
+                                  LargeImageSource="Resources/import_64.png"
+                                  SmallImageSource="Resources/import_16.png"
+                                  Command="{Binding LoadProjectCommand}" />
+                    
                     <RibbonButton LargeImageSource="Resources/settings_64.png"
                                   SmallImageSource="Resources/settings_16.png"
                                   Label="{x:Static local:Strings.Settings}"
+                                  IsEnabled="{Binding IsProjectLoaded}"
                                   Command="{Binding SetupCommand}" />
+
                     <RibbonButton LargeImageSource="Resources/sync_64.png"
                                   SmallImageSource="Resources/sync_16.png"
                                   Label="{x:Static local:Strings.UpdateCache}"
                                   Command="{Binding UpdateCommand}"
                                   IsEnabled="{Binding IsProjectValid}" />
                 </RibbonGroup>
+
+
 
                 <RibbonGroup Header="{x:Static local:Strings.Analysis}"
                              IsEnabled="{Binding IsProjectValid}">

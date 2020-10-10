@@ -12,7 +12,7 @@ namespace Insight.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -32,30 +32,6 @@ namespace Insight.Properties {
             }
             set {
                 this["Provider"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".\\ProjectBase")]
-        public string ProjectBase {
-            get {
-                return ((string)(this["ProjectBase"]));
-            }
-            set {
-                this["ProjectBase"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".\\Cache")]
-        public string Cache {
-            get {
-                return ((string)(this["Cache"]));
-            }
-            set {
-                this["Cache"] = value;
             }
         }
         
@@ -176,6 +152,18 @@ namespace Insight.Properties {
             }
             set {
                 this["MinDegreeForChangeCoupling"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastKnownProject {
+            get {
+                return ((string)(this["LastKnownProject"]));
+            }
+            set {
+                this["LastKnownProject"] = value;
             }
         }
     }

@@ -27,18 +27,35 @@ namespace Insight
         ChangeSetHistory _history;
         Dictionary<string, LinesOfCode> _metrics;
         private readonly IMetricProvider _metricsProvider;
-        private readonly ColorSchemeManager _colorSchemeManager;
 
-        public Analyzer(Project project, IMetricProvider metricProvider)
+        // TODO atr Remove the color schema manager here.
+        // TODO atr Analyzer should return only data. Let the main view model manage this.
+
+        private ColorSchemeManager _colorSchemeManager;
+
+        public Analyzer(IMetricProvider metricProvider)
         {
-            Project = project;
             _metricsProvider = metricProvider;
-            _colorSchemeManager = new ColorSchemeManager(Project.Cache);
         }
 
         public List<WarningMessage> Warnings { get; private set; }
 
-        Project Project { get; }
+        
+        // TODO atr remove this property and pass required information to method calls
+        // We only need filter, cache directory and source code provider
+        private IProject _project;
+        public IProject Project
+        {
+            get
+            {
+                return _project;
+            }
+            set
+            {
+                _project = value;
+                _colorSchemeManager = new ColorSchemeManager(Project.Cache);
+            }
+        }
 
         private static string ClassifyDirectory(string localPath)
         {
@@ -175,13 +192,14 @@ namespace Insight
             var builder = new KnowledgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
+            // TODO atr This should be moved to the view model.
             var dataContext = new HierarchicalDataContext(hierarchicalData, _colorScheme);
             dataContext.AreaSemantic = Strings.LinesOfCode;
             dataContext.WeightSemantic = Strings.NotAvailable;
             return dataContext;
         }
 
-
+        // TODO atr move to view model (Project)
         IColorScheme _colorScheme;
 
         void LoadColorScheme()
@@ -262,7 +280,7 @@ namespace Insight
                 LoadColorScheme();
             }
 
-
+            // TODO atr bitmap?
             bitmap.Create(path, workByDeveloper, _colorScheme, true);
 
             return path;
@@ -343,7 +361,7 @@ namespace Insight
             progress.Message("Updating code metrics.");
 
             // Update code metrics
-            _metricsProvider.UpdateLinesOfCodeCache(Project.ProjectBase, Project.Cache, Project.GetNormalizedFileExtensions());
+            _metricsProvider.UpdateLinesOfCodeCache(Project.SourceControlDirectory, Project.Cache, Project.GetNormalizedFileExtensions());
 
             // Don't delete, only extend if necessary
             _colorSchemeManager.UpdateColorScheme(GetAllKnownDevelopers());

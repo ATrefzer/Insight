@@ -11,20 +11,37 @@ namespace Insight
 {
     public interface IProject
     {
+        string Cache { get; }
+        IFilter Filter { get; set; }
+        string SourceControlDirectory { get; set; }
+
+        bool IsDefault { get; }
+        bool IsValid();
+        void Load(string path);
+        ISourceControlProvider CreateProvider();
+        IEnumerable<string> GetNormalizedFileExtensions();
     }
 
 
     [Serializable]
-    public sealed class Project
+    public sealed class Project : IProject
     {
-        string _extensionsToInclude = "";
-        string _pathToExclude = "";
-        string _pathToInclude;
+        private string _extensionsToInclude = "";
+        private string _pathToExclude = "";
+        private string _pathToInclude;
 
-        string _projectBase;
+        private string _sourceControlDirectory;
 
-        public event EventHandler ProjectLoaded;
-        public string Cache { get; set; }
+        public Project()
+        {
+            InitNewProject();
+            IsDefault = true;
+        }
+
+        public string Cache => GetCacheDirectory();
+
+        public bool IsDefault { get; set; }
+
 
         public string ExtensionsToInclude
         {
@@ -36,11 +53,13 @@ namespace Insight
             }
         }
 
+        public string ProjectName { get; set; }
+
         /// <summary>
         /// Summary filter: Which files from the history are considered for the analysis.
         /// </summary>
         [XmlIgnore]
-        public Filter Filter { get; set; }
+        public IFilter Filter { get; set; }
 
         /// <summary>
         /// Need one to reject
@@ -68,12 +87,12 @@ namespace Insight
             }
         }
 
-        public string ProjectBase
+        public string SourceControlDirectory
         {
-            get => _projectBase;
+            get => _sourceControlDirectory;
             set
             {
-                _projectBase = value;
+                _sourceControlDirectory = value;
 
                 // Project base is used in filters!
                 UpdateFilter();
@@ -82,10 +101,12 @@ namespace Insight
 
         public string Provider { get; set; }
 
-        [XmlIgnore]
-        public ITeamClassifier TeamClassifier { get; set; }
+        [XmlIgnore] public ITeamClassifier TeamClassifier { get; set; }
 
         public string WorkItemRegEx { get; set; }
+
+
+        public string ProjectParentDirectory { get; set; }
 
         public ISourceControlProvider CreateProvider()
         {
@@ -101,7 +122,7 @@ namespace Insight
                 throw new Exception($"Failed creating '{type}'");
             }
 
-            provider.Initialize(ProjectBase, Cache, Filter, WorkItemRegEx);
+            provider.Initialize(SourceControlDirectory, Cache, Filter, WorkItemRegEx);
             return provider;
         }
 
@@ -135,57 +156,55 @@ namespace Insight
             return Directory.Exists(Cache);
         }
 
-        public bool IsProjectBaseValid()
+        public bool IsSourceControlDirectoryValid()
         {
-            return Directory.Exists(ProjectBase);
+            return Directory.Exists(SourceControlDirectory);
         }
 
         public bool IsValid()
         {
-            return IsProjectBaseValid() && IsCacheValid();
+            return IsSourceControlDirectoryValid() && IsCacheValid() && IsProjectDirectoryValid();
         }
 
-        public void Load()
+        public string GetProjectFile()
         {
-            ProjectBase = Settings.Default.ProjectBase.Trim();
-            Cache = Settings.Default.Cache.Trim();
-            ExtensionsToInclude = Settings.Default.ExtensionsToInclude.Trim();
-            PathsToExclude = Settings.Default.PathsToExclude.Trim();
-            PathsToInclude = Settings.Default.PathsToInclude.Trim();
-            Provider = Settings.Default.Provider.Trim();
-            WorkItemRegEx = Settings.Default.WorkItemRegEx.Trim();
-            TeamClassifier = default(ITeamClassifier);
-            UpdateFilter();
-            OnProjectLoaded();
+            return Path.Combine(ProjectParentDirectory, ProjectName, "insight.project");
         }
 
-        public void LoadFrom(string path)
+        public string GetProjectDirectory()
+        {
+            return Path.Combine(ProjectParentDirectory, ProjectName);
+        }
+
+        public bool IsProjectDirectoryValid()
+        {
+            return Directory.Exists(GetProjectDirectory());
+        }
+
+        public void Load(string path)
         {
             var file = new XmlFile<Project>();
             var tmp = file.Read(path);
 
-            ProjectBase = tmp.ProjectBase;
-            Cache = tmp.Cache;
+            SourceControlDirectory = tmp.SourceControlDirectory;
+            ProjectParentDirectory = tmp.ProjectParentDirectory;
+            ProjectName = tmp.ProjectName;
             ExtensionsToInclude = tmp.ExtensionsToInclude;
             PathsToExclude = tmp.PathsToExclude;
             PathsToInclude = tmp.PathsToInclude;
             Provider = tmp.Provider;
             WorkItemRegEx = tmp.WorkItemRegEx;
             TeamClassifier = tmp.TeamClassifier;
+            IsDefault = false;
+
             UpdateFilter();
-            OnProjectLoaded();
         }
 
         public void Save()
         {
-            Settings.Default.ProjectBase = ProjectBase;
-            Settings.Default.Cache = Cache;
-            Settings.Default.PathsToExclude = PathsToExclude;
-            Settings.Default.PathsToInclude = PathsToInclude;
-            Settings.Default.ExtensionsToInclude = ExtensionsToInclude;
-            Settings.Default.Provider = Provider;
-            Settings.Default.WorkItemRegEx = WorkItemRegEx;
-            Settings.Default.Save();
+            var file = GetProjectFile();
+            SaveTo(file);
+            IsDefault = false;
         }
 
         public void SaveTo(string path)
@@ -194,15 +213,57 @@ namespace Insight
             file.Write(path, this);
         }
 
-        void OnProjectLoaded()
+
+        public void InitProjectEnvironment()
         {
-            ProjectLoaded?.Invoke(this, EventArgs.Empty);
+            if (IsSourceControlDirectoryValid() is false)
+            {
+                throw new Exception(Strings.SourceControlDirectoyNotFound);
+            }
+
+            if (Directory.Exists(GetProjectDirectory()))
+            {
+                Directory.Delete(GetProjectDirectory(), true);
+            }
+
+            Directory.CreateDirectory(GetProjectDirectory());
+
+            if (Directory.Exists(GetCacheDirectory()) is false)
+            {
+                Directory.CreateDirectory(GetCacheDirectory());
+            }
+        }
+
+        public void LoadFromDirectory(string directory)
+        {
+            var file = Path.Combine(directory, "insight.project");
+            Load(file);
+        }
+
+        private string GetCacheDirectory()
+        {
+            return Path.Combine(GetProjectDirectory(), "Cache");
+        }
+
+
+        private void InitNewProject()
+        {
+            ProjectParentDirectory = ".\\Project-Parent-Directory";
+            SourceControlDirectory = ".\\Source-Control-Directory";
+            ProjectName = "Project-Name";
+            ExtensionsToInclude = Settings.Default.ExtensionsToInclude.Trim();
+            PathsToExclude = Settings.Default.PathsToExclude.Trim();
+            PathsToInclude = Settings.Default.PathsToInclude.Trim();
+            Provider = Settings.Default.Provider.Trim();
+            WorkItemRegEx = Settings.Default.WorkItemRegEx.Trim();
+            TeamClassifier = default(ITeamClassifier);
+            UpdateFilter();
         }
 
         /// <summary>
         /// Split, Trim, and ToLower
         /// </summary>
-        IEnumerable<string> SplitTrimAndToLower(string splitThis)
+        private IEnumerable<string> SplitTrimAndToLower(string splitThis)
         {
             if (string.IsNullOrEmpty(splitThis))
             {
@@ -216,7 +277,7 @@ namespace Insight
             return parts;
         }
 
-        void UpdateFilter()
+        private void UpdateFilter()
         {
             // Filters to make the file summary
 
@@ -241,7 +302,7 @@ namespace Insight
 
             // Remvove all files that are not in the base directory.
             // (History / log may return files outside)
-            filters.Add(new OnlyFilesWithinRootDirectoryFilter(ProjectBase));
+            filters.Add(new OnlyFilesWithinRootDirectoryFilter(SourceControlDirectory));
 
             // All filters must apply
             Filter = new Filter(filters.ToArray());

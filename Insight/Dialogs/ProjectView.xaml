@@ -60,23 +60,33 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="5">
-            <Button Content="{x:Static local:Strings.Load}"
+
+            <Button Content="{x:Static local:Strings.Cancel}"
+                    Style="{StaticResource DialogButtonStyle}"
+                    Margin="0 0 5 0"
+                    Command="{Binding CancelCommand}"
+                    CommandParameter="{Binding ElementName=_settingsView}" />
+
+            <!--<Button Content="{x:Static local:Strings.Load}"
                     Style="{StaticResource DialogButtonStyle}"
                     Margin="0 0 5 0"
                     Command="{Binding LoadCommand}"/>
+
             <Button Content="{x:Static local:Strings.Save}"
                     Style="{StaticResource DialogButtonStyle}"
                     Margin="0 0 5 0"
-                    Command="{Binding SaveCommand}"/>
+                    Command="{Binding SaveCommand}"/>-->
+
             <Button Content="{x:Static local:Strings.Ok}"
                     Style="{StaticResource DialogButtonStyle}"
                     Margin="0 0 5 0"
-                    Command="{Binding ApplyCommand}"
+                    Command="{Binding OkCommand}"
                     CommandParameter="{Binding ElementName=_settingsView}" />
         </StackPanel>
 
         <Grid Margin="5">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -100,6 +110,7 @@
                        Margin="5 0 0 0"
                        Style="{StaticResource TextBlockAsSeparatorStyle}"/>
 
+            <!-- Source Control Provider -->
             <Label Content="{x:Static local:Strings.SourceProvider}"
                    Grid.Row="1"
                    Grid.Column="0"
@@ -113,39 +124,53 @@
                       SelectedValuePath="Class"
                       SelectedValue="{Binding Provider}"/>
 
-            <Label Content="{x:Static local:Strings.ProjectBase}"
+            <!-- Project parent directory -->
+            <Label Content="{x:Static local:Strings.ProjectParentDirectory}"
                    Grid.Row="2"
                    Grid.Column="0"
                    Style="{StaticResource LabelStyle}"/>
             <TextBox Grid.Row="2"
                      IsReadOnly="True"
                      Grid.Column="1"
-                     Text="{Binding ProjectBase}"
+                     Text="{Binding ProjectParentDirectory}"
                      Style="{StaticResource TextBoxStyle}"/>
             <Button Grid.Row="2"
                     Grid.Column="2"
-                    Command="{Binding SelectProjectBaseCommand}"
+                    Command="{Binding SelectProjectParentCommand}"
                     Style="{StaticResource FolderButtonStyle}"/>
 
-            <Label Content="{x:Static local:Strings.Cache}"
+            <!-- Project Name -->
+            <Label Content="{x:Static local:Strings.ProjectName}"
                    Grid.Row="3"
                    Grid.Column="0"
                    Style="{StaticResource LabelStyle}"/>
             <TextBox Grid.Row="3"
-                     IsReadOnly="True"
+                     IsReadOnly="False"
                      Grid.Column="1"
-                     Text="{Binding Cache}"
+                     Text="{Binding ProjectName}"
                      Style="{StaticResource TextBoxStyle}"/>
-            <Button Grid.Row="3"
-                    Grid.Column="2"
-                    Command="{Binding SelectCacheCommand}"
-                    Style="{StaticResource FolderButtonStyle}"/>
 
-            <Label Content="{x:Static local:Strings.WorkItemRegEx}"
+            <Label Content="{x:Static local:Strings.SourceControlDirectory}"
                    Grid.Row="4"
                    Grid.Column="0"
                    Style="{StaticResource LabelStyle}"/>
             <TextBox Grid.Row="4"
+                     IsReadOnly="True"
+                     Grid.Column="1"
+                     Text="{Binding SourceControlDirectory}"
+                     Style="{StaticResource TextBoxStyle}"/>
+            <Button Grid.Row="4"
+                    Grid.Column="2"
+                    Command="{Binding SelectSourceControlCommand}"
+                    Style="{StaticResource FolderButtonStyle}"/>
+
+
+            <!-- Workitem regex -->
+            <Label Content="{x:Static local:Strings.WorkItemRegEx}"
+                   Grid.Row="5"
+                   Grid.Column="0"
+                   Style="{StaticResource LabelStyle}"/>
+            <TextBox Grid.Row="5"
                      Grid.Column="1"
                      Grid.ColumnSpan="2"
                      Text="{Binding WorkItemRegEx}"
@@ -153,37 +178,37 @@
 
             <!-- Filter -->
             <TextBlock Text="{x:Static local:Strings.Filter}"
-                       Grid.Row="5"
+                       Grid.Row="6"
                        Grid.Column="0"
                        Grid.ColumnSpan="3"
                        Margin="5 20 0 0"
                        Style="{StaticResource TextBlockAsSeparatorStyle}"/>
 
             <Label Content="{x:Static local:Strings.FileExtensions}"
-                   Grid.Row="6"
-                   Grid.Column="0"
-                   Style="{StaticResource LabelStyle}"/>
-            <TextBox Grid.Row="6"
-                     Grid.Column="1"
-                     Grid.ColumnSpan="2"
-                     Text="{Binding ExtensionsToInclude}"
-                     Style="{StaticResource TextBoxStyle}"/>
-
-            <Label Content="{x:Static local:Strings.PathsExclude}"
                    Grid.Row="7"
                    Grid.Column="0"
                    Style="{StaticResource LabelStyle}"/>
             <TextBox Grid.Row="7"
                      Grid.Column="1"
                      Grid.ColumnSpan="2"
-                     Text="{Binding PathsToExclude}"
+                     Text="{Binding ExtensionsToInclude}"
                      Style="{StaticResource TextBoxStyle}"/>
 
-            <Label Content="{x:Static local:Strings.PathsInclude}"
+            <Label Content="{x:Static local:Strings.PathsExclude}"
                    Grid.Row="8"
                    Grid.Column="0"
                    Style="{StaticResource LabelStyle}"/>
             <TextBox Grid.Row="8"
+                     Grid.Column="1"
+                     Grid.ColumnSpan="2"
+                     Text="{Binding PathsToExclude}"
+                     Style="{StaticResource TextBoxStyle}"/>
+
+            <Label Content="{x:Static local:Strings.PathsInclude}"
+                   Grid.Row="9"
+                   Grid.Column="0"
+                   Style="{StaticResource LabelStyle}"/>
+            <TextBox Grid.Row="9"
                      Grid.Column="1"
                      Grid.ColumnSpan="2"
                      Text="{Binding PathsToInclude}"

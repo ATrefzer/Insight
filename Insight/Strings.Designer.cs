@@ -19,7 +19,7 @@ namespace Insight {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -75,15 +75,6 @@ namespace Insight {
         public static string Analysis {
             get {
                 return ResourceManager.GetString("Analysis", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cache.
-        /// </summary>
-        public static string Cache {
-            get {
-                return ResourceManager.GetString("Cache", resourceCulture);
             }
         }
         
@@ -147,6 +138,15 @@ namespace Insight {
         public static string Coupling {
             get {
                 return ResourceManager.GetString("Coupling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to create project.
+        /// </summary>
+        public static string CreateProjectFailed {
+            get {
+                return ResourceManager.GetString("CreateProjectFailed", resourceCulture);
             }
         }
         
@@ -305,6 +305,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New.
+        /// </summary>
+        public static string NewProject {
+            get {
+                return ResourceManager.GetString("NewProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -.
         /// </summary>
         public static string NotAvailable {
@@ -328,6 +337,24 @@ namespace Insight {
         public static string Ok {
             get {
                 return ResourceManager.GetString("Ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Override.
+        /// </summary>
+        public static string Override {
+            get {
+                return ResourceManager.GetString("Override", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The directory &apos;{0}&apos; exists. Do you want to override it?.
+        /// </summary>
+        public static string OverrideExistingProject {
+            get {
+                return ResourceManager.GetString("OverrideExistingProject", resourceCulture);
             }
         }
         
@@ -370,11 +397,20 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project Base.
+        ///   Looks up a localized string similar to Project name.
         /// </summary>
-        public static string ProjectBase {
+        public static string ProjectName {
             get {
-                return ResourceManager.GetString("ProjectBase", resourceCulture);
+                return ResourceManager.GetString("ProjectName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project parent directory.
+        /// </summary>
+        public static string ProjectParentDirectory {
+            get {
+                return ResourceManager.GetString("ProjectParentDirectory", resourceCulture);
             }
         }
         
@@ -429,6 +465,24 @@ namespace Insight {
         public static string SourceControl {
             get {
                 return ResourceManager.GetString("SourceControl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source Control Base.
+        /// </summary>
+        public static string SourceControlDirectory {
+            get {
+                return ResourceManager.GetString("SourceControlDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The source control directory does not exist..
+        /// </summary>
+        public static string SourceControlDirectoyNotFound {
+            get {
+                return ResourceManager.GetString("SourceControlDirectoyNotFound", resourceCulture);
             }
         }
         

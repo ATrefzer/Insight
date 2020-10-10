@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using Insight.Analyzers;
+using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.ViewModels;
@@ -23,23 +24,30 @@ namespace Insight
         private readonly Analyzer _analyzer;
         private readonly BackgroundExecution _backgroundExecution;
         private readonly DialogService _dialogs;
-        private readonly Project _project;
+        
+        private Project _project;
+
         private readonly TabBuilder _tabBuilder;
         private readonly ViewController _viewController;
 
         private int _selectedIndex = -1;
         private ObservableCollection<TabContentViewModel> _tabs = new ObservableCollection<TabContentViewModel>();
 
-        public MainViewModel(ViewController viewController, DialogService dialogs, Project project, Analyzer analyzer,
-            BackgroundExecution backgroundExecution)
+        public MainViewModel(ViewController viewController, DialogService dialogs, BackgroundExecution backgroundExecution,
+                             Analyzer analyzer,
+                             Project lastKnownProject)
         {
             _tabBuilder = new TabBuilder(this);
             _viewController = viewController;
-            _dialogs = dialogs;
-            _project = project;
             _analyzer = analyzer;
+            _dialogs = dialogs;
+            _project = lastKnownProject;
+
+
             _backgroundExecution = backgroundExecution;
 
+            LoadProjectCommand = new DelegateCommand(LoadProjectClick);
+            NewProjectCommand = new DelegateCommand(NewProjectClick);
             SetupCommand = new DelegateCommand(SetupClick);
             UpdateCommand = new DelegateCommand(UpdateClick);
             FragmentationCommand = new DelegateCommand(FragmentationClick);
@@ -57,6 +65,34 @@ namespace Insight
             EditColorsCommand = new DelegateCommand(EditColorsClick);
         }
 
+        private void LoadProjectClick()
+        {
+            var path = _dialogs.GetLoadFile("project", "Insight", string.Empty);
+            if (path != null)
+            {
+                var tmp = new Project();
+                tmp.Load(path);
+
+                UpdateProject(tmp);
+
+            }
+        }
+
+        private void UpdateProject(Project project)
+        {
+            // TODO atr How to pass the project to the view model
+
+            _project = project;
+            _analyzer.Project = _project;
+
+            // Update Ribbon
+            Refresh();
+        }
+
+        public ICommand LoadProjectCommand { get; set; }
+
+        public ICommand NewProjectCommand { get; set; }
+
         public ICommand AboutCommand { get; set; }
 
         public ICommand ChangeCouplingCommand { get; set; }
@@ -73,6 +109,8 @@ namespace Insight
         public ICommand HotspotsCommand { get; set; }
 
         public bool IsProjectValid => _project.IsValid();
+
+        public bool IsProjectLoaded => !_project.IsDefault;
 
         public ICommand KnowledgeCommand { get; set; }
 
@@ -370,9 +408,29 @@ namespace Insight
             }
         }
 
+        private void NewProjectClick()
+        {
+            var project = _viewController.ShowNewProject();
+            if (project != null)
+            {
+                UpdateProject(project);
+
+                _tabs.Clear();
+                _analyzer.Clear();
+            }
+
+            // Refresh state of ribbon
+            Refresh();
+        }
 
         private void SetupClick()
         {
+            if (_project == null || _project.IsDefault)
+            {
+                return;
+            }
+
+            // Edit the given project
             var changed = _viewController.ShowProjectSettings(_project);
             if (changed)
             {

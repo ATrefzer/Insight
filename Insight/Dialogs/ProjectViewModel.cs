@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
 
-using Insight.GitProvider;
 using Insight.WpfCore;
 
 using Prism.Commands;
@@ -13,14 +13,22 @@ namespace Insight.Dialogs
     internal sealed class ProjectViewModel : CachedModelWrapper<Project>
     {
         private readonly DialogService _dialogs;
+        private readonly Mode _mode;
 
-        public ProjectViewModel(Project project, DialogService dialogs) : base(project)
+        public ProjectViewModel(Project project, DialogService dialogs, Mode mode) : base(project)
         {
             _dialogs = dialogs;
+            _mode = mode;
             UpdatAll();
         }
 
-        public ICommand ApplyCommand => new DelegateCommand<Window>(ApplySettings);
+        public enum Mode
+        {
+            Create,
+            Update
+        }
+
+        public ICommand OkCommand => new DelegateCommand<Window>(OkClick);
 
         public List<ProviderDescription> AvailableProviders
         {
@@ -46,7 +54,19 @@ namespace Insight.Dialogs
             }
         }
 
-        public string Cache
+        public string ProjectName
+        {
+            get => GetValue<string>();
+            set => SetValue(value);
+        }
+
+        public string ProjectParentDirectory
+        {
+            get => GetValue<string>();
+            set => SetValue(value);
+        }
+
+        public string SourceControlDirectory
         {
             get => GetValue<string>();
             set => SetValue(value);
@@ -58,7 +78,10 @@ namespace Insight.Dialogs
             set => SetValue(value);
         }
 
-        public ICommand LoadCommand => new DelegateCommand(Load);
+        /// <summary>
+        /// Properties that can only be set when creating the project
+        /// </summary>
+        public bool EnableImmutableProperties { get; set; }
 
         public string PathsToExclude
         {
@@ -66,17 +89,13 @@ namespace Insight.Dialogs
             set => SetValue(value);
         }
 
+
         public string PathsToInclude
         {
             get => GetValue<string>();
             set => SetValue(value);
         }
 
-        public string ProjectBase
-        {
-            get => GetValue<string>();
-            set => SetValue(value);
-        }
 
         public string Provider
         {
@@ -84,9 +103,11 @@ namespace Insight.Dialogs
             set => SetValue(value);
         }
 
-        public ICommand SaveCommand => new DelegateCommand(Save);
-        public ICommand SelectCacheCommand => new DelegateCommand(SelectCacheDirectory);
-        public ICommand SelectProjectBaseCommand => new DelegateCommand(SelectProjectBaseDirectory);
+        public ICommand CancelCommand => new DelegateCommand<Window>(Cancel);
+
+
+        public ICommand SelectProjectParentCommand => new DelegateCommand(SelectProjectParentDirectory);
+        public ICommand SelectSourceControlCommand => new DelegateCommand(SelectSourceControlDirectory);
 
         public string WorkItemRegEx
         {
@@ -94,22 +115,32 @@ namespace Insight.Dialogs
             set => SetValue(value);
         }
 
+        public bool Changed { get; private set; }
+
         protected override IEnumerable<string> ValidateProperty(string propertyName)
         {
             switch (propertyName)
             {
-                case nameof(Cache):
-                    if (!Directory.Exists(Cache))
+                case nameof(ProjectParentDirectory):
+                    if (!Directory.Exists(ProjectParentDirectory))
                     {
                         return new[] { "directory_does_not_exist" };
                     }
 
                     break;
 
-                case nameof(ProjectBase):
-                    if (!Directory.Exists(ProjectBase))
+                case nameof(SourceControlDirectory):
+                    if (!Directory.Exists(SourceControlDirectory))
                     {
                         return new[] { "directory_does_not_exist" };
+                    }
+
+                    break;
+
+                case nameof(ProjectName):
+                    if (!IsProjectNameValid())
+                    {
+                        return new[] { "invalid_characters" };
                     }
 
                     break;
@@ -118,51 +149,79 @@ namespace Insight.Dialogs
             return null;
         }
 
-        public bool Changed { get; private set; }
-        private void ApplySettings(Window wnd)
+        private void Cancel(Window wnd)
         {
-            Changed |= Apply();
-            Model.Save();
-            wnd.DialogResult = true;
+            wnd.DialogResult = false;
             wnd.Close();
         }
 
-        private void Load()
+        private bool IsProjectNameValid()
         {
-            var file = _dialogs.GetLoadFile("xml", "Load project", Cache);
-            if (file != null)
+            if (ProjectName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             {
-                Changed = true;
-                Model.LoadFrom(file);
-                UpdatAll();
+                return false;
+            }
+
+            return true;
+        }
+
+        private void OkClick(Window wnd)
+        {
+            Changed |= Apply();
+
+            try
+            {
+                if (_mode == Mode.Create)
+                {
+                    if (CreateNewProjectEnvironment() is false)
+                    {
+                        return;
+                    }
+                }
+
+                // Create or update
+                Model.Save();
+                wnd.DialogResult = true;
+                wnd.Close();
+            }
+            catch (Exception ex)
+            {
+                _dialogs.ShowError(Strings.CreateProjectFailed + "\n" + ex.Message);
             }
         }
 
-        private void Save()
+        private bool CreateNewProjectEnvironment()
         {
-            Apply();
-            var file = _dialogs.GetSaveFile("xml", "Save project", Cache);
-            if (file != null)
+            if (Directory.Exists(Model.GetProjectDirectory()))
             {
-                Model.SaveTo(file);
+                var result = _dialogs.AskYesNoQuestion(string.Format(Strings.OverrideExistingProject, Model.GetProjectFile()), Strings.Override);
+                if (result is false)
+                {
+                    // Keep the existing directory
+                    return false;
+                }
             }
+
+            Model.InitProjectEnvironment();
+            return true;
         }
 
-        private void SelectCacheDirectory()
+
+        private void SelectProjectParentDirectory()
         {
             var dir = _dialogs.GetDirectory();
             if (dir != null)
             {
-                Cache = dir;
+                ProjectParentDirectory = dir;
             }
         }
 
-        private void SelectProjectBaseDirectory()
+        private void SelectSourceControlDirectory()
         {
             var dir = _dialogs.GetDirectory();
             if (dir != null)
             {
-                ProjectBase = dir;
+                SourceControlDirectory = dir;
             }
         }
 
@@ -171,8 +230,9 @@ namespace Insight.Dialogs
             // Reset to the state of the model element.
             ClearModifications();
             OnAllPropertyChanged();
-            ValidateNow(nameof(Cache));
-            ValidateNow(nameof(ProjectBase));
+            ValidateNow(nameof(ProjectName));
+            ValidateNow(nameof(ProjectParentDirectory));
+            ValidateNow(nameof(SourceControlDirectory));
         }
     }
 }

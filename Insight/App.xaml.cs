@@ -1,9 +1,7 @@
-﻿using System.Text;
-using System.Windows;
+﻿using System.Windows;
 
 using Insight.Properties;
 using Insight.Shared;
-using Insight.Shared.System;
 
 namespace Insight
 {
@@ -12,21 +10,14 @@ namespace Insight
     /// </summary>
     public partial class App
     {
-        private Project _project;
-
         private void App_OnExit(object sender, ExitEventArgs e)
         {
-            // Now saved on closing the dialog, too
-            _project.Save();
         }
 
         private void App_OnStartup(object sender, StartupEventArgs e)
-        {         
-            _project = new Project();
-            _project.Load();
-
+        {
             // Load thresholds from config file
-          
+
             // Summary
             Thresholds.MaxWorkItemsPerCommitForSummary = Settings.Default.MaxWorkItemsPerCommitForSummary;
 
@@ -38,8 +29,8 @@ namespace Insight
             Thresholds.MinCouplingForChangeCoupling = Settings.Default.MinCouplingForChangeCoupling;
             Thresholds.MaxItemsInChangesetForChangeCoupling = Settings.Default.MaxItemsInChangesetForChangeCoupling;
             Thresholds.MinDegreeForChangeCoupling = Settings.Default.MinDegreeForChangeCoupling;
-            
-            Current.Properties.Add("project", _project);
+
+            Current.Properties.Add("lastKnownProject", Settings.Default.LastKnownProject);
         }
     }
 }

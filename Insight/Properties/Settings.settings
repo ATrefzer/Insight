@@ -5,12 +5,6 @@
     <Setting Name="Provider" Type="System.String" Scope="User">
       <Value Profile="(Default)">Insight.SvnProvider.SvnProvider,Insight.SvnProvider</Value>
     </Setting>
-    <Setting Name="ProjectBase" Type="System.String" Scope="User">
-      <Value Profile="(Default)">.\ProjectBase</Value>
-    </Setting>
-    <Setting Name="Cache" Type="System.String" Scope="User">
-      <Value Profile="(Default)">.\Cache</Value>
-    </Setting>
     <Setting Name="ExtensionsToInclude" Type="System.String" Scope="User">
       <Value Profile="(Default)">.cs;.xaml</Value>
     </Setting>
@@ -40,6 +34,9 @@
     </Setting>
     <Setting Name="MinDegreeForChangeCoupling" Type="System.Double" Scope="User">
       <Value Profile="(Default)">40</Value>
+    </Setting>
+    <Setting Name="LastKnownProject" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

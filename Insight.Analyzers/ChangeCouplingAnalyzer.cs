@@ -42,7 +42,7 @@ namespace Insight.Analyzers
                 // Do you have uncommitted changes.
                 // Do you have commit items not inside the base directory?
                 var missingFiles =itemIds.Select(id =>idToLocalFile[id]).Where(file => !File.Exists(file));
-                // TODO why is our commit history so screwed up??? Debug.Assert(!missingFiles.Any());
+                // Debug.Assert(!missingFiles.Any());
                 
                 IncrementCommitCount(itemIds);
 

@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -330,6 +331,15 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\edit_colors_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\plus_16.png" />
+    <Resource Include="Resources\plus_32.png" />
+    <Resource Include="Resources\plus_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\import_32.png" />
+    <Resource Include="Resources\import_64.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

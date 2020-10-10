@@ -90,6 +90,7 @@ namespace Insight.GitProvider
             //var args = $"log --pretty=format:'%H%n%aN%n%ad%n%s' --date=iso --numstat";
             //var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict --name-status";
 
+            // TODO atr --find-renames, --all
             // Full history, simplify merges
             var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict --name-status --simplify-merges --full-history";
 
