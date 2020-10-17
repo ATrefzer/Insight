@@ -54,7 +54,7 @@
     <Compile Include="GitProvider.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="GitProviderBase.cs" />
-    <Compile Include="GitProviderLinear.cs" />
+    <Compile Include="GitProviderMasterOnly.cs" />
     <Compile Include="Graph.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

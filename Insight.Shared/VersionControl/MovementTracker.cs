@@ -8,8 +8,10 @@ using Insight.Shared.Model;
 namespace Insight.Shared.VersionControl
 {
     /// <summary>
+    /// Idea: Instead of adding the new items directly to a change set, give them to this tracker. When all items are known
+    /// apply them to a change set all at once. Assigns each file a unique id that survives all renames.
     /// We process the change sets from latest to oldest.
-    /// Assigns each file a unique id that survives all renames.
+    /// 
     /// Note:
     /// Several cases with svn are converted.
     /// If we find a source file added / renamed / copied into many others this is considered as add operation.
@@ -30,10 +32,13 @@ namespace Insight.Shared.VersionControl
         /// </summary>
         public void ApplyChangeSet(List<ChangeItem> items)
         {
+            Debug.Assert(items.Any() is false);
+
             ApplyIds();
             items.AddRange(_changeItems);
             _changeItems.Clear();
         }
+
 
         public void BeginChangeSet(ChangeSet cs)
         {
@@ -114,7 +119,6 @@ namespace Insight.Shared.VersionControl
                     }
                     else
                     {
-                        // TODO
                         // If the file was modified in future the rename was an copy instead!
                         item.Kind = KindOfChange.Add;
 

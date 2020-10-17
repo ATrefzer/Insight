@@ -95,7 +95,15 @@ namespace Insight
 
             if (exception != null)
             {
-                _dialogs.ShowError(exception.Message);
+                var message = exception.Message;
+
+                Exception innerException = exception.InnerException;
+                while (innerException != null)
+                {
+                    message += "\n" + innerException.Message;
+                    innerException = innerException.InnerException;
+                }
+                _dialogs.ShowError(message);
             }
         }
     }

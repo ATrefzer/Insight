@@ -46,10 +46,18 @@ namespace Insight.Dialogs
                                   Name = "Git (Processes history file by file - slow!)"
                           };
 
+
+                var gitMasterOnly = new ProviderDescription
+                          {
+                                  Class = GitProvider.GitProviderMasterOnly.GetClass(),
+                                  Name = "Git (Only commits on master, tracks renames)"
+                          };
+
                 return new List<ProviderDescription>
                        {
                                svn,
-                               git
+                               git,
+                               gitMasterOnly
                        };
             }
         }

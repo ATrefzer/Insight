@@ -221,7 +221,7 @@ namespace Insight.SvnProvider
 
 
         /// <summary>
-        ///     Duplicate with git probvider
+        ///     Duplicate with git provider
         /// </summary>
         private Dictionary<string, Contribution> CalculateContributionsParallel(IProgress progress,
             List<string> localFiles)

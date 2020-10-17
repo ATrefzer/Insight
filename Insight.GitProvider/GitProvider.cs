@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -298,6 +299,7 @@ namespace Insight.GitProvider
             Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, graph);
         }
 
+        
         void UpdateHistory(IProgress progress)
         {            
             // Git graph
@@ -369,7 +371,7 @@ namespace Insight.GitProvider
 
                     foreach (var csId in changeSetIds)
                     {
-                        if (graph.TryGetValue(csId, out node))
+                        if (graph.TryGetNode(csId, out node))
                         {
                             nodesToProcess.Enqueue(node);
                             handledNodes.Add(node.CommitHash);
@@ -400,7 +402,7 @@ namespace Insight.GitProvider
                         foreach (var parent in node.ParentHashes)
                         {
                             // Avoid cycles in case a change set is parent of many others.
-                            if (!handledNodes.Contains(parent) && graph.TryGetValue(parent, out node))
+                            if (!handledNodes.Contains(parent) && graph.TryGetNode(parent, out node))
                             {
                                 nodesToProcess.Enqueue(node);
                                 handledNodes.Add(node.CommitHash);

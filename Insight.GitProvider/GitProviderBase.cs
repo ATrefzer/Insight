@@ -40,6 +40,14 @@ namespace Insight.GitProvider
                                      .ToList();
         }
 
+        protected string GetMasterHead()
+        {
+            var masterRefPath = Path.Combine(_startDirectory, ".git\\refs\\heads\\master");
+            var lines = File.ReadAllLines(masterRefPath);
+            return lines.Single().Substring(0, 40);
+
+        }
+
 
         protected void UpdateContribution(IProgress progress)
         {

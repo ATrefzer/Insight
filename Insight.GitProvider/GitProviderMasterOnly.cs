@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 
 using Insight.Shared;
@@ -10,13 +12,13 @@ using Newtonsoft.Json;
 namespace Insight.GitProvider
 {
     /// <summary>
-    /// Provides higher level funtions and queries on a git repository.
+    /// Provides higher level functions and queries on a git repository.
     /// </summary>
-    public sealed class GitProviderLinear : GitProviderBase, ISourceControlProvider
+    public sealed class GitProviderMasterOnly : GitProviderBase, ISourceControlProvider
     {
         public static string GetClass()
         {
-            var type = typeof(GitProviderLinear);
+            var type = typeof(GitProviderMasterOnly);
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
@@ -64,10 +66,32 @@ namespace Insight.GitProvider
         private void UpdateHistory()
         {
             var log = _gitCli.Log();
+            var graph = new Graph();
 
-            var parser = new Parser(_mapper, null);
+            var parser = new Parser(_mapper, graph);
             parser.WorkItemRegex = _workItemRegex;
             var history = parser.ParseLogString(log);
+
+            // Extract master branch by tracking backwards
+            var headHash = GetMasterHead();
+
+
+            var masterNodes = new List<GraphNode>();
+            var headNode = graph.GetNode(headHash);
+            while (headNode != null)
+            {
+                masterNodes.Add(headNode);
+
+                // The first parent is the branch that was checked out when we merged.
+                var parentHash = headNode.ParentHashes.FirstOrDefault();
+                headNode = graph.GetNode(parentHash);
+            }
+
+            var masterHashes = masterNodes.Select(node => node.CommitHash).ToHashSet();
+            var masterChangeSets = history.ChangeSets.Where(cs => masterHashes.Contains(cs.Id));
+            var masterHistory = new ChangeSetHistory(masterChangeSets.OrderByDescending(x => x.Date).ToList());
+            
+
 
             // Update Ids for files
             var tracker = new MovementTracker();
@@ -86,11 +110,11 @@ namespace Insight.GitProvider
             Warnings = tracker.Warnings;
 
             // Write history file
-            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
+            var json = JsonConvert.SerializeObject(masterHistory, Formatting.Indented);
             File.WriteAllText(_historyFile, json, Encoding.UTF8);
 
             // For information
-            File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
+            File.WriteAllText(Path.Combine(_cachePath, @"git_master_history.txt"), log);
         }
     }
 }

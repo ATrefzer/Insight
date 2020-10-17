@@ -8,8 +8,20 @@ namespace Insight.GitProvider
 {
     public sealed class GraphNode
     {
-        public string CommitHash { get; set; }
-        public List<string> ParentHashes { get; set; }
+        public GraphNode(string commitHash)
+        {
+            CommitHash = commitHash;
+        }
+
+        public string CommitHash { get;  }
+
+        /// <summary>
+        /// Ordered list of all parents. The first parent is the branch that was checked out during a merge.
+        /// The second parent is the branch that was merged in.
+        /// </summary>
+        public List<string> ParentHashes { get; } = new List<string>();
+
+        public HashSet<string> ChildHashes { get; } = new HashSet<string>();
     }
 
     /// <summary>
@@ -17,15 +29,17 @@ namespace Insight.GitProvider
     /// </summary>
     public class Graph
     {
-        private object _lockObj = new object();
+        private readonly object _lockObj = new object();
 
         // hash -> node {hash, parent hashes}
-        Dictionary<string, GraphNode> _graph = new Dictionary<string, GraphNode>();
+        readonly Dictionary<string, GraphNode> _graph = new Dictionary<string, GraphNode>();
 
+        public IEnumerable<GraphNode> AllNodes => _graph.Values.ToList();
        
 
         /// <summary>
-        /// Adds a new commit to the commit Graph
+        /// Adds a new commit to the commit graph.
+        /// This may result in several new nodes in the graph because we add nodes for possible parents in advance.
         /// </summary>
         /// <param name="hash">Commit hash (change set id)</param>
         /// <param name="parents">List of parent commit hashes</param>
@@ -34,30 +48,71 @@ namespace Insight.GitProvider
             var allParents = !string.IsNullOrEmpty(parents) ? parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                                     .Select(parent => parent)
                                     .ToList() : new List<string>();
-            var node = new GraphNode { CommitHash = hash, ParentHashes = allParents };
+
 
             lock (_lockObj)
             {
-                if (!_graph.ContainsKey(node.CommitHash))
+
+                // GraphNode for the given hash.
+                var node = GetOrAddNode(hash);
+
+                // Update parents and child relationships
+                foreach (var parentHash in allParents)
                 {
-                    _graph.Add(node.CommitHash, node);
+                    node.ParentHashes.Add(parentHash);
+
+                    var parent = GetOrAddNode(parentHash);
+                    parent.ChildHashes.Add(hash);
                 }
             }
         }
 
-        public List<string> GetParents(string id)
+        GraphNode GetOrAddNode(string hash)
         {
-            return _graph[id].ParentHashes;
+            GraphNode node;
+            if (_graph.TryGetValue(hash, out node) is false)
+            {
+                node = new GraphNode(hash);
+                _graph.Add(hash, node);
+            }
+
+            return node;
         }
 
-        public bool Exists(string id)
+        public HashSet<string> GetChildren(string hash)
         {
-            return _graph.ContainsKey(id);
+            return _graph[hash].ChildHashes;
         }
 
-        internal bool TryGetValue(string parent, out GraphNode node)
+        public List<string> GetParents(string hash)
         {
-            return _graph.TryGetValue(parent, out node);
+            return _graph[hash].ParentHashes;
+        }
+
+        public bool Exists(string hash)
+        {
+            return _graph.ContainsKey(hash);
+        }
+
+        public GraphNode GetNode(string hash)
+        {
+            if (hash == null)
+            {
+                return null;
+            }
+
+            return _graph[hash];
+        }
+
+        public bool TryGetNode(string hash, out GraphNode node)
+        {
+            if (hash == null)
+            {
+                node = null;
+                return false;
+            }
+
+            return _graph.TryGetValue(hash, out node);
         }
     }
 }
