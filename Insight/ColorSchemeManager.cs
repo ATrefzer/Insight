@@ -1,15 +1,17 @@
-﻿using Insight.Shared;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using Insight.Shared;
+
 using Visualization.Controls;
 using Visualization.Controls.Interfaces;
 
 namespace Insight
 {
     /// <summary>
-    /// Manages the colors used in the current project. 
-    /// The colors shall stay stable regardless of the order of your analyses.
+    /// Manages the colors used in the current project.
+    /// The colors shall stay stable regardless of the order of your analysis.
     /// Opening a file trend and then showing knowledge shall result in the same colors not matter in which order
     /// you execute it. Therefore a color file is written the first time we create a cache. After this the color file
     /// is never deleted, only new colors are appended. This keeps the colors the same. Plus it gives the user the option
@@ -17,22 +19,17 @@ namespace Insight
     /// </summary>
     public class ColorSchemeManager
     {
-        public ColorSchemeManager(string projectCache)
-        {
-            _projectCache = projectCache;
-        }
+        public string DefaultFileName = "colors.json";
 
-        private string _projectCache;
-
-        /// <summary>        
+        /// <summary>
         /// Once the color file is created it is not deleted because the user can edit it.
         /// Assume the names are ordered such that the most relevant entries come first.
         /// </summary>
-        public bool UpdateColorScheme(List<string> orderedNames)
+        public bool UpdateColorScheme(string pathToColorFile, List<string> orderedNames)
         {
-            bool updated = false;
+            var updated = false;
 
-            var scheme = ReadColorSchemeFile();
+            var scheme = ReadColorSchemeFile(pathToColorFile);
             if (scheme == null)
             {
                 // Create a new scheme
@@ -51,6 +48,7 @@ namespace Insight
                     {
                         scheme.AddColorFor(newName);
                     }
+
                     updated = true;
                 }
             }
@@ -58,32 +56,29 @@ namespace Insight
             if (updated)
             {
                 var json = new JsonFile<ColorScheme>();
-                json.Write(GetColorFile(), scheme);
+                json.Write(pathToColorFile, scheme);
             }
+
             return updated;
         }
 
-        private ColorScheme ReadColorSchemeFile()
+
+        internal IColorScheme GetColorScheme(string pathToColorFile)
         {
-            if (!File.Exists(GetColorFile()))
+            return ReadColorSchemeFile(pathToColorFile);
+        }
+
+        private ColorScheme ReadColorSchemeFile(string pathToColorFile)
+        {
+            if (!File.Exists(pathToColorFile))
             {
                 return null;
             }
 
             var json = new JsonFile<ColorScheme>();
-            var scheme = json.Read(GetColorFile());
+            var scheme = json.Read(pathToColorFile);
 
             return scheme;
-        }
-
-        private string GetColorFile()
-        {
-            return Path.Combine(_projectCache, "colors.json");
-        }
-
-        internal IColorScheme GetColorScheme()
-        {
-            return ReadColorSchemeFile();
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+
 using Insight.Analyzers;
 using Insight.Builder;
 using Insight.Dto;
@@ -11,6 +11,7 @@ using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
+
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
 using Visualization.Controls.Interfaces;
@@ -19,19 +20,19 @@ namespace Insight
 {
     public sealed class Analyzer
     {
+        private readonly IMetricProvider _metricsProvider;
+
         /// <summary>
         /// Local path -> contribution
         /// </summary>
-        Dictionary<string, Contribution> _contributions;
+        private Dictionary<string, Contribution> _contributions;
 
-        ChangeSetHistory _history;
-        Dictionary<string, LinesOfCode> _metrics;
-        private readonly IMetricProvider _metricsProvider;
+        private ChangeSetHistory _history;
+        private Dictionary<string, LinesOfCode> _metrics;
 
-        // TODO atr Remove the color schema manager here.
-        // TODO atr Analyzer should return only data. Let the main view model manage this.
 
-        private ColorSchemeManager _colorSchemeManager;
+        // TODO atr remove this property and pass required information to method calls
+        // We only need filter, cache directory and source code provider
 
         public Analyzer(IMetricProvider metricProvider)
         {
@@ -40,45 +41,7 @@ namespace Insight
 
         public List<WarningMessage> Warnings { get; private set; }
 
-        
-        // TODO atr remove this property and pass required information to method calls
-        // We only need filter, cache directory and source code provider
-        private IProject _project;
-        public IProject Project
-        {
-            get
-            {
-                return _project;
-            }
-            set
-            {
-                _project = value;
-                _colorSchemeManager = new ColorSchemeManager(Project.Cache);
-            }
-        }
-
-        private static string ClassifyDirectory(string localPath)
-        {
-            // Classify different source code folders
-
-            // THIS IS AN EXAMPLE
-            if (localPath.Contains("UnitTest"))
-            {
-                return "Test";
-            }
-
-            if (localPath.Contains("UI"))
-            {
-                return "UserInterface";
-            }
-
-            if (localPath.Contains("bla\\bla\\bla"))
-            {
-                return "bla";
-            }
-
-            return string.Empty;
-        }
+        public IProject Project { get; set; }
 
         public List<Coupling> AnalyzeChangeCoupling()
         {
@@ -100,30 +63,11 @@ namespace Insight
             return sortedCouplings;
         }
 
-
-       
-        private List<Coupling> AnalyzeLogicalComponentChangeCoupling(string mappingFile)
-        {
-            var couplingAnalyzer = new ChangeCouplingAnalyzer();
-            var mapper = new LogicalComponentMapper();
-            mapper.ReadDefinitionFile(mappingFile, true);
-
-            Func<string, string> classifier = (localPath) =>
-            {
-                return mapper.MapLocalPathToLogicalComponent(localPath);
-            };
-
-            var classifiedCouplings = couplingAnalyzer.CalculateClassifiedChangeCouplings(_history, classifier);
-            Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
-
-            return classifiedCouplings;
-        }
-
         public HierarchicalDataContext AnalyzeCodeAge()
         {
             LoadHistory();
             LoadMetrics();
-          
+
             // Get summary of all files
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
 
@@ -172,12 +116,11 @@ namespace Insight
             return dataContext;
         }
 
-        public HierarchicalDataContext AnalyzeKnowledge()
+        public HierarchicalDataContext AnalyzeKnowledge(IColorScheme colorScheme)
         {
             LoadHistory();
             LoadMetrics();
             LoadContributions(false);
-            LoadColorScheme();
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
@@ -185,7 +128,7 @@ namespace Insight
             // Assign a color to each developer
             var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct().ToList();
 
-            var legend = new LegendBitmap(mainDevelopers, _colorScheme);
+            var legend = new LegendBitmap(mainDevelopers, colorScheme);
             legend.CreateLegendBitmap(Path.Combine(Project.Cache, "knowledge_color.bmp"));
 
             // Build the knowledge data
@@ -193,36 +136,21 @@ namespace Insight
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
             // TODO atr This should be moved to the view model.
-            var dataContext = new HierarchicalDataContext(hierarchicalData, _colorScheme);
+            var dataContext = new HierarchicalDataContext(hierarchicalData, colorScheme);
             dataContext.AreaSemantic = Strings.LinesOfCode;
             dataContext.WeightSemantic = Strings.NotAvailable;
             return dataContext;
-        }
-
-        // TODO atr move to view model (Project)
-        IColorScheme _colorScheme;
-
-        void LoadColorScheme()
-        {
-            if (_colorScheme != null)
-            {
-                return;
-            }
- 
-            _colorScheme = _colorSchemeManager.GetColorScheme() ?? new ColorScheme();
-           
         }
 
 
         /// <summary>
         /// Same as knowledge but uses a different color scheme
         /// </summary>
-        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer)
+        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer, IColorScheme colorScheme)
         {
             LoadHistory();
             LoadMetrics();
             LoadContributions(false);
-            LoadColorScheme();
 
             var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
@@ -231,7 +159,7 @@ namespace Insight
             var builder = new KnowledgeBuilder(developer);
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
-            var dataContext = new HierarchicalDataContext(hierarchicalData, _colorScheme);
+            var dataContext = new HierarchicalDataContext(hierarchicalData, colorScheme);
             dataContext.AreaSemantic = Strings.LinesOfCode;
             dataContext.WeightSemantic = Strings.NotAvailable;
             return dataContext;
@@ -258,11 +186,9 @@ namespace Insight
 
             return trend;
         }
-       
-        public string AnalyzeWorkOnSingleFile(string fileName)
-        {
-            LoadColorScheme();
 
+        public string AnalyzeWorkOnSingleFile(string fileName, IColorScheme colorScheme)
+        {
             var provider = Project.CreateProvider();
             var workByDeveloper = provider.CalculateDeveloperWork(fileName);
 
@@ -271,22 +197,13 @@ namespace Insight
             var fi = new FileInfo(fileName);
             var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
 
-            var orderedNames = workByDeveloper.Keys.OrderByDescending(name => workByDeveloper[name]).ToList();
-
-            if (_colorSchemeManager.UpdateColorScheme(orderedNames))
-            {
-                // This may happen if we do not have the latest sources and a new developer occurs.
-                _colorScheme = null;
-                LoadColorScheme();
-            }
 
             // TODO atr bitmap?
-            bitmap.Create(path, workByDeveloper, _colorScheme, true);
+            bitmap.Create(path, workByDeveloper, colorScheme, true);
 
             return path;
         }
 
-    
 
         public List<DataGridFriendlyComment> ExportComments()
         {
@@ -315,10 +232,10 @@ namespace Insight
             foreach (var cs in _history.ChangeSets)
             {
                 result.Add(new DataGridFriendlyComment
-                {
-                    Committer = cs.Committer,
-                    Comment = cs.Comment
-                });
+                           {
+                                   Committer = cs.Committer,
+                                   Comment = cs.Comment
+                           });
             }
 
             Csv.Write(Path.Combine(Project.Cache, "comments.csv"), result);
@@ -362,15 +279,64 @@ namespace Insight
 
             // Update code metrics
             _metricsProvider.UpdateLinesOfCodeCache(Project.SourceControlDirectory, Project.Cache, Project.GetNormalizedFileExtensions());
+        }
 
-            // Don't delete, only extend if necessary
-            _colorSchemeManager.UpdateColorScheme(GetAllKnownDevelopers());
+
+        internal void Clear()
+        {
+            _history = null;
+            _metrics = null;
+            _contributions = null;
+        }
+
+        internal List<string> GetMainDevelopers()
+        {
+            LoadContributions(false);
+            return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
+        }
+
+        private static string ClassifyDirectory(string localPath)
+        {
+            // Classify different source code folders
+
+            // THIS IS AN EXAMPLE
+            if (localPath.Contains("UnitTest"))
+            {
+                return "Test";
+            }
+
+            if (localPath.Contains("UI"))
+            {
+                return "UserInterface";
+            }
+
+            if (localPath.Contains("bla\\bla\\bla"))
+            {
+                return "bla";
+            }
+
+            return string.Empty;
+        }
+
+
+        private List<Coupling> AnalyzeLogicalComponentChangeCoupling(string mappingFile)
+        {
+            var couplingAnalyzer = new ChangeCouplingAnalyzer();
+            var mapper = new LogicalComponentMapper();
+            mapper.ReadDefinitionFile(mappingFile, true);
+
+            Func<string, string> classifier = localPath => { return mapper.MapLocalPathToLogicalComponent(localPath); };
+
+            var classifiedCouplings = couplingAnalyzer.CalculateClassifiedChangeCouplings(_history, classifier);
+            Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
+
+            return classifiedCouplings;
         }
 
         /// <summary>
         /// Returns developers ordered by the number of commits.
         /// </summary>
-        private List<string> GetAllKnownDevelopers()
+        public List<string> GetAllKnownDevelopers()
         {
             LoadHistory();
 
@@ -380,29 +346,15 @@ namespace Insight
             {
                 dict.AddToValue(cs.Committer, 1);
             }
+
             var developersOrderedByCommits = dict.Keys.OrderBy(key => dict[key]).ToList();
             return developersOrderedByCommits;
         }
 
 
-        internal void Clear()
+        private object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
         {
-            _history = null;
-            _metrics = null;
-            _contributions = null;
-            _colorScheme = null;
-        }
-
-        internal List<string> GetMainDevelopers()
-        {
-            LoadContributions(false);
-            return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
-        }
-
-
-        object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
-        {
-            var linesOfCode = (int)hotspotCalculator.GetLinesOfCode(artifact);
+            var linesOfCode = (int) hotspotCalculator.GetLinesOfCode(artifact);
             if (_contributions != null)
             {
                 var result = new DataGridFriendlyArtifact();
@@ -439,7 +391,7 @@ namespace Insight
             }
         }
 
-        void LoadContributions(bool silent)
+        private void LoadContributions(bool silent)
         {
             if (_contributions == null)
             {
@@ -453,7 +405,7 @@ namespace Insight
             }
         }
 
-        void LoadHistory()
+        private void LoadHistory()
         {
             if (_history == null)
             {
@@ -466,7 +418,7 @@ namespace Insight
             }
         }
 
-        void LoadMetrics()
+        private void LoadMetrics()
         {
             // Get code metrics (all files from the cache!)
             if (_metricsProvider != null)

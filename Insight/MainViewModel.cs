@@ -26,6 +26,7 @@ namespace Insight
         private readonly DialogService _dialogs;
         
         private Project _project;
+        private readonly ColorSchemeManager _colorSchemeManager;
 
         private readonly TabBuilder _tabBuilder;
         private readonly ViewController _viewController;
@@ -35,14 +36,14 @@ namespace Insight
 
         public MainViewModel(ViewController viewController, DialogService dialogs, BackgroundExecution backgroundExecution,
                              Analyzer analyzer,
-                             Project lastKnownProject)
+                             Project lastKnownProject, ColorSchemeManager colorSchemeManager)
         {
             _tabBuilder = new TabBuilder(this);
             _viewController = viewController;
             _analyzer = analyzer;
             _dialogs = dialogs;
             _project = lastKnownProject;
-
+            _colorSchemeManager = colorSchemeManager;
 
             _backgroundExecution = backgroundExecution;
 
@@ -182,7 +183,8 @@ namespace Insight
         public async void OnShowWork(IHierarchicalData data)
         {
             var fileToAnalyze = data.Tag as string;
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze))
+            var colorScheme = _colorSchemeManager.GetColorScheme(GetColorFilePath());
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme))
                 .ConfigureAwait(true);
 
             if (path == null) return;
@@ -298,13 +300,18 @@ namespace Insight
 
         private async void KnowledgeClick()
         {
-            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge());
+            var colorScheme = _colorSchemeManager.GetColorScheme(GetColorFilePath());
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(colorScheme));
             if (context == null) return;
 
-            var colorScheme = context.ColorScheme;
 
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands());
             _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands());
+        }
+
+        private string GetColorFilePath()
+        {
+            return Path.Combine(_project.GetProjectDirectory(), _colorSchemeManager.DefaultFileName);
         }
 
         private async void KnowledgeLossClick()
@@ -312,10 +319,10 @@ namespace Insight
             var forDeveloper = GetDeveloperForKnowledgeLoss();
             if (forDeveloper == null) return;
 
-            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper));
-            if (context == null) return;
 
-            var colorScheme = context.ColorScheme;
+            var colorScheme = _colorSchemeManager.GetColorScheme(GetColorFilePath());
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper, colorScheme));
+            if (context == null) return;
 
             _tabBuilder.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands());
             _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands());
@@ -451,6 +458,8 @@ namespace Insight
 
         private async void UpdateClick()
         {
+            Debug.Assert(_project.IsValid());
+
             // The functions to update or pull are implemented in SvnProvider and GitProvider.
             // But actually that is not the task of this tool. Give it an updated repository.
 
@@ -461,6 +470,10 @@ namespace Insight
 
             await _backgroundExecution.ExecuteWithProgressAsync(progress =>
                 _analyzer.UpdateCache(progress, includeContributions));
+
+            // Don't delete, only extend if necessary
+            var developers = _analyzer.GetAllKnownDevelopers();
+            _colorSchemeManager.UpdateColorScheme(GetColorFilePath(), developers);
 
             _tabs.Clear();
         }

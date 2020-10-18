@@ -198,6 +198,8 @@ namespace Insight
             IsDefault = false;
 
             UpdateFilter();
+
+            Settings.Default.LastKnownProject = path;
         }
 
         public void Save()
@@ -211,6 +213,8 @@ namespace Insight
         {
             var file = new XmlFile<Project>();
             file.Write(path, this);
+
+            Settings.Default.LastKnownProject = path;
         }
 
 

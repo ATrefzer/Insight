@@ -85,13 +85,11 @@ namespace Insight.GitProvider
         public string Log()
         {
             // --num_stat Shows added and removed lines
+
             var program = "git";
 
-            //var args = $"log --pretty=format:'%H%n%aN%n%ad%n%s' --date=iso --numstat";
-            //var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict --name-status";
-
-            // TODO atr --find-renames, --all
-            // Full history, simplify merges
+            // Full history, simplify merges. Renames are tracked by default.
+            // We could use --find-renames -M9 to change the similarity to 90% but to results are not so good
             var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict --name-status --simplify-merges --full-history";
 
             // Alternatives: iso-strict, iso
@@ -101,13 +99,16 @@ namespace Insight.GitProvider
 
         /// <summary>
         /// Git by default simplifies the history for a single file. This means the parent relationships may be incomplete.
+        /// Renames are tracked. Merge commits that do not contribute are not part of the history.
         /// </summary>
         public string Log(string localPath)
         {
             localPath = localPath.Replace("\\", "/");
             var program = "git";
 
-            // --follow to track
+            // --follow to track renaming, works only for a single file!
+            // When --follow is used --full-history has no effect. We don't see merge commits that do contribute to the file.
+
             var args = $"log --follow --pretty=format:{LogFormat} --date=iso-strict --name-status -- \"{localPath}\"";
 
             var result = ExecuteCommandLine(program, args);
