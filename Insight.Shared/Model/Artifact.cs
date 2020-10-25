@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Insight.Shared.Model
 {
     /// <summary>
-    /// An artefact is a file committed to the source control system.
+    /// An artifact is a file committed to the source control system.
     /// </summary>
     public class Artifact
     {

@@ -40,9 +40,16 @@ namespace Insight.Dialogs
                                   Name = "Svn"
                           };
 
+
                 var git = new ProviderDescription
+                                    {
+                                            Class = GitProvider.GitProvider.GetClass(),
+                                            Name = "Git (Track renames until file with shared history)"
+                                    };
+
+                var gitFileByFile = new ProviderDescription
                           {
-                                  Class = GitProvider.GitProvider.GetClass(),
+                                  Class = GitProvider.GitProviderFileByFile.GetClass(),
                                   Name = "Git (Processes history file by file - slow!)"
                           };
 
@@ -55,9 +62,10 @@ namespace Insight.Dialogs
 
                 return new List<ProviderDescription>
                        {
-                               svn,
                                git,
-                               gitMasterOnly
+                               gitFileByFile,
+                               gitMasterOnly,
+                               svn
                        };
             }
         }

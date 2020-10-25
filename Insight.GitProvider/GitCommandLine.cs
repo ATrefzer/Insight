@@ -7,6 +7,8 @@ namespace Insight.GitProvider
 {
     public sealed class GitCommandLine
     {
+        // Note: Use Committer Date. Otherwise children of a commit may appear before the parent.
+
         /// <summary>
         /// %H   Hash (abbreviated is %h)
         /// %n   Newline
@@ -18,7 +20,9 @@ namespace Insight.GitProvider
         /// %P   Parents (all sha1s in one line) First commit does not have a parent!
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
-        const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
+        const string LogFormat = "START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER";
+
+        private const string MainBranch = "master";
 
         readonly string _workingDirectory;
         private readonly ProcessRunner _runner;
@@ -47,12 +51,17 @@ namespace Insight.GitProvider
             File.WriteAllText(exportFile, result.StdOut);
         }
 
-        public string GetAllTrackedFiles()
+        public string GetAllTrackedFiles(string hash = null)
         {
             var program = "git";
 
+            if (hash == null)
+            {
+                hash = "HEAD";
+            }
+
             // Optional HEAD
-            var args = $"ls-tree -r master --name-only";
+            var args = $"ls-tree -r --name-only {hash}";
 
             var result = ExecuteCommandLine(program, args);
             return result.StdOut;
@@ -60,12 +69,13 @@ namespace Insight.GitProvider
 
         /// <summary>
         /// Returns true if there are any changes in the working or
-        /// staging area.
+        /// staging area. TODO really
+        /// Detects un-tracked changes
         /// </summary>
         public bool HasLocalChanges()
         {
             var program = "git";
-            var args = $"status --short";
+            var args = "status --short";
             var result = ExecuteCommandLine(program, args);
             return !string.IsNullOrEmpty(result.StdOut.Trim());
         }
@@ -77,21 +87,44 @@ namespace Insight.GitProvider
         {
             var hint = "your branch is ahead of";
             var program = "git";
-            var args = $"status";
+            var args = "status";
             var result = ExecuteCommandLine(program, args);
             return !result.StdOut.ToLowerInvariant().Contains(hint);
         }
 
+
+        public bool HasIndexOrWorkspaceChanges()
+        {
+            // https://stackoverflow.com/questions/3882838/whats-an-easy-way-to-detect-modified-files-in-a-git-workspace
+
+            // ... check both the staged contents (what is in the index) and the files in the working tree.
+            // Alternatives like git ls-files -m will only check the working tree against the index
+            // (i.e. they will ignore any staged (but uncommitted) content that is also in the working tree)
+
+            var program = "git";
+            var args = "diff-index -M -C --quiet HEAD";
+            var result = ExecuteCommandLine(program, args);
+
+            // Exit code 0 = no changes
+            return result.ExitCode != 0;
+        }
+
         public string Log()
         {
-            // --num_stat Shows added and removed lines
+            // --num_stat Would shows added and removed lines
 
             var program = "git";
 
             // Full history, simplify merges. Renames are tracked by default.
             // We could use --find-renames -M9 to change the similarity to 90% but to results are not so good
+            //
+            // --cc implies the -c option and further compresses merge commits.
+            //
             var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict --name-status --simplify-merges --full-history";
 
+            //-c diff.renameLimit=99999 log --pretty=format:{START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER --date=iso-strict --name-status --simplify-merges --full-history
+            
+            
             // Alternatives: iso-strict, iso
             var result = ExecuteCommandLine(program, args);
             return result.StdOut;
@@ -115,12 +148,21 @@ namespace Insight.GitProvider
             return result.StdOut;
         }
 
-        public ProcessResult PullMasterFromOrigin()
+
+        public string GetCheckedOutBranch()
         {
-            // git pull origin master
             var program = "git";
-            var args = $"pull origin master";
-            return ExecuteCommandLine(program, args);
+            var args = "git symbolic-ref --short -q HEAD";
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut;
+        }
+
+        public bool IsMasterGetCheckedOut()
+        {
+            var program = "git";
+            var args = "symbolic-ref --short -q HEAD";
+            var result = ExecuteCommandLine(program, args);
+            return string.Compare(result.StdOut.Trim('\n'), MainBranch, System.StringComparison.OrdinalIgnoreCase) == 0;
         }
 
         ProcessResult ExecuteCommandLine(string program, string args)

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 
 using Insight.Shared;
@@ -52,7 +53,7 @@ namespace Insight.GitProvider
         {
             DeleteAllCaches();
 
-            VerifyGitDirectory();
+            VerifyGitPreConditions();
 
             UpdateHistory();
 
@@ -63,14 +64,16 @@ namespace Insight.GitProvider
             }
         }
 
+    
+        
+
         private void UpdateHistory()
         {
             var log = _gitCli.Log();
-            var graph = new Graph();
 
-            var parser = new Parser(_mapper, graph);
+            var parser = new Parser(_mapper);
             parser.WorkItemRegex = _workItemRegex;
-            var history = parser.ParseLogString(log);
+            var (history, graph) = parser.ParseLogString(log);
 
             // Extract master branch by tracking backwards
             var headHash = GetMasterHead();
@@ -83,8 +86,8 @@ namespace Insight.GitProvider
                 masterNodes.Add(headNode);
 
                 // The first parent is the branch that was checked out when we merged.
-                var parentHash = headNode.ParentHashes.FirstOrDefault();
-                headNode = graph.GetNode(parentHash);
+                headNode = headNode.Parents.FirstOrDefault();
+              
             }
 
             var masterHashes = masterNodes.Select(node => node.CommitHash).ToHashSet();

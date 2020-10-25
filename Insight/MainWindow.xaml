@@ -9,7 +9,7 @@
               xmlns:Dialogs="clr-namespace:Insight.Dialogs"
               mc:Ignorable="d"
               Icon="Resources/Lightswitch.ico"
-              Title="Insight"
+              Title="{Binding Title}"
               Height="450"
               Width="800"
               Closing="MainWindow_OnClosing">

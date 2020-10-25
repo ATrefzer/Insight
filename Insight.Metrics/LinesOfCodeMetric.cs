@@ -104,7 +104,8 @@ namespace Insight.Metrics
 
             var dict = ParseClocOutput(stdOut);
 
-            Debug.Assert(dict.Count == 1);
+            // 2nd is "sum"
+            Debug.Assert(dict.Count == 2);
             return dict.First().Value;
         }
 
@@ -118,12 +119,15 @@ namespace Insight.Metrics
             {
                 // Structure of output file
                 // language,filename,blank,comment,code
+
                 var parts = line.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length != 5)
                 {
+                    // Note there is a summary line "SUM" at the end with 4 entries.
                     continue;
                 }
 
+                
                 var file = parts[1].Trim();
                 var metric = CreateMetric(parts);
                 metrics[file.ToLowerInvariant()] = metric;

@@ -2,20 +2,24 @@
 In Progress
 ---------------------------------------
 
-- Draw some UML images
-- Layouting for circle packaging (run against old verison)
-- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+- Better GIT parser
 
 ---------------------------------------
 In TODO
 ---------------------------------------
+ - Bugs in ntg
 
+ - CleanupHistory cleanup. Expect cleaned history to be stored. No deletes!
+
+ - Measure hashset vs dictionary intersect
 - Investigate broken svn history. See CalculateChangeCouplings
+- Settings allows to change read only project settings.
+- Anonymize developer
+- Color editor
 - Classifier for names!
-- Try on different git projects
 - Settings: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
   after the filters are changed. More restrictive is ok!
-- Settings: Ask user to clear Colors.txt when he changes the base directory in the settings window.
+- In general: Where should files be filtered? Provider or outside? => Provider returns all tracked history No deletes within.
 
 
 
@@ -23,6 +27,7 @@ In TODO
 
 - Overlay texts
 
+- Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
 
 - TreeMap: TryAddToStrip, Move vertical / horizontal strip to new classes
 - TreeMap: Refactoring stripProportion

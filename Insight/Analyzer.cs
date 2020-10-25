@@ -174,8 +174,7 @@ namespace Insight
             // Log on this file to get all revisions
             var fileHistory = provider.ExportFileHistory(localFile);
 
-            // For each file we need to calculate the metrics
-
+            // For each file we need to calculate the metrics LOC and inverted whitespace.
             foreach (var file in fileHistory)
             {
                 var fileInfo = new FileInfo(file.CachePath);
@@ -413,7 +412,7 @@ namespace Insight
                 _history = provider.QueryChangeSetHistory();
                 Warnings = provider.Warnings;
 
-                // Remove all items that are deleted now.
+                // Remove all items that are deleted now. TODO expect here the history without deletes!
                 _history.CleanupHistory();
             }
         }

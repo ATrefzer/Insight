@@ -76,7 +76,7 @@ namespace Insight
         /// <summary>
         /// Call from Ui thread
         /// </summary>
-        public async Task ExecuteWithProgressAsync(Action<Progress> action)
+        public async Task ExecuteWithProgressAsync(Action<Progress> action, bool throwException = false)
         {
             Debug.Assert(Thread.CurrentThread.ManagedThreadId == Application.Current.Dispatcher.Thread.ManagedThreadId);
 
@@ -89,6 +89,11 @@ namespace Insight
                 }
                 catch (Exception ex)
                 {
+                    if (throwException)
+                    {
+                        throw;
+                    }
+
                     exception = ex;
                 }
             }
@@ -106,5 +111,6 @@ namespace Insight
                 _dialogs.ShowError(message);
             }
         }
+
     }
 }

@@ -17,17 +17,13 @@ namespace Insight.GitProvider
     public sealed class Parser
     {
         readonly PathMapper _mapper;
-        readonly Graph _graph;
-        readonly string endHeaderMarker = "END_HEADER";
+        string endHeaderMarker = "END_HEADER";
         readonly string recordMarker = "START_HEADER";
         string _lastLine;
 
-        public Parser(PathMapper mapper, Graph graph)
+        public Parser(PathMapper mapper)
         {
             _mapper = mapper;
-
-            // cs id -> parents (tab separated)
-            _graph = graph;
         }
 
         public string WorkItemRegex { get; set; }
@@ -37,16 +33,24 @@ namespace Insight.GitProvider
         {
             using (var stream = new FileStream(logFile, FileMode.Open))
             {
-                var history = ParseLog(stream);
+                var history = ParseLog(stream, null);
                 return history;
             }
         }
 
-        public ChangeSetHistory ParseLogString(string gitLogString)
+        public (ChangeSetHistory, Graph) ParseLogString(string gitLogString)
+        {
+            var graph = new Graph();
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(gitLogString));
+            return (ParseLog(stream, graph), graph);
+        }
+
+        public ChangeSetHistory ParseLogStringNoGraph(string gitLogString)
         {
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(gitLogString));
-            return ParseLog(stream);
+            return ParseLog(stream, null);
         }
+
 
         void CreateChangeItem(ChangeSet cs, string changeItem)
         {
@@ -80,7 +84,7 @@ namespace Insight.GitProvider
             ci.LocalPath = _mapper.MapToLocalFile(ci.ServerPath);
         }
 
-        bool GoToNextRecord(StreamReader reader)
+        private bool GoToNextRecord(StreamReader reader)
         {
             if (_lastLine == recordMarker)
             {
@@ -103,7 +107,7 @@ namespace Insight.GitProvider
         /// <summary>
         /// Log file has format specified in GitCommandLine class
         /// </summary>
-        ChangeSetHistory ParseLog(Stream log)
+        private ChangeSetHistory ParseLog(Stream log, Graph graph)
         {
             var changeSets = new List<ChangeSet>();
 
@@ -117,7 +121,7 @@ namespace Insight.GitProvider
 
                 while (proceed)
                 {
-                    var changeSet = ParseRecord(reader);
+                    var changeSet = ParseRecord(reader, graph);
                     changeSets.Add(changeSet);
                     proceed = GoToNextRecord(reader);
                 }
@@ -127,7 +131,7 @@ namespace Insight.GitProvider
             return history;
         }
 
-        ChangeSet ParseRecord(StreamReader reader)
+        private ChangeSet ParseRecord(StreamReader reader, Graph graph)
         {
             // We are located on the first data item of the record
             var hash = ReadLine(reader);
@@ -139,7 +143,7 @@ namespace Insight.GitProvider
             var comment = ReadComment(reader);
 
             // Last node has no parents.
-            _graph?.UpdateGraph(hash, parents);
+            graph?.UpdateGraph(hash, parents);
 
             var cs = new ChangeSet();
             cs.Id = hash;
@@ -163,7 +167,7 @@ namespace Insight.GitProvider
             }
         }
 
-        void ReadChangeItems(ChangeSet cs, StreamReader reader)
+        private void ReadChangeItems(ChangeSet cs, StreamReader reader)
         {
             // Now parse the files!
             var changeItem = ReadLine(reader);
@@ -178,7 +182,7 @@ namespace Insight.GitProvider
             }
         }
 
-        string ReadComment(StreamReader reader)
+        private string ReadComment(StreamReader reader)
         {
             string commentLine;
 
@@ -207,8 +211,9 @@ namespace Insight.GitProvider
 
         public static KindOfChange ToKindOfChange(string kind)
         {
-            if (kind.StartsWith("R"))
+           if (kind.StartsWith("R"))
             {
+                // Note overlapping with "RM"
                 // Followed by the similarity
                 return KindOfChange.Rename;
             }
@@ -222,14 +227,15 @@ namespace Insight.GitProvider
             {
                 return KindOfChange.Add;
             }
-            else if (kind == "D")
+            else if (kind == "D" || kind == "DD")
             {
                 return KindOfChange.Delete;
             }
-            else if (kind == "M")
+            else if (kind == "M" )
             {
                 return KindOfChange.Edit;
             }
+       
             else
             {
                 Debug.Assert(false);
@@ -237,5 +243,7 @@ namespace Insight.GitProvider
                 return KindOfChange.None;
             }
         }
+
+    
     }
 }

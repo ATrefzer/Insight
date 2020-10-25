@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using Insight.Analyzers;
-using Insight.Metrics;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.ViewModels;
@@ -64,6 +63,8 @@ namespace Insight
             AboutCommand = new DelegateCommand(AboutClick);
             PredictHotspotsCommand = new DelegateCommand(PredictHotspotsClick);
             EditColorsCommand = new DelegateCommand(EditColorsClick);
+
+            Refresh();
         }
 
         private void LoadProjectClick()
@@ -86,9 +87,12 @@ namespace Insight
             _project = project;
             _analyzer.Project = _project;
 
+          
             // Update Ribbon
             Refresh();
         }
+
+        public string Title { get; set; } = "Insight";
 
         public ICommand LoadProjectCommand { get; set; }
 
@@ -194,6 +198,8 @@ namespace Insight
 
         public void Refresh()
         {
+            Title = Strings.Insight + " - " + _project.ProjectName;
+
             OnAllPropertyChanged();
         }
 
@@ -468,14 +474,34 @@ namespace Insight
             // Contributions may be too much if using svn.
             var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
 
-            await _backgroundExecution.ExecuteWithProgressAsync(progress =>
-                _analyzer.UpdateCache(progress, includeContributions));
+            try
+            {
+                await _backgroundExecution.ExecuteWithProgressAsync(progress =>
+                                                                            _analyzer.UpdateCache(progress, includeContributions), true);
 
-            // Don't delete, only extend if necessary
-            var developers = _analyzer.GetAllKnownDevelopers();
-            _colorSchemeManager.UpdateColorScheme(GetColorFilePath(), developers);
+                // Don't delete, only extend if necessary
+                var developers = _analyzer.GetAllKnownDevelopers();
+                _colorSchemeManager.UpdateColorScheme(GetColorFilePath(), developers);
+            }
+            catch (Exception ex)
+            {
+                ShowException(ex);
+            }
+            
 
             _tabs.Clear();
+        }
+
+        private void ShowException(Exception exception)
+        {
+            var message = exception.Message;
+            var innerException = exception.InnerException;
+            while (innerException != null)
+            {
+                message += "\n" + innerException.Message;
+                innerException = innerException.InnerException;
+            }
+            _dialogs.ShowError(message);
         }
     }
 }

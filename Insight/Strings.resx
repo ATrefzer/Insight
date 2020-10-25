@@ -305,7 +305,13 @@ Do you want to proceed?</value>
     <value>Override</value>
   </data>
 
-  <data name="OverrideExistingProject" xml:space="preserve">
+  <data name="Insight" xml:space="preserve">
+    <value>Insight</value>
+  </data>
+
+  
+
+    <data name="OverrideExistingProject" xml:space="preserve">
     <value>The directory '{0}' exists. Do you want to override it?</value>
   </data>
   

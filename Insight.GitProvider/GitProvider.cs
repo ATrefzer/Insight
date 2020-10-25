@@ -1,62 +1,21 @@
-﻿using System;
+﻿using Insight.Shared;
+using Insight.Shared.Model;
+using Insight.Shared.VersionControl;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Insight.Shared;
-using Insight.Shared.Model;
-
-using Newtonsoft.Json;
+using Insight.GitProvider.Debugging;
 
 namespace Insight.GitProvider
 {
-    /// <summary>
-    /// Provides higher level functions and queries on a git repository.
-    /// 
-    /// Problem:
-    /// Git tracks content and does not have a unique Id for a file. I want to to have a unique Id, however. 
-    /// 
-    /// So I create a simplified commit history where each local file is tracked by a unique Id.
-    /// This means I have to stop tracking a file as soon it gets the ancestor of multiple other files.
-    /// In this case I can no longer track a unique Id.
-    /// 
-    /// Another key point is that git log for a single file by default is simplified.
-    /// A commit for example that is deleted in one branch and modified later 
-    /// in another branch before merged is simply removed.
-    /// 
-    /// Algorithm
-    /// 1. Ask git for all tracked (local) files
-    /// 2. For each file request the history. Each commit record has a single file
-    ///    in it. I assign a unique id for the file. This history is already simplified by git(!)
-    /// 3. Reconstruct a simplified change set history. 
-    ///    Because a file (server path) can be the common ancestor of many other files it is possible to find 
-    ///    changesets containing files with different Ids but same server path.
-    /// 4. Remove all these items that represent shared history for more than one tracked file.
-    /// 
-    /// So I track all renaming of a file until the file starts sharing history with another file.
-    /// This allows me to use unique file ids but not losing too much of the history.
-    /// This approach is easy to handle but is very slow for larger repositories.
-    /// </summary>
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
-        readonly object _lockObj = new object();
-        Graph _graph;
-
-        /// <summary>
-        /// Debugging!
-        /// </summary>
-        private Dictionary<string, string> _idToLocalFile;
-
-        public static string GetClass()
-        {
-            var type = typeof(GitProvider);
-            return type.FullName + "," + type.Assembly.GetName().Name;
-        }
+        private GitDebugHelper _dbg;
+        private Statistics _stats;
 
         public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
         {
@@ -69,7 +28,38 @@ namespace Insight.GitProvider
             _contributionFile = Path.Combine(cachePath, "contribution.json");
             _gitCli = new GitCommandLine(_startDirectory);
 
+            // "/" maps to _startDirectory
             _mapper = new PathMapper(_startDirectory);
+        }
+
+        public void UpdateCache(IProgress progress, bool includeWorkData)
+        {
+            DeleteAllCaches();
+
+            VerifyGitPreConditions();
+            var logDir = PrepareLogDirectory();
+
+            using (_dbg = new GitDebugHelper(logDir, _gitCli))
+            {
+                UpdateHistory(progress);
+            }
+
+            if (includeWorkData)
+            {
+                // Optional
+                UpdateContribution(progress);
+            }
+        }
+
+        private void Log(string logMessage)
+        {
+            _dbg?.Log(logMessage);
+        }
+
+        public static string GetClass()
+        {
+            var type = typeof(GitProvider);
+            return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
         private void DeleteAllCaches()
@@ -85,351 +75,339 @@ namespace Insight.GitProvider
             }
         }
 
-        public void UpdateCache(IProgress progress, bool includeWorkData)
-        {
-            DeleteAllCaches();
-
-            VerifyGitDirectory();
-            PrepareLogDirectory();
-
-            UpdateHistory(progress);
-
-            if (includeWorkData)
-            {
-                // Optional
-                UpdateContribution(progress);
-            }
-        }
-
-        void PrepareLogDirectory()
+        private string PrepareLogDirectory()
         {
             var logPath = Path.Combine(_cachePath, "logs");
             if (!Directory.Exists(logPath))
             {
                 Directory.CreateDirectory(logPath);
             }
+
+            return logPath;
         }
 
-        /// <summary>
-        /// file Id -> change set ids where to remove the file
-        /// </summary>
-        static Dictionary<string, HashSet<string>> FindSharedHistory(List<ChangeSet> historyOrderedByDate)
+        private (ChangeSetHistory, Graph) ReadHistory()
         {
-            // file id -> change set id
-            var filesToRemove = new Dictionary<string, HashSet<string>>();
-
-            // Find overlapping files in history.
-            foreach (var cs in historyOrderedByDate)
-            {
-                var serverPaths = new HashSet<string>();
-                var duplicateServerPaths = new HashSet<string>();
-
-                // Pass 1: Find which server paths are used more than once in the current changeset
-                foreach (var item in cs.Items)
-                {
-                    // Remember the files to be deleted.
-                    if (!serverPaths.Add(item.ServerPath))
-                    {
-                        // Same server path on more than one change set items.
-                        duplicateServerPaths.Add(item.ServerPath);
-                    }
-                }
-
-                // Pass 2: Determine the files to be deleted.
-                foreach (var item in cs.Items)
-                {
-                    // Since we deal with a graph we may have to clean several branches later.
-                    if (duplicateServerPaths.Contains(item.ServerPath))
-                    {
-                        // Remove the file with id=item.Id starting from change set cs.Id
-                        if (!filesToRemove.ContainsKey(item.Id))
-                        {
-                            filesToRemove.Add(item.Id, new HashSet<string> { cs.Id });
-                        }
-                        else
-                        {
-                            filesToRemove[item.Id].Add(cs.Id);
-                        }
-                    }
-                }
-            }
-
-            return filesToRemove;
-        }
-
-
-        // ReSharper disable once UnusedMember.Local
-        void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
-        {
-            var logPath = Path.Combine(_cachePath, "logs");          
-
-            var file = forLocalFile.Replace("\\", "_").Replace(":", "_");
-            file = Path.Combine(logPath, file);
-
-            // Ensure same file stored in different directories don't override each other.
-            File.WriteAllText(file, gitFileLog);
-        }
-
-
-        void Dump(string path, List<ChangeSet> commits, Graph graph)
-        {
-            // For debugging
-            var writer = new StreamWriter(path);
-            foreach (var commit in commits)
-            {
-                writer.WriteLine("START_HEADER");
-                writer.WriteLine(commit.Id);
-                writer.WriteLine(commit.Committer);
-                writer.WriteLine(commit.Date.ToString("o"));
-                writer.WriteLine(string.Join("\t", graph.GetParents(commit.Id)));
-                writer.WriteLine(commit.Comment);
-                writer.WriteLine("END_HEADER");
-
-                // files
-                foreach (var file in commit.Items)
-                {
-                    switch (file.Kind)
-                    {
-                        // Lose the similarity
-                        case KindOfChange.Add:
-                            writer.WriteLine("A\t" + file.ServerPath);
-                            break;
-                        case KindOfChange.Edit:
-                            writer.WriteLine("M\t" + file.ServerPath);
-                            break;
-                        case KindOfChange.Copy:
-                            writer.WriteLine("C\t" + file.FromServerPath + "\t" + file.ServerPath);
-                            break;
-                        case KindOfChange.Rename:
-                            writer.WriteLine("R\t" + file.FromServerPath + "\t" + file.ServerPath);
-                            break;
-                    }
-                }
-            }
-        }
-
-        void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> history)
-        {
-            var id = Guid.NewGuid().ToString();
-            _idToLocalFile.Add(id, localPath);
-
-            var gitFileLog = _gitCli.Log(localPath);
-            
-            // Writes logs for all files (debugging)
-            //DebugWriteLogForSingleFile(gitFileLog, localPath);
-
-            var parser = new Parser(_mapper, null);
-            parser.WorkItemRegex = _workItemRegex;
-
-            var fileHistory = parser.ParseLogString(gitFileLog);
-
-            foreach (var cs in fileHistory.ChangeSets)
-            {
-                Debug.Assert(_graph.Exists(cs.Id));
-                var singleFile = cs.Items.Single();
-
-                if (singleFile.Kind == KindOfChange.Delete)
-                {
-                    // File was deleted and maybe added later again.
-                    // Stop following this file. Do not add current version to
-                    // history. Analyzer.LoadHistory will kill all deleted items
-                    // and the file will not be part of the summary anyway.
-                    break;
-                }
-
-                lock (_lockObj)
-                {
-                    if (!history.ContainsKey(cs.Id))
-                    {
-                        singleFile.Id = id;
-                        history.Add(cs.Id, cs);
-                    }
-                    else
-                    {
-                        // Seen this change set before. Add the file.
-                        var changeSet = history[cs.Id];
-                        singleFile.Id = id;
-                        changeSet.Items.Add(singleFile);
-                    }
-
-                    // Convert copy to add
-                    if (singleFile.Kind == KindOfChange.Copy)
-                    {
-                        // Consider copy as a new start. Ignore anything before
-                        // Example: 
-                        // StringId is created in cs1. Not touched later.
-                        // NumberId is copied from StringId in cs2. Not touched later.
-                        // Shared history in cs1 would cause StringId to disappear.
-                        singleFile.Kind = KindOfChange.Add;
-                        break;
-                    }
-                }
-            }
-        }
-
-        List<ChangeSet> RebuildHistory(List<string> localPaths, IProgress progress)
-        {
-            var count = localPaths.Count;
-            var counter = 0;
-
-            // hash -> cs
-            var history = new Dictionary<string, ChangeSet>();
-
-            Parallel.ForEach(localPaths,
-                             localPath =>
-                             {
-                                 // Progress
-                                 Interlocked.Increment(ref counter);
-                                 progress.Message($"Rebuilding history {counter}/{count}");
-
-                                 ProcessHistoryForFile(localPath, history);
-                             });
-
-            return history.Values.OrderByDescending(x => x.Date).ToList();
-        }
-
-        void SaveFullLogToDisk()
-        {
-            var log = _gitCli.Log();
-            File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
-        }
-
-        void SaveRecoveredLogToDisk(List<ChangeSet> commits, Graph graph)
-        {
-            Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, graph);
-        }
-
-        
-        void UpdateHistory(IProgress progress)
-        {            
-            // Git graph
-            _graph = new Graph();
-            _idToLocalFile = new Dictionary<string, string>();
-
-            
-            // Build the full graph
+            // Ordered from new to old
             var fullLog = _gitCli.Log();
-            var parser = new Parser(_mapper, _graph);
-            parser.ParseLogString(fullLog);
+            var parser = new Parser(_mapper);
+            var (history, graph) = parser.ParseLogString(fullLog);
+            SaveFullGitLog(fullLog);
 
-            // Save the original log for information (debugging)
-            //SaveFullLogToDisk();
-
-            // Build a virtual commit history
-            var localPaths = GetAllTrackedLocalFiles();
-         
-            var history = RebuildHistory(localPaths, progress);
-
-            // file id -> List of change set id
-            var filesToRemove = FindSharedHistory(history);
-
-            // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
-            // The history may skip some commits so we use the full graph to traverse everything.
-            DeleteSharedHistory(history, filesToRemove);
-
-            // Write history file
-            var json = JsonConvert.SerializeObject(new ChangeSetHistory(history), Formatting.Indented);
-            File.WriteAllText(_historyFile, json, Encoding.UTF8);
-
-            // Save the constructed log for information
-            SaveRecoveredLogToDisk(history, _graph);
-
-            // Just a plausibility check
-            VerifyNoDuplicateServerPathsInChangeset(history);
+            return (history, graph);
         }
 
-        /// <summary>
-        /// Empty merge commits are removed implicitly
-        /// In each commit remove the files that are ancestors for more than one file.
-        /// For each file to remove we traverse the whole graph from the starting commit.
-        /// </summary>
-        public void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove)
+        private void UpdateHistory(IProgress progress)
         {
-            lock (_lockObj)
+            Warnings = new List<WarningMessage>();
+            _stats = new Statistics();
+
+            var (history, graph) = ReadHistory();
+
+            // I assume the only commit without children is the master's head
+            Debug.Assert(HasUnmergedCommits(graph) is false);
+
+            AssignUniqueFileIds(graph, history, progress);
+
+            // Remove deleted files and empty changes sets
+            var headNode = graph.GetNode(GetMasterHead());
+            var aliveIds = GetAllTrackedFiles().Select(file => headNode.Scope.GetId(file)).ToHashSet();
+
+            VerifyScope(headNode);
+
+            // Note we have to drop all Delete items from the history. This is safe.
+            // A file can be deleted in one branch but maintained in another one.
+            // If we would call CleanupHistory() we would remove all ids that belong to a deleted file
+            // This means we lose a file that is still tracked.
+
+            history.CleanupHistory(aliveIds);
+            Debug.Assert(!history.ChangeSets.SelectMany(cs => cs.Items).Any(item => item.IsDelete()));
+
+            SaveHistory(history);
+        }
+
+        private void VerifyScope(GraphNode node)
+        {
+            if (node.Scope == null)
             {
-                DeleteSharedHistory(historyToModify, filesToRemove, _graph);
+                throw new Exception("Node has node scope assigned!");
+            }
+
+            var expectedServerPaths = GetAllTrackedFiles(node.CommitHash);
+            var actualServerPaths = node.Scope.GetAllFiles();
+
+            var differences = expectedServerPaths;
+            differences.SymmetricExceptWith(actualServerPaths);
+            foreach (var diff in differences)
+            {
+                Warnings.Add(new WarningMessage(node.CommitHash, diff));
             }
         }
 
-        public static void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove, Graph graph)
+        private bool IsMergeWithUnprocessedParents(GraphNode node)
         {
-             // filesToRemove: 
-                // fileId -> commit hash (change set id) where we start removing the file
-                var idToChangeSet = historyToModify.ToDictionary(x => x.Id, x => x);
+            if (IsMerge(node))
+            {
+                var mergeInto = node.Parents[0];
+                var mergeFrom = node.Parents[1];
 
-
-                foreach (var fileToRemove in filesToRemove)
+                if (mergeFrom.Scope == null || mergeInto.Scope == null)
                 {
-                    var fileIdToRemove = fileToRemove.Key;
-                    var changeSetIds = fileToRemove.Value;
+                    // We can't process this merge commit yet. But we end up here again.
+                    return true;
+                }
+            }
 
-                    // Traverse graph to find all change sets where we have to delete the files
-                    // Note: The simplified history is incomplete.
-                    var nodesToProcess = new Queue<GraphNode>();
-                    var handledNodes = new HashSet<string>();
-                    GraphNode node;
+            return false;
+        }
 
-                    foreach (var csId in changeSetIds)
+        private void AssignUniqueFileIds(Graph graph, ChangeSetHistory history, IProgress progress)
+        {
+            var commitHashToChangeSet = history.ChangeSets.ToDictionary(cs => cs.Id, cs => cs);
+
+            var alreadyProcessed = new HashSet<string>();
+
+            // Can't use enumerator here because we have to visit unfinished parents again.
+            var rootNode = graph.AllNodes.Single(node => node.Parents.Any() is false);
+            var nodesToProcess = new Queue<GraphNode>();
+            nodesToProcess.Enqueue(rootNode);
+
+            var processing = 0;
+            var nodeCount = graph.AllNodes.Count();
+            while (nodesToProcess.Any())
+            {
+                var node = nodesToProcess.Dequeue();
+                var changeSet = commitHashToChangeSet[node.CommitHash];
+
+                Log("\n##############################################################################");
+                Log($"Start processing node {node.CommitHash}");
+
+                if (IsMergeWithUnprocessedParents(node))
+                {
+                    // We arrive here later again.
+                    Log("  But this is an merge node with an unprocessed parent. See you later again.");
+                    continue;
+                }
+
+                if (!alreadyProcessed.Add(node.CommitHash))
+                {
+                    // When we arrive a merge node the first time both parents may be complete (or not).
+                    // If so we would end up following the same path twice.
+                    Log("  But this node was already processed. Stop here.");
+                    continue;
+                }
+
+                progress.Message($"Processing commit {++processing} / {nodeCount}");
+
+
+                // Obtain scope for this node.
+                var state = PreProcessNode(node);
+
+                ApplyIdsAndUpdateScope(changeSet, state);
+
+                var remainingAmbiguities = state.GetMergeAmbiguities().ToList();
+                if (remainingAmbiguities.Any())
+                {
+                    
+                    Log("\tWe have remaining ambiguities. Synch with git tree here.");
+                    _stats.LookupTreeAfterBothBranchesRenamedFile++;
+                    var actualTreeFiles = GetAllTrackedFiles(node.CommitHash);
+
+                    // Remove all files no longer existent.
+                    foreach (var pair in remainingAmbiguities)
                     {
-                        if (graph.TryGetNode(csId, out node))
+                        if (actualTreeFiles.Contains(pair.Key))
                         {
-                            nodesToProcess.Enqueue(node);
-                            handledNodes.Add(node.CommitHash);
+                            // I know the Id is unique here.
+                            Log($"\t - Include tracked: {pair.Key} ({pair.Value})");
+                            Debug.Assert(!state.NewScope.IsKnown(pair.Key));
+                            state.Resolve(pair.Key, Resolution.Keep);
                         }
                         else
                         {
-                            Debug.Assert(false);
-                        }
-                    }
-
-
-                    while (nodesToProcess.Any())
-                    {
-                        node = nodesToProcess.Dequeue();
-
-                        if (idToChangeSet.ContainsKey(node.CommitHash))
-                        {
-                            // Note: The history of a file may skip some commits if they are not relevant.
-                            // Therefore it is possible that no changeset exists for the hash.
-                            // Remember that we follow the full graph.
-                            var cs = idToChangeSet[node.CommitHash];
-
-                            // Remove the file from change set
-                            cs.Items.RemoveAll(i => i.Id == fileIdToRemove);
-                        }
-
-                        // Delete the current file also in all parents
-                        foreach (var parent in node.ParentHashes)
-                        {
-                            // Avoid cycles in case a change set is parent of many others.
-                            if (!handledNodes.Contains(parent) && graph.TryGetNode(parent, out node))
-                            {
-                                nodesToProcess.Enqueue(node);
-                                handledNodes.Add(node.CommitHash);
-                            }
+                            Log($"\t - Drop not tracked: {pair.Key} ({pair.Value})");
+                            state.Resolve(pair.Key, Resolution.Remove);
                         }
                     }
                 }
+
+                node.Scope = state.NewScope;
+                //_dbg?.Verify(graph, node, history);
+
+                AddChildrenToQueue(node, nodesToProcess);
+            }
         }
 
-
-        private void VerifyNoDuplicateServerPathsInChangeset(List<ChangeSet> commits)
+        /// <summary>
+        /// Obtains a new scope for the current node together with ambiguities from parent nodes.
+        /// </summary>
+        private ResolutionState PreProcessNode(GraphNode node)
         {
-            foreach (var cs in commits)
+            Log("\tPreprocess node");
+            var state = new ResolutionState();
+            
+            if (IsRoot(node))
             {
-                try
+                // Called once for the first commit.
+                Log("  This is the first node. So I create a new scope.");
+                state.NewScope = new Scope();
+            }
+            else if (node.Parents.Count == 1)
+            {
+                var parent = node.Parents.Single();
+                state.NewScope = parent.Scope;
+
+                Debug.Assert(state.NewScope != null);
+                if (parent.Children.Count > 1)
                 {
-                    cs.Items.ToDictionary(k => k.ServerPath, k => k.ServerPath);
+                    Log("  One parent, but parent has many children so I inherit its scope by cloning");
+
+                    // We follow two branches, so each one gets its own copy.
+                    state.NewScope = parent.Scope.Clone();
                 }
-                catch(Exception)
+                else
                 {
-                    foreach (var item in cs.Items)
-                    {
-                        Debug.WriteLine(item.Id + " -> " + item.LocalPath + "-> " + _idToLocalFile[item.Id]);
-                    }
-                    throw;
+                    state.NewScope = parent.Scope;
+                    Log("  One parent, one child, so I inherit its original scope");
                 }
             }
+            else if (IsMerge(node))
+            {
+                Log("... this is a merge node.");
+
+                var mergeInto = node.Parents[0];
+                var mergeFrom = node.Parents[1];
+
+                Log($"Parents: {node.Parents[0].CommitHash} {node.Parents[1].CommitHash}");
+                Log("I try to resolve the merge before processing the item list.");
+
+                var noConflicts = mergeInto.Scope.Intersect(mergeFrom.Scope).ToList();
+
+                state.OnlyInMergeInto = new Scope(mergeInto.Scope.Except(noConflicts));
+                state.OnlyInMergeFrom = new Scope(mergeFrom.Scope.Except(noConflicts));
+                state.NewScope = new Scope(noConflicts.ToDictionary(nc => nc.Key, nc => nc.Value));
+
+                // A file was created and maintained in different branches. We reset the tracking here.
+                ResetIdsWhenSamePathHasDifferentIds(state);
+            }
+
+            return state;
+        }
+
+        private static bool IsRoot(GraphNode node)
+        {
+            return node.Parents.Count == 0;
+        }
+
+        private void ResetIdsWhenSamePathHasDifferentIds(ResolutionState state)
+        {
+            // Here we lose some information. A file was added with the same name in both branches.
+            // I reset tracking with a new Id from here on. We lose all commits before. 
+
+            Log("\tPreprocess merge - handling same file tracked with different ids.");
+
+            var samePathHasDifferentIds = state.GetMergeAmbiguities().GroupBy(pair => pair.Key).Where(g => g.Count() > 1).ToList();
+            if (samePathHasDifferentIds.Any())
+            {
+                foreach (var group in samePathHasDifferentIds)
+                {
+                    var serverPath = group.Key;
+                    var id = state.Resolve(serverPath, Resolution.KeepWithNewId);
+
+                    _stats.RestartWithNewFileIdBecauseAddedInDifferentBranches++;
+                    var msg = $"Resolve same file with different Ids: {serverPath}. Restart with new file id ({id})";
+                    Warnings.Add(new WarningMessage("", msg));
+                    Log($"\t - WARNING: { msg}");
+                }
+            }
+        }
+
+        private static void AddChildrenToQueue(GraphNode node, Queue<GraphNode> nodesToProcess)
+        {
+            // Add children to processing queue
+            foreach (var childNode in node.Children)
+            {
+                nodesToProcess.Enqueue(childNode);
+            }
+        }
+
+        private void ApplyIdsAndUpdateScope(ChangeSet changeSet, ResolutionState state)
+        {
+            Log("\tProcessing items");
+            foreach (var item in changeSet.Items)
+            {
+                if (item.Id != null)
+                {
+                    // Partially merged
+                    continue;
+                }
+
+                switch (item.Kind)
+                {
+                    case KindOfChange.Add:
+
+                        // This file is in the new scope with a new id regardless what the parents have.
+                        
+                        item.Id = state.Resolve(item.ServerPath, Resolution.Add);
+                        Log($"\tA {item.ServerPath} ({item.Id})");
+                        break;
+
+                    case KindOfChange.Edit:
+
+                        item.Id = state.Resolve(item.ServerPath, Resolution.GetExisting);
+                        Log($"\tM {item.ServerPath} ({item.Id})");
+                        break;
+
+                    case KindOfChange.Copy:
+
+                        // Treat like Add
+                        item.Id = state.Resolve(item.ServerPath, Resolution.Add);
+                        Log($"\tC {item.ServerPath} ({item.Id})");
+                        break;
+
+                    case KindOfChange.Rename:
+
+                        // Must exist in either scope
+                        state.Resolve(item.FromServerPath, Resolution.Remove);
+                        item.Id = state.Resolve(item.ServerPath, Resolution.Add);
+                        Log($"\tR {item.FromServerPath} -> {item.ServerPath} ({item.Id})");
+                        break;
+
+                    case KindOfChange.Delete:
+                       
+                        item.Id = state.Resolve(item.ServerPath, Resolution.Remove);
+                        Log($"\tD {item.ServerPath} ({item.Id})");
+
+                        break;
+                    default:
+                        Debug.Assert(false);
+                        break;
+                }
+            }
+        }
+
+        private bool HasUnmergedCommits(Graph graph)
+        {
+            // I assume the way I request the git log the only commit without children is the head (of the master)
+            var headHash = GetMasterHead();
+            var unfinished = graph.AllNodes.Where(node => node.Children.Any() is false && node.CommitHash != headHash);
+            return unfinished.Any();
+        }
+
+        private void SaveFullGitLog(string fullLog)
+        {
+            File.WriteAllText(Path.Combine(_cachePath, @"git_full.txt"), fullLog);
+        }
+
+        private void SaveHistory(ChangeSetHistory history)
+        {
+            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
+            File.WriteAllText(_historyFile, json, Encoding.UTF8);
+        }
+
+        private bool IsMerge(GraphNode graphNode)
+        {
+            return graphNode.Parents.Count == 2;
         }
     }
 }

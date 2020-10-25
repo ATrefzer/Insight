@@ -41,7 +41,7 @@ namespace Tests
             filesToRemove.Add("fileBId", new HashSet<string> { "child" });
 
             // Act
-            GitProvider.DeleteSharedHistory(commits, filesToRemove, graph);
+            GitProviderFileByFile.DeleteSharedHistory(commits, filesToRemove, graph);
 
             Assert.AreEqual(0, commit_child.Items.Count);
             Assert.AreEqual(0, commit_parent.Items.Count);

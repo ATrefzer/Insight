@@ -188,6 +188,7 @@ namespace Insight.SvnProvider
 
         private List<string> GetAllTrackedLocalFiles()
         {
+            // TODO The git provider does not make any pre filtering. Unify.
             var localFiles = GetAllTrackedFiles()
                 .Select(MapToLocalFile_ServerIsRelativeToBaseDirectory)
                 .Where(local => _fileFilter.IsAccepted(local) && File.Exists(local))
@@ -211,11 +212,8 @@ namespace Insight.SvnProvider
         private void UpdateContribution(IProgress progress)
         {
             var localFiles = GetAllTrackedLocalFiles();
-
             var contribution = CalculateContributionsParallel(progress, localFiles.ToList());
-
             var json = JsonConvert.SerializeObject(contribution);
-
             File.WriteAllText(_contributionFile, json, Encoding.UTF8);
         }
 
