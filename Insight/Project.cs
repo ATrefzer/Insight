@@ -122,7 +122,7 @@ namespace Insight
                 throw new Exception($"Failed creating '{type}'");
             }
 
-            provider.Initialize(SourceControlDirectory, Cache, Filter, WorkItemRegEx);
+            provider.Initialize(SourceControlDirectory, Cache, WorkItemRegEx);
             return provider;
         }
 
@@ -304,7 +304,7 @@ namespace Insight
                 filters.Add(new PathIncludeFilter(paths.ToArray()));
             }
 
-            // Remvove all files that are not in the base directory.
+            // Remove all files that are not in the base directory.
             // (History / log may return files outside)
             filters.Add(new OnlyFilesWithinRootDirectoryFilter(SourceControlDirectory));
 

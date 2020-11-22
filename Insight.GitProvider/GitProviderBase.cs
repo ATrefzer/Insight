@@ -20,7 +20,6 @@ namespace Insight.GitProvider
     public abstract class GitProviderBase
     {
         protected string _cachePath;
-        protected IFilter _fileFilter;
         protected GitCommandLine _gitCli;
         protected string _historyFile;
         protected string _contributionFile;
@@ -131,9 +130,7 @@ namespace Insight.GitProvider
             var trackedServerPaths = GetAllTrackedFiles();
 
             // Filtered local paths
-            return trackedServerPaths.Select(sp => _mapper.MapToLocalFile(sp))
-                                     .Where(lp => _fileFilter.IsAccepted(lp))
-                                     .ToList();
+            return trackedServerPaths.Select(sp => _mapper.MapToLocalFile(sp)).ToList();
         }
 
         protected string GetMasterHead()
@@ -292,6 +289,9 @@ namespace Insight.GitProvider
                             break;
                         case KindOfChange.Rename:
                             writer.WriteLine("R\t" + file.FromServerPath + "\t" + file.ServerPath);
+                            break;
+                        case KindOfChange.TypeChanged:
+                            writer.WriteLine("T\t" + file.ServerPath);
                             break;
                     }
                 }

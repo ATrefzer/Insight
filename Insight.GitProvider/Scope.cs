@@ -61,6 +61,8 @@ namespace Insight.GitProvider
 
         public void Remove(string serverPath)
         {
+            if (serverPath == null)
+                return;
             if (_serverPathToId.ContainsKey(serverPath))
             {
                 _serverPathToId.Remove(serverPath);
@@ -68,7 +70,6 @@ namespace Insight.GitProvider
             }
         }
 
-        // TODO remove when all references are resolved
         public bool IsKnown(string servePath)
         {
             return _serverPathToId.ContainsKey(servePath);
@@ -132,7 +133,7 @@ namespace Insight.GitProvider
 
         private void VerifyScope()
         {
-            //Debug.Assert(_serverPathToId.Values.Distinct().Count() == _serverPathToId.Count);
+            Debug.Assert(_serverPathToId.Values.Distinct().Count() == _serverPathToId.Count);
         }
 
         public IEnumerator<KeyValuePair<string, Guid>> GetEnumerator()

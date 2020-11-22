@@ -126,6 +126,11 @@ namespace Insight.Shared.VersionControl
                         Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
                     }
                 }
+                else if (item.IsTypeChange())
+                {
+                    var id = GetOrCreateId(item.ServerPath);
+                    item.Id = id;
+                }
                 else
                 {
                     Debug.Assert(false);

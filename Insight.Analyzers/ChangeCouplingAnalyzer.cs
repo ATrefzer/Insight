@@ -36,7 +36,7 @@ namespace Insight.Analyzers
                 }
 
                 // Only accepted files
-                // Normally the files are already filtered when the history was created.
+                // TODO ## Cleanup filtering
                 var itemIds = cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.Id).ToList();
 
                 // Do you have uncommitted changes.

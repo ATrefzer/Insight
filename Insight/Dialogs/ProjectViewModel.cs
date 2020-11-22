@@ -28,6 +28,8 @@ namespace Insight.Dialogs
             Update
         }
 
+        public bool CanUpdate => _mode == Mode.Create;
+
         public ICommand OkCommand => new DelegateCommand<Window>(OkClick);
 
         public List<ProviderDescription> AvailableProviders

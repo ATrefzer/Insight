@@ -1,4 +1,5 @@
-﻿using Insight.Shared;
+﻿using Insight.GitProvider.Debugging;
+using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 using Newtonsoft.Json;
@@ -8,7 +9,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Insight.GitProvider.Debugging;
 
 namespace Insight.GitProvider
 {
@@ -17,12 +17,11 @@ namespace Insight.GitProvider
         private GitDebugHelper _dbg;
         private Statistics _stats;
 
-        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
-            _fileFilter = fileFilter;
 
             _historyFile = Path.Combine(cachePath, "git_history.json");
             _contributionFile = Path.Combine(cachePath, "contribution.json");
@@ -111,7 +110,8 @@ namespace Insight.GitProvider
 
             // Remove deleted files and empty changes sets
             var headNode = graph.GetNode(GetMasterHead());
-            var aliveIds = GetAllTrackedFiles().Select(file => headNode.Scope.GetId(file)).ToHashSet();
+            var allTrackedFiles = GetAllTrackedFiles();
+            var aliveIds = allTrackedFiles.Select(file => headNode.Scope.GetId(file)).ToHashSet();
 
             VerifyScope(headNode);
 
@@ -161,14 +161,38 @@ namespace Insight.GitProvider
             return false;
         }
 
+        GraphNode GetRootNode(Graph graph)
+        {
+            // TODO ebabdf94973a90b833925fc3f5af9ab228494638 (runtime)
+            // Can't use enumerator here because we have to visit unfinished parents again.
+            var rootNodes = graph.AllNodes.Where(node => node.Parents.Any() is false).ToList();
+            Debug.Assert(rootNodes.Count == 1);
+
+            if (rootNodes.Count == 1)
+            {
+                return rootNodes.First();
+            }
+            
+            // The .NET Runtime repository for example has more than one root node(!)
+            var masterNode = graph.GetNode(GetMasterHead());
+            var root = masterNode;
+            while (root.Parents.Any())
+            {
+                root = root.Parents[0];
+            }
+
+            return root;
+        }
+
         private void AssignUniqueFileIds(Graph graph, ChangeSetHistory history, IProgress progress)
         {
             var commitHashToChangeSet = history.ChangeSets.ToDictionary(cs => cs.Id, cs => cs);
 
             var alreadyProcessed = new HashSet<string>();
 
-            // Can't use enumerator here because we have to visit unfinished parents again.
-            var rootNode = graph.AllNodes.Single(node => node.Parents.Any() is false);
+
+
+            var rootNode = GetRootNode(graph);
             var nodesToProcess = new Queue<GraphNode>();
             nodesToProcess.Enqueue(rootNode);
 
@@ -212,6 +236,8 @@ namespace Insight.GitProvider
                     Log("\tWe have remaining ambiguities. Synch with git tree here.");
                     _stats.LookupTreeAfterBothBranchesRenamedFile++;
                     var actualTreeFiles = GetAllTrackedFiles(node.CommitHash);
+
+                    Debug.Assert(remainingAmbiguities.GroupBy(x => x.Key).Any(g => g.Count() > 1) is false);
 
                     // Remove all files no longer existent.
                     foreach (var pair in remainingAmbiguities)
@@ -355,6 +381,11 @@ namespace Insight.GitProvider
                     case KindOfChange.Edit:
 
                         item.Id = state.Resolve(item.ServerPath, Resolution.GetExisting);
+                        if (item.Id == null)
+                        {
+                            // This can happen. First occurrence in log is an edit.
+                            item.Id = state.Resolve(item.ServerPath, Resolution.Add);
+                        }
                         Log($"\tM {item.ServerPath} ({item.Id})");
                         break;
 
@@ -368,8 +399,7 @@ namespace Insight.GitProvider
                     case KindOfChange.Rename:
 
                         // Must exist in either scope
-                        state.Resolve(item.FromServerPath, Resolution.Remove);
-                        item.Id = state.Resolve(item.ServerPath, Resolution.Add);
+                        item.Id = state.Resolve(item.ServerPath, Resolution.Rename, item.FromServerPath);
                         Log($"\tR {item.FromServerPath} -> {item.ServerPath} ({item.Id})");
                         break;
 

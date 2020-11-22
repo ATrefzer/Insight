@@ -87,7 +87,9 @@ namespace Insight
             _project = project;
             _analyzer.Project = _project;
 
-          
+            _tabs.Clear();
+            _analyzer.Clear();
+
             // Update Ribbon
             Refresh();
         }

@@ -16,7 +16,8 @@ namespace Insight.Shared.Model
         Rename = 16,
 
         // Added for git file history
-        Copy
+        Copy = 8,
+        TypeChanged = 512
     }
 
     [Serializable]
@@ -63,6 +64,11 @@ namespace Insight.Shared.Model
         public bool IsRename()
         {
             return (Kind & KindOfChange.Rename) == KindOfChange.Rename;
+        }
+
+        public bool IsTypeChange()
+        {
+            return (Kind & KindOfChange.TypeChanged) == KindOfChange.TypeChanged;
         }
     }
 }

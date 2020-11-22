@@ -26,7 +26,6 @@ namespace Insight.SvnProvider
     {
         private string _cachePath;
         private string _contributionFile;
-        private IFilter _fileFilter;
 
 
         private MappingInfo _mappingInfo;
@@ -120,7 +119,7 @@ namespace Insight.SvnProvider
             return result;
         }
 
-        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
@@ -128,7 +127,6 @@ namespace Insight.SvnProvider
             _historyFile = Path.Combine(cachePath, @"svn_history.log");
             _contributionFile = Path.Combine(cachePath, @"contribution.json");
             _svnCli = new SvnCommandLine(_startDirectory);
-            _fileFilter = fileFilter;
         }
 
         /// <summary>
@@ -188,10 +186,9 @@ namespace Insight.SvnProvider
 
         private List<string> GetAllTrackedLocalFiles()
         {
-            // TODO The git provider does not make any pre filtering. Unify.
             var localFiles = GetAllTrackedFiles()
                 .Select(MapToLocalFile_ServerIsRelativeToBaseDirectory)
-                .Where(local => _fileFilter.IsAccepted(local) && File.Exists(local))
+                .Where(File.Exists)
                 .ToList();
             return localFiles;
         }
@@ -512,7 +509,9 @@ namespace Insight.SvnProvider
             Debug.Assert(result.First().Date >= result.Last().Date);
 
             Warnings = _tracking.Warnings;
-            return new ChangeSetHistory(result);
+            var history = new ChangeSetHistory(result);
+            history.CleanupHistory();
+            return history;
         }
 
         private string ReadRevision(XmlReader reader)

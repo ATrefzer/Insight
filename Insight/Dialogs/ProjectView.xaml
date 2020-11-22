@@ -132,10 +132,12 @@
             <TextBox Grid.Row="2"
                      IsReadOnly="True"
                      Grid.Column="1"
+                     IsEnabled="{Binding CanUpdate}"
                      Text="{Binding ProjectParentDirectory}"
                      Style="{StaticResource TextBoxStyle}"/>
             <Button Grid.Row="2"
                     Grid.Column="2"
+                    IsEnabled="{Binding CanUpdate}"
                     Command="{Binding SelectProjectParentCommand}"
                     Style="{StaticResource FolderButtonStyle}"/>
 
@@ -147,6 +149,7 @@
             <TextBox Grid.Row="3"
                      IsReadOnly="False"
                      Grid.Column="1"
+                     IsEnabled="{Binding CanUpdate}"
                      Text="{Binding ProjectName}"
                      Style="{StaticResource TextBoxStyle}"/>
 
@@ -157,10 +160,12 @@
             <TextBox Grid.Row="4"
                      IsReadOnly="True"
                      Grid.Column="1"
+                     IsEnabled="{Binding CanUpdate}"
                      Text="{Binding SourceControlDirectory}"
                      Style="{StaticResource TextBoxStyle}"/>
             <Button Grid.Row="4"
                     Grid.Column="2"
+                    IsEnabled="{Binding CanUpdate}"
                     Command="{Binding SelectSourceControlCommand}"
                     Style="{StaticResource FolderButtonStyle}"/>
 

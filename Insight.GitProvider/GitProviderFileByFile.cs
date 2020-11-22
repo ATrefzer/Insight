@@ -58,12 +58,11 @@ namespace Insight.GitProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
-            _fileFilter = fileFilter;
 
             _historyFile = Path.Combine(cachePath, "git_history.json");
             _contributionFile = Path.Combine(cachePath, "contribution.json");
@@ -281,24 +280,26 @@ namespace Insight.GitProvider
             // Build a virtual commit history
             var localPaths = GetAllTrackedLocalFiles();
          
-            var history = RebuildHistory(localPaths, progress);
+            var changeSets = RebuildHistory(localPaths, progress);
 
             // file id -> List of change set id
-            var filesToRemove = FindSharedHistory(history);
+            var filesToRemove = FindSharedHistory(changeSets);
 
             // Cleanup history. We stop tracking a file if it starts sharing its history with another file.
             // The history may skip some commits so we use the full graph to traverse everything.
-            DeleteSharedHistory(history, filesToRemove);
+            DeleteSharedHistory(changeSets, filesToRemove);
 
             // Write history file
-            var json = JsonConvert.SerializeObject(new ChangeSetHistory(history), Formatting.Indented);
+            var history = new ChangeSetHistory(changeSets);
+            history.CleanupHistory(); // Assume nothing is removed since no deletes should be in history.
+            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
             File.WriteAllText(_historyFile, json, Encoding.UTF8);
 
             // Save the constructed log for information
-            SaveRecoveredLogToDisk(history, _graph);
+            SaveRecoveredLogToDisk(changeSets, _graph);
 
             // Just a plausibility check
-            VerifyNoDuplicateServerPathsInChangeset(history);
+            VerifyNoDuplicateServerPathsInChangeset(changeSets);
         }
 
         /// <summary>

@@ -11,7 +11,8 @@ namespace Insight.GitProvider
         Add,
         GetExisting,
         Remove,
-        Keep
+        Keep,
+        Rename
     }
 
     /// <summary>
@@ -41,7 +42,7 @@ namespace Insight.GitProvider
 
         public Scope OnlyInMergeInto { get; set; }
 
-        public string Resolve(string serverPath, Resolution resolution)
+        public string Resolve(string serverPath, Resolution resolution, string fromServerPath = null)
         {
             string id = null;
             if (resolution == Resolution.KeepWithNewId)
@@ -68,7 +69,14 @@ namespace Insight.GitProvider
             }
             else if (resolution == Resolution.Remove)
             {
+                id = GetId(serverPath);
                 NewScope.Remove(serverPath);
+            }
+            else if (resolution == Resolution.Rename)
+            {
+                id = GetId(fromServerPath);
+                NewScope.Update(fromServerPath, serverPath);
+                Debug.Assert(id == NewScope.GetId(serverPath));
             }
             else
             {
@@ -90,13 +98,20 @@ namespace Insight.GitProvider
                 return id;
             }
 
-            if (OnlyInMergeInto.IsKnown(serverPath) && !OnlyInMergeFrom.IsKnown(serverPath))
+            var isKnownInMergeInto = OnlyInMergeInto != null && OnlyInMergeInto.IsKnown(serverPath);
+            var isKnownInMergeFrom = OnlyInMergeFrom != null && OnlyInMergeFrom.IsKnown(serverPath);
+
+            if (isKnownInMergeInto && !isKnownInMergeFrom)
             {
                 id = OnlyInMergeInto.GetId(serverPath);
             }
-            else if (!OnlyInMergeInto.IsKnown(serverPath) && OnlyInMergeFrom.IsKnown(serverPath))
+            else if (!isKnownInMergeInto && isKnownInMergeFrom)
             {
                 id = OnlyInMergeFrom.GetId(serverPath);
+            }
+            else if (!isKnownInMergeInto && !isKnownInMergeFrom)
+            {
+                return null;
             }
             else
             {

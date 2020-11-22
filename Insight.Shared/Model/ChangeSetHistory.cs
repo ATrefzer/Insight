@@ -39,7 +39,7 @@ namespace Insight.Shared.Model
                 {
                     // Ignore monster merges.
                     // Note: We may lose files for the summary when the last merge with many work items contains a final rename.
-                    // Maybe write a warning or make further analyses.
+                    // Maybe write a warning or make further analysis.
                     continue;
                 }
 

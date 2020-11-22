@@ -17,9 +17,8 @@ namespace Insight.Shared
         /// </summary>
         /// <param name="projectBase">Root folder of the local repository.</param>
         /// <param name="cachePath">Directory where to cache files and logs.</param>
-        /// <param name="fileFilter">Filter to include files. For example *.cs files.</param>
         /// <param name="workItemRegex">Optional regular expression to parse commit comments.</param>
-        void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex);
+        void Initialize(string projectBase, string cachePath, string workItemRegex);
 
         /// <summary>
         /// Developer name -> number of lines modified in the given file.

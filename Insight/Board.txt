@@ -7,20 +7,15 @@ In Progress
 ---------------------------------------
 In TODO
 ---------------------------------------
- - Bugs in ntg
 
- - CleanupHistory cleanup. Expect cleaned history to be stored. No deletes!
-
- - Measure hashset vs dictionary intersect
+- Bugs in ntg
+- Runtime error 12000 commits later.
+- Profile
 - Investigate broken svn history. See CalculateChangeCouplings
-- Settings allows to change read only project settings.
 - Anonymize developer
 - Color editor
 - Classifier for names!
-- Settings: Filters are applied to the summary. But Sync contribution already used the fiters. New sync should be done
-  after the filters are changed. More restrictive is ok!
-- In general: Where should files be filtered? Provider or outside? => Provider returns all tracked history No deletes within.
-
+- Settings: Filters are applied to the summary. All windows should be cleared.
 
 
 - Commits pro line statt absolute 

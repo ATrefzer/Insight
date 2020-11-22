@@ -270,7 +270,6 @@ namespace Insight
             progress.Message("Updating source control history.");
 
             // Note: You should have the latest code locally such that history and metrics match!
-            // Update svn history
             var provider = Project.CreateProvider();
             provider.UpdateCache(progress, includeContributions);
 
@@ -409,11 +408,12 @@ namespace Insight
             if (_history == null)
             {
                 var provider = Project.CreateProvider();
+
+                // Assume the history was already cleaned such that it only contains tracked files and no deletes.
                 _history = provider.QueryChangeSetHistory();
                 Warnings = provider.Warnings;
 
-                // Remove all items that are deleted now. TODO expect here the history without deletes!
-                _history.CleanupHistory();
+                
             }
         }
 

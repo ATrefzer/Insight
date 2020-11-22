@@ -235,7 +235,11 @@ namespace Insight.GitProvider
             {
                 return KindOfChange.Edit;
             }
-       
+            else if (kind == "T")
+            {
+                return KindOfChange.TypeChanged;
+            }
+
             else
             {
                 Debug.Assert(false);

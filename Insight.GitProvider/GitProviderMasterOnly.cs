@@ -23,12 +23,11 @@ namespace Insight.GitProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-        public void Initialize(string projectBase, string cachePath, IFilter fileFilter, string workItemRegex)
+        public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
-            _fileFilter = fileFilter;
 
             _historyFile = Path.Combine(cachePath, "git_history.json");
             _contributionFile = Path.Combine(cachePath, "contribution.json");
@@ -93,7 +92,7 @@ namespace Insight.GitProvider
             var masterHashes = masterNodes.Select(node => node.CommitHash).ToHashSet();
             var masterChangeSets = history.ChangeSets.Where(cs => masterHashes.Contains(cs.Id));
             var masterHistory = new ChangeSetHistory(masterChangeSets.OrderByDescending(x => x.Date).ToList());
-            
+  
 
 
             // Update Ids for files
@@ -111,6 +110,7 @@ namespace Insight.GitProvider
             }
 
             Warnings = tracker.Warnings;
+            masterHistory.CleanupHistory();
 
             // Write history file
             var json = JsonConvert.SerializeObject(masterHistory, Formatting.Indented);
