@@ -18,7 +18,7 @@ namespace Tests
             // Graph
             var graph = new Graph();
             graph.UpdateGraph("child", "parent");
-            graph.UpdateGraph("parent", null);
+            graph.UpdateGraph("parent", "");
 
             // Changesets
             var commit_child = new ChangeSet();

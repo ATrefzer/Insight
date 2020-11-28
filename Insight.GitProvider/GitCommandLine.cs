@@ -20,7 +20,7 @@ namespace Insight.GitProvider
         /// %P   Parents (all sha1s in one line) First commit does not have a parent!
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
-        const string LogFormat = "START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER";
+        const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
 
         private const string MainBranch = "master";
 
@@ -120,7 +120,7 @@ namespace Insight.GitProvider
             //
             // --cc implies the -c option and further compresses merge commits.
             //
-            var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict --name-status --simplify-merges --full-history";
+            var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict-local --name-status --simplify-merges --full-history";
 
             //-c diff.renameLimit=99999 log --pretty=format:{START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER --date=iso-strict --name-status --simplify-merges --full-history
             
@@ -142,7 +142,7 @@ namespace Insight.GitProvider
             // --follow to track renaming, works only for a single file!
             // When --follow is used --full-history has no effect. We don't see merge commits that do contribute to the file.
 
-            var args = $"log --follow --pretty=format:{LogFormat} --date=iso-strict --name-status -- \"{localPath}\"";
+            var args = $"log --follow --pretty=format:{LogFormat} --date=iso-strict-local --name-status -- \"{localPath}\"";
 
             var result = ExecuteCommandLine(program, args);
             return result.StdOut;

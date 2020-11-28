@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Insight.GitProvider.Debugging;
 using Insight.Shared;
 using Insight.Shared.Model;
 
@@ -257,7 +258,7 @@ namespace Insight.GitProvider
 
         void SaveRecoveredLogToDisk(List<ChangeSet> commits, Graph graph)
         {
-            Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, graph);
+            GitDebugHelper.Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, graph);
         }
 
         

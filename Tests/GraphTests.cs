@@ -164,7 +164,7 @@ namespace Tests
             graph.UpdateGraph("n3", "n1");
             graph.UpdateGraph("n4", "n3 n2");
             graph.UpdateGraph("n2", "n1");
-            graph.UpdateGraph("n1", null);
+            graph.UpdateGraph("n1", "");
 
             Assert.AreEqual(0, graph.GetNode("n1").Parents.Count);
             Assert.AreEqual(2, graph.GetNode("n1").Children.Count);

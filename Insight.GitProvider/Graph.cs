@@ -5,8 +5,28 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+using LibGit2Sharp;
+
 namespace Insight.GitProvider
 {
+    // TODO 
+    class GitNode
+    {
+        public Scope Scope { get; set; }
+        public Commit Commit { get; set; }
+    }
+
+    // TODO
+    class GraphNode<T>
+    {
+        public GraphNode(T value)
+        {
+            Value = value;
+        }
+
+        public T Value { get; }
+    }
+
     [DebuggerDisplay("{CommitHash}: P={Parents.Count}, C={Children.Count}")]
     public sealed class GraphNode
     {
@@ -15,20 +35,19 @@ namespace Insight.GitProvider
             CommitHash = commitHash;
         }
 
-        public string CommitHash { get;  }
 
-        /// <summary>
-        /// Ordered list of all parents. The first parent is the branch that was checked out during a merge.
-        /// The second parent is the branch that was merged in.
-        /// </summary>
-        //public List<string> ParentHashes { get; } = new List<string>();
+    public object Commit { get; set; }
+    
+    // TODO Attached graph objects.
+    public Scope Scope {get; set;}
+    
 
-        //public List<string> ChildHashes { get; } = new List<string>();
+    public string CommitHash { get;  }
+
 
         public List<GraphNode> Parents { get; } = new List<GraphNode>();
         public List<GraphNode> Children { get; } = new List<GraphNode>();
 
-        public Scope Scope {get; set;}
     }
 
     /// <summary>
@@ -184,22 +203,9 @@ namespace Insight.GitProvider
 
             return _preprocessData.EulerPath[lcaIndex];
         }
-        
 
-        /// <summary>
-        /// Adds a new commit to the commit graph.
-        /// This may result in several new nodes in the graph because we add nodes for possible parents in advance.
-        /// </summary>
-        /// <param name="hash">Commit hash (change set id)</param>
-        /// <param name="parents">List of parent commit hashes to extend the graph</param>
-        public void UpdateGraph(string hash, string parents)
+        public void UpdateGraph(string hash, IEnumerable<string> allParents)
         {
-            
-
-            var allParents = !string.IsNullOrEmpty(parents) ? parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                                    .Select(parent => parent)
-                                    .ToList() : new List<string>();
-
             lock (_lockObj)
             {
                 _preprocessData = null;
@@ -216,6 +222,23 @@ namespace Insight.GitProvider
                     parent.Children.Add(GetOrAddNode(hash));
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds a new commit to the commit graph.
+        /// This may result in several new nodes in the graph because we add nodes for possible parents in advance.
+        /// </summary>
+        /// <param name="hash">Commit hash (change set id)</param>
+        /// <param name="parents">List of parent commit hashes to extend the graph</param>
+        public void UpdateGraph(string hash, string parents)
+        {
+            
+
+            var allParents = !string.IsNullOrEmpty(parents) ? parents.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(parent => parent)
+                                    .ToList() : new List<string>();
+
+            UpdateGraph(hash, allParents);
         }
 
         public GraphNode GetOrAddNode(string hash)

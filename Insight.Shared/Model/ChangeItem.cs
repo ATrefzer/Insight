@@ -66,6 +66,11 @@ namespace Insight.Shared.Model
             return (Kind & KindOfChange.Rename) == KindOfChange.Rename;
         }
 
+        public bool IsCopy()
+        {
+            return (Kind & KindOfChange.Copy) == KindOfChange.Copy;
+        }
+
         public bool IsTypeChange()
         {
             return (Kind & KindOfChange.TypeChanged) == KindOfChange.TypeChanged;

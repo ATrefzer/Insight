@@ -257,45 +257,6 @@ namespace Insight.GitProvider
             return Path.Combine(GetHistoryCache(), name.ToString());
         }
 
-        
-        protected void Dump(string path, List<ChangeSet> commits, Graph graph)
-        {
-            // For debugging
-            var writer = new StreamWriter(path);
-            foreach (var commit in commits)
-            {
-                writer.WriteLine("START_HEADER");
-                writer.WriteLine(commit.Id);
-                writer.WriteLine(commit.Committer);
-                writer.WriteLine(commit.Date.ToString("o"));
-                writer.WriteLine(string.Join("\t", graph.GetParentHashes(commit.Id)));
-                writer.WriteLine(commit.Comment);
-                writer.WriteLine("END_HEADER");
 
-                // files
-                foreach (var file in commit.Items)
-                {
-                    switch (file.Kind)
-                    {
-                        // Lose the similarity
-                        case KindOfChange.Add:
-                            writer.WriteLine("A\t" + file.ServerPath);
-                            break;
-                        case KindOfChange.Edit:
-                            writer.WriteLine("M\t" + file.ServerPath);
-                            break;
-                        case KindOfChange.Copy:
-                            writer.WriteLine("C\t" + file.FromServerPath + "\t" + file.ServerPath);
-                            break;
-                        case KindOfChange.Rename:
-                            writer.WriteLine("R\t" + file.FromServerPath + "\t" + file.ServerPath);
-                            break;
-                        case KindOfChange.TypeChanged:
-                            writer.WriteLine("T\t" + file.ServerPath);
-                            break;
-                    }
-                }
-            }
-        }
     }
 }
