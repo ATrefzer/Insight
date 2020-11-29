@@ -79,10 +79,12 @@
     <Compile Include="Cache.cs" />
     <Compile Include="CirclePackingLayoutTests.cs" />
     <Compile Include="ColorSchemeTest.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="DecoderTests.cs" />
     <Compile Include="FractalValueTests.cs" />
     <Compile Include="DeleteSharedHistoryTests.cs" />
+    <Compile Include="GitCommandlineTests.cs" />
     <Compile Include="GraphTests.cs" />
     <Compile Include="HierarchicalDataBuilder.cs" />
     <Compile Include="HierarchicalTestExamples.cs" />

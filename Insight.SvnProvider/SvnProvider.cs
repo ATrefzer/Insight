@@ -21,7 +21,7 @@ namespace Insight.SvnProvider
     /// <summary>
     ///     Provider for Svn changeset history.
     ///     Since Svn is only a source control system work items are not provided!
-    ///     For exampe we don't know if a commit was a bug fix or not.
+    ///     For example we don't know if a commit was a bug fix or not.
     /// </summary>
     public sealed class SvnProvider : ISourceControlProvider
     {

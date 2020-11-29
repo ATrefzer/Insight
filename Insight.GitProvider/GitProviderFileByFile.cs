@@ -1,18 +1,15 @@
-﻿using System;
+﻿using Insight.GitProvider.Debugging;
+using Insight.Shared;
+using Insight.Shared.Model;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Insight.GitProvider.Debugging;
-using Insight.Shared;
-using Insight.Shared.Model;
-
-using Newtonsoft.Json;
 
 namespace Insight.GitProvider
 {
@@ -59,17 +56,9 @@ namespace Insight.GitProvider
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 
-        public void Initialize(string projectBase, string cachePath, string workItemRegex)
+        public override void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
-            _startDirectory = projectBase;
-            _cachePath = cachePath;
-            _workItemRegex = workItemRegex;
-
-            _historyFile = Path.Combine(cachePath, "git_history.json");
-            _contributionFile = Path.Combine(cachePath, "contribution.json");
-            _gitCli = new GitCommandLine(_startDirectory);
-
-            _mapper = new PathMapper(_startDirectory);
+            base.Initialize(projectBase, cachePath, workItemRegex);
         }
 
         private void DeleteAllCaches()
@@ -113,7 +102,7 @@ namespace Insight.GitProvider
         /// <summary>
         /// file Id -> change set ids where to remove the file
         /// </summary>
-        static Dictionary<string, HashSet<string>> FindSharedHistory(List<ChangeSet> historyOrderedByDate)
+        private Dictionary<string, HashSet<string>> FindSharedHistory(List<ChangeSet> historyOrderedByDate)
         {
             // file id -> change set id
             var filesToRemove = new Dictionary<string, HashSet<string>>();
@@ -161,7 +150,7 @@ namespace Insight.GitProvider
         // ReSharper disable once UnusedMember.Local
         void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
         {
-            var logPath = Path.Combine(_cachePath, "logs");          
+            var logPath = Path.Combine(_cachePath, "logs");
 
             var file = forLocalFile.Replace("\\", "_").Replace(":", "_");
             file = Path.Combine(logPath, file);
@@ -176,7 +165,7 @@ namespace Insight.GitProvider
             _idToLocalFile.Add(id, localPath);
 
             var gitFileLog = _gitCli.Log(localPath);
-            
+
             // Writes logs for all files (debugging)
             //DebugWriteLogForSingleFile(gitFileLog, localPath);
 
@@ -250,25 +239,18 @@ namespace Insight.GitProvider
             return history.Values.OrderByDescending(x => x.Date).ToList();
         }
 
-        void SaveFullLogToDisk()
-        {
-            var log = _gitCli.Log();
-            File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
-        }
-
         void SaveRecoveredLogToDisk(List<ChangeSet> commits, Graph graph)
         {
             GitDebugHelper.Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, graph);
         }
 
-        
         void UpdateHistory(IProgress progress)
-        {            
+        {
             // Git graph
             _graph = new Graph();
             _idToLocalFile = new Dictionary<string, string>();
 
-            
+
             // Build the full graph
             var fullLog = _gitCli.Log();
             var parser = new Parser(_mapper);
@@ -280,7 +262,7 @@ namespace Insight.GitProvider
 
             // Build a virtual commit history
             var localPaths = GetAllTrackedLocalFiles();
-         
+
             var changeSets = RebuildHistory(localPaths, progress);
 
             // file id -> List of change set id
@@ -318,66 +300,65 @@ namespace Insight.GitProvider
 
         public static void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove, Graph graph)
         {
-             // filesToRemove: 
-                // fileId -> commit hash (change set id) where we start removing the file
-                var idToChangeSet = historyToModify.ToDictionary(x => x.Id, x => x);
+            // filesToRemove: 
+            // fileId -> commit hash (change set id) where we start removing the file
+            var idToChangeSet = historyToModify.ToDictionary(x => x.Id, x => x);
 
 
-                foreach (var fileToRemove in filesToRemove)
+            foreach (var fileToRemove in filesToRemove)
+            {
+                var fileIdToRemove = fileToRemove.Key;
+                var changeSetIds = fileToRemove.Value;
+
+                // Traverse graph to find all change sets where we have to delete the files
+                // Note: The simplified history is incomplete.
+                var nodesToProcess = new Queue<GraphNode>();
+                var handledNodes = new HashSet<string>();
+                GraphNode node;
+
+                foreach (var csId in changeSetIds)
                 {
-                    var fileIdToRemove = fileToRemove.Key;
-                    var changeSetIds = fileToRemove.Value;
-
-                    // Traverse graph to find all change sets where we have to delete the files
-                    // Note: The simplified history is incomplete.
-                    var nodesToProcess = new Queue<GraphNode>();
-                    var handledNodes = new HashSet<string>();
-                    GraphNode node;
-
-                    foreach (var csId in changeSetIds)
+                    if (graph.TryGetNode(csId, out node))
                     {
-                        if (graph.TryGetNode(csId, out node))
+                        nodesToProcess.Enqueue(node);
+                        handledNodes.Add(node.CommitHash);
+                    }
+                    else
+                    {
+                        Debug.Assert(false);
+                    }
+                }
+
+
+                while (nodesToProcess.Any())
+                {
+                    node = nodesToProcess.Dequeue();
+
+                    if (idToChangeSet.ContainsKey(node.CommitHash))
+                    {
+                        // Note: The history of a file may skip some commits if they are not relevant.
+                        // Therefore it is possible that no changeset exists for the hash.
+                        // Remember that we follow the full graph.
+                        var cs = idToChangeSet[node.CommitHash];
+
+                        // Remove the file from change set
+                        cs.Items.RemoveAll(i => i.Id == fileIdToRemove);
+                    }
+
+                    // Delete the current file also in all parents
+                    foreach (var parent in node.Parents)
+                    {
+                        var parentHash = parent.CommitHash;
+                        // Avoid cycles in case a change set is parent of many others.
+                        if (!handledNodes.Contains(parentHash) && graph.TryGetNode(parentHash, out node))
                         {
                             nodesToProcess.Enqueue(node);
                             handledNodes.Add(node.CommitHash);
                         }
-                        else
-                        {
-                            Debug.Assert(false);
-                        }
-                    }
-
-
-                    while (nodesToProcess.Any())
-                    {
-                        node = nodesToProcess.Dequeue();
-
-                        if (idToChangeSet.ContainsKey(node.CommitHash))
-                        {
-                            // Note: The history of a file may skip some commits if they are not relevant.
-                            // Therefore it is possible that no changeset exists for the hash.
-                            // Remember that we follow the full graph.
-                            var cs = idToChangeSet[node.CommitHash];
-
-                            // Remove the file from change set
-                            cs.Items.RemoveAll(i => i.Id == fileIdToRemove);
-                        }
-
-                        // Delete the current file also in all parents
-                        foreach (var parent in node.Parents)
-                        {
-                            var parentHash = parent.CommitHash;
-                            // Avoid cycles in case a change set is parent of many others.
-                            if (!handledNodes.Contains(parentHash) && graph.TryGetNode(parentHash, out node))
-                            {
-                                nodesToProcess.Enqueue(node);
-                                handledNodes.Add(node.CommitHash);
-                            }
-                        }
                     }
                 }
+            }
         }
-
 
         private void VerifyNoDuplicateServerPathsInChangeset(List<ChangeSet> commits)
         {
@@ -387,7 +368,7 @@ namespace Insight.GitProvider
                 {
                     cs.Items.ToDictionary(k => k.ServerPath, k => k.ServerPath);
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     foreach (var item in cs.Items)
                     {

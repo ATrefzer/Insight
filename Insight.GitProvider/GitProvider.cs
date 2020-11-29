@@ -3,42 +3,52 @@ using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 using LibGit2Sharp;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Insight.GitProvider
 {
+    /// <summary>
+    /// Git provider with rename tracking.
+    /// Git is not intended to track renames. So there are some tradeoffs.
+    ///
+    /// 1. First I read the full git graph. This is quite fast even for a larger repository.
+    /// 2. Then I process the nodes from initial node to head. Following a breadth first search.
+    ///    I initialize a scope (file name -> unique id) with all initial tracked files.
+    /// 3. Following the graph I update the scopes to reflect all file operations (add, edit etc)
+    ///    Operations that are easy to track like a simple rename in a branch and then merge again
+    ///    are tracked. As soon I encounter a situation that is not clear I reset tracking by
+    ///    assigning a new Id to the file.
+    ///    I found a lot of these situations when parsing the NUnit repository as a test.
+    ///
+    /// The algorithm is quite slow. NUnit can be parsed in less than a minute. But for smaller
+    /// repositories (like NUnit) this gives more interesting results than without tracking renames.
+    /// 
+    /// </summary>
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
         private Repository _repo;
         private Statistics _stats;
 
-        public void Initialize(string projectBase, string cachePath, string workItemRegex)
+        public override void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
-            _startDirectory = projectBase;
-            _cachePath = cachePath;
-            _workItemRegex = workItemRegex;
-
-            _historyFile = Path.Combine(cachePath, "git_history.json");
-            _contributionFile = Path.Combine(cachePath, "contribution.json");
-            _gitCli = new GitCommandLine(_startDirectory);
-
-            // "/" maps to _startDirectory
-            _mapper = new PathMapper(_startDirectory);
+            base.Initialize(projectBase, cachePath, workItemRegex);
         }
 
+        public static string GetClass()
+        {
+            var type = typeof(GitProvider);
+            return type.FullName + "," + type.Assembly.GetName().Name;
+        }
 
         public void UpdateCache(IProgress progress, bool includeWorkData)
         {
             DeleteAllCaches();
 
             VerifyGitPreConditions();
-            var logDir = PrepareLogDirectory();
 
             using (_repo = new Repository(_startDirectory))
             {
@@ -52,35 +62,29 @@ namespace Insight.GitProvider
             }
         }
 
-
-        public static string GetClass()
+        private void UpdateHistory(IProgress progress)
         {
-            var type = typeof(GitProvider);
-            return type.FullName + "," + type.Assembly.GetName().Name;
-        }
+            Warnings = new List<WarningMessage>();
+            _stats = new Statistics();
 
-        private void DeleteAllCaches()
-        {
-            if (File.Exists(_contributionFile))
-            {
-                File.Delete(_contributionFile);
-            }
+            var (history, graph) = GetRawHistory(progress);
 
-            if (File.Exists(_historyFile))
-            {
-                File.Delete(_historyFile);
-            }
-        }
+            // Remove deleted files and empty changes sets
+            var headNode = graph.GetNode(GetMasterHead());
+            var allTrackedFiles = GetAllTrackedFiles();
+            var aliveIds = allTrackedFiles.Select(file => headNode.Scope.GetId(file)).ToHashSet();
 
-        private string PrepareLogDirectory()
-        {
-            var logPath = Path.Combine(_cachePath, "logs");
-            if (!Directory.Exists(logPath))
-            {
-                Directory.CreateDirectory(logPath);
-            }
+            VerifyScope(headNode);
 
-            return logPath;
+            // Note we have to drop all Delete items from the history. This is safe.
+            // A file can be deleted in one branch but maintained in another one.
+            // If we would call CleanupHistory() we would remove all ids that belong to a deleted file
+            // This means we lose a file that is still tracked.
+
+            history.CleanupHistory(aliveIds);
+            Debug.Assert(!history.ChangeSets.SelectMany(cs => cs.Items).Any(item => item.IsDelete()));
+
+            SaveHistory(history);
         }
 
         /// <summary>
@@ -104,36 +108,6 @@ namespace Insight.GitProvider
             return (history, graph);
         }
 
-
-        private void UpdateHistory(IProgress progress)
-        {
-            Warnings = new List<WarningMessage>();
-            _stats = new Statistics();
-
-            var (history, graph) = GetRawHistory(progress);
-
-            // Remove deleted files and empty changes sets
-            var headNode = graph.GetNode(GetMasterHead());
-            var allTrackedFiles = GetAllTrackedFiles(); // TODO use the tre (!)
-            var aliveIds = allTrackedFiles.Select(file => headNode.Scope.GetId(file)).ToHashSet();
-
-            VerifyScope(headNode);
-
-            // Note we have to drop all Delete items from the history. This is safe.
-            // A file can be deleted in one branch but maintained in another one.
-            // If we would call CleanupHistory() we would remove all ids that belong to a deleted file
-            // This means we lose a file that is still tracked.
-
-            history.CleanupHistory(aliveIds);
-            Debug.Assert(!history.ChangeSets.SelectMany(cs => cs.Items).Any(item => item.IsDelete()));
-
-            SaveHistory(history);
-        }
-
-        private bool IsMerge(GraphNode graphNode)
-        {
-            return graphNode.Parents.Count == 2;
-        }
 
         private bool IsMergeWithUnprocessedParents(GraphNode node)
         {
@@ -177,7 +151,6 @@ namespace Insight.GitProvider
                 if (IsMergeWithUnprocessedParents(node))
                 {
                     // We arrive here later again.
-                    //Log("  But this is an merge node with an unprocessed parent. See you later again.");
                     continue;
                 }
 
@@ -185,7 +158,6 @@ namespace Insight.GitProvider
                 {
                     // When we arrive a merge node the first time both parents may be complete (or not).
                     // If so we would end up following the same path twice.
-                    //Log("  But this node was already processed. Stop here.");
                     continue;
                 }
 
@@ -232,8 +204,7 @@ namespace Insight.GitProvider
 
             if (node.Parents.Count == 0)
             {
-                // Called once for the first commit.
-                //Log("  This is the first node. So I create a new scope.");
+                // Called once for the first commit
                 scope = new Scope();
                 UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId);
             }
@@ -245,8 +216,6 @@ namespace Insight.GitProvider
                 Debug.Assert(scope != null);
                 if (parent.Children.Count > 1)
                 {
-                    //Log("  One parent, but parent has many children so I inherit its scope by cloning");
-
                     // We follow two branches, so each one gets its own copy.
                     scope = parent.Scope.Clone();
                 }
@@ -255,23 +224,16 @@ namespace Insight.GitProvider
                     scope = parent.Scope;
                 }
 
-                //Log("  One parent, one child, so I inherit its original scope");
-
                 UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId);
             }
             else if (IsMerge(node))
             {
-                //Log("... this is a merge node.");
-
                 var mergeInto = node.Parents[0];
                 var mergeFrom = node.Parents[1];
 
-                // Log($"Parents: {node.Parents[0].CommitHash} {node.Parents[1].CommitHash}");
-                //Log("I try to resolve the merge before processing the item list.");
-
                 scope = mergeInto.Scope;
 
-                UpdateScopeTwoParents(deltas, mergeInto.Scope, mergeFrom.Scope, deletedServerPathToId);
+                UpdateScopeTwoParents(deltas, mergeInto, mergeFrom, deletedServerPathToId);
             }
             else
             {
@@ -291,26 +253,33 @@ namespace Insight.GitProvider
             }
         }
 
-        private void UpdateScopeTwoParents(Differences deltas, Scope mergeIntoScope, Scope mergeFromScope,
+        /// <summary>
+        /// Update the scope of mergeInto to reflect the changes made in the branch we merge from.
+        /// When files are removed I collect them in the "deleted" dictionary.
+        /// These are needed later to assign the id to the deleted file.
+        /// </summary>
+        private void UpdateScopeTwoParents(Differences deltas, GraphNode mergeInto, GraphNode mergeFrom,
             Dictionary<string, string> deleted)
         {
             foreach (var change in deltas.DiffExclusiveToParent1)
             {
                 // These are the changes done on the feature branch. We merge them into the scope.
-                UpdateScopeFromMergeSource(mergeIntoScope, mergeFromScope, change, deleted);
+                UpdateScopeFromMergeSource(mergeInto, mergeFrom, change, deleted);
             }
 
             foreach (var change in deltas.ChangesInCommit)
             {
                 // These are the changes done on the merge commit itself (fixing conflicts etc)
-                ApplyChangesToScope(mergeIntoScope, change, deleted);
+                ApplyChangesToScope(mergeInto.Scope, change, deleted);
             }
         }
 
-        private void UpdateScopeFromMergeSource(Scope mergeIntoScope, Scope mergeFromScope, TreeEntryChanges change,
+        private void UpdateScopeFromMergeSource(GraphNode mergeInto, GraphNode mergeFrom, TreeEntryChanges change,
             IDictionary<string, string> deleted)
         {
             // Merge changes from feature branch. Apply all Ids we can find without ambiguity.
+            var mergeFromScope = mergeFrom.Scope;
+            var mergeIntoScope = mergeInto.Scope;
 
             if (change.Status == ChangeKind.Added)
             {
@@ -337,7 +306,7 @@ namespace Insight.GitProvider
                 mergeIntoScope.Remove(change.Path);
                 mergeIntoScope.Add(change.Path);
                 _stats.ResetRenameTrackingOnFile++;
-                Warnings.Add(new WarningMessage("", "Reset tracking"));
+                Warnings.Add(new WarningMessage(mergeInto.CommitHash, $"Reset tracking due to added file {change.Path}"));
             }
             else if (change.Status == ChangeKind.Modified)
             {
@@ -514,16 +483,9 @@ namespace Insight.GitProvider
             differences.SymmetricExceptWith(actualServerPaths);
             foreach (var diff in differences)
             {
-                Warnings.Add(new WarningMessage(node.CommitHash, diff));
+                Warnings.Add(new WarningMessage(node.CommitHash, $"Final scope does not line up with tracked files: {diff}"));
             }
         }
-
-        private void SaveHistory(ChangeSetHistory history)
-        {
-            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
-            File.WriteAllText(_historyFile, json, Encoding.UTF8);
-        }
-
 
         private KindOfChange ToChangeKind(ChangeKind kind)
         {
@@ -554,6 +516,24 @@ namespace Insight.GitProvider
             }
 
             return KindOfChange.None;
+        }
+
+        private void DeleteAllCaches()
+        {
+            if (File.Exists(_contributionFile))
+            {
+                File.Delete(_contributionFile);
+            }
+
+            if (File.Exists(_historyFile))
+            {
+                File.Delete(_historyFile);
+            }
+        }
+
+        private bool IsMerge(GraphNode graphNode)
+        {
+            return graphNode.Parents.Count == 2;
         }
     }
 }

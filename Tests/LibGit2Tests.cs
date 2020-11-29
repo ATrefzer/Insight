@@ -13,9 +13,7 @@ namespace Tests
         public void CheckFileInTree()
         {
             // Learning behaviour of libgit2
-            var nunitRepoPath = @"D:\Private\repos\nunit";
-
-            using (var repo = new Repository(nunitRepoPath))
+            using (var repo = new Repository(Constants.NUnitDirectory))
             {
                 var commit = repo.Lookup<Commit>("9a98666491219048fd86397c1d1c8ba364cba052");
                 var file = commit.Tree["src/NUnitFramework/framework/Interfaces/IReflectionInfo.cs"];

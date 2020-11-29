@@ -13,8 +13,6 @@ namespace Tests
     [TestFixture]
     class GitProviderTests
     {
-        private readonly LibGit2Tests _libGit2Tests = new LibGit2Tests();
-
         private sealed class FollowResult
         {
             public string FinalName { get; set; }

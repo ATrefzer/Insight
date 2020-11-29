@@ -202,7 +202,7 @@ namespace Insight.Shared.VersionControl
         }
 
         /// <summary>
-        /// If we have a renamed file that was modifed in the same commit.
+        /// If we have a renamed file that was modified in the same commit.
         /// The rename is actually a copy in this case.
         /// </summary>
         private void ConvertRenameToAddIfSourceIsModified()

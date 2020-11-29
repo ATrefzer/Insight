@@ -258,6 +258,31 @@ namespace Insight.GitProvider
             return Path.Combine(GetHistoryCache(), name.ToString());
         }
 
+        protected void SaveHistory(ChangeSetHistory history)
+        {
+            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
+            File.WriteAllText(_historyFile, json, Encoding.UTF8);
+        }
 
+
+        public virtual void Initialize(string projectBase, string cachePath, string workItemRegex)
+        {
+            _startDirectory = projectBase;
+            _cachePath = cachePath;
+            _workItemRegex = workItemRegex;
+
+            _historyFile = Path.Combine(cachePath, "git_history.json");
+            _contributionFile = Path.Combine(cachePath, "contribution.json");
+            _gitCli = new GitCommandLine(_startDirectory);
+
+            // "/" maps to _startDirectory
+            _mapper = new PathMapper(_startDirectory);
+        }
+
+        protected void SaveFullLogToDisk()
+        {
+            var log = _gitCli.Log();
+            File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
+        }
     }
 }
