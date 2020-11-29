@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
-using Insight.Analyzers;
+﻿using Insight.Analyzers;
 using Insight.Builder;
 using Insight.Dto;
 using Insight.Metrics;
@@ -11,7 +6,10 @@ using Insight.Shared;
 using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
-
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
 using Visualization.Controls.Interfaces;
@@ -277,6 +275,8 @@ namespace Insight
 
             // Update code metrics
             _metricsProvider.UpdateLinesOfCodeCache(Project.SourceControlDirectory, Project.Cache, Project.GetNormalizedFileExtensions());
+
+            Warnings = provider.Warnings;
         }
 
 
@@ -411,9 +411,6 @@ namespace Insight
 
                 // Assume the history was already cleaned such that it only contains tracked files and no deletes.
                 _history = provider.QueryChangeSetHistory();
-                Warnings = provider.Warnings;
-
-                
             }
         }
 

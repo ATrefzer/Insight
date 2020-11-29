@@ -9,12 +9,14 @@ namespace Insight.GitProvider
     public sealed class Scope : IEnumerable<KeyValuePair<string, Guid>>
     {
         private readonly Dictionary<string, Guid> _serverPathToId = new Dictionary<string, Guid>();
-        
+        private readonly Dictionary<Guid, string> _idToServerPath = new Dictionary<Guid, string>();
+
         public Scope(Dictionary<string, Guid> seed)
         {
             foreach (var pair in seed)
             {
                 _serverPathToId.Add(pair.Key, pair.Value);
+                _idToServerPath.Add(pair.Value, pair.Key);
             }
         }
 
@@ -23,6 +25,7 @@ namespace Insight.GitProvider
             foreach (var pair in seed)
             {
                 _serverPathToId.Add(pair.Key, pair.Value);
+                _idToServerPath.Add(pair.Value, pair.Key);
             }
         }
 
@@ -37,6 +40,11 @@ namespace Insight.GitProvider
             foreach (var pair in _serverPathToId)
             {
                 clone._serverPathToId.Add(pair.Key, pair.Value);
+            }
+
+            foreach (var pair in _idToServerPath)
+            {
+                clone._idToServerPath.Add(pair.Key, pair.Value);
             }
 
             return clone;
@@ -62,11 +70,14 @@ namespace Insight.GitProvider
         public void Remove(string serverPath)
         {
             if (serverPath == null)
+            {
                 return;
-            if (_serverPathToId.ContainsKey(serverPath))
+            }
+
+            if (_serverPathToId.TryGetValue(serverPath, out var id))
             {
                 _serverPathToId.Remove(serverPath);
-                
+                _idToServerPath.Remove(id);
             }
         }
 
@@ -75,7 +86,12 @@ namespace Insight.GitProvider
             return _serverPathToId.ContainsKey(servePath);
         }
 
-        public bool IsKnown(KeyValuePair<string, Guid> file) // TODO intro of class
+        public bool IsKnown(Guid id)
+        {
+            return _idToServerPath.ContainsKey(id);
+        }
+
+        public bool IsKnown(KeyValuePair<string, Guid> file) 
         {
             if (_serverPathToId.TryGetValue(file.Key, out var id))
             {
@@ -96,16 +112,6 @@ namespace Insight.GitProvider
             return null;
         }
 
-        private string GetOrCreateId(string serverPath)
-        {
-            if (_serverPathToId.TryGetValue(serverPath, out var guid))
-            {
-                return guid.ToString();
-            }
-
-            return Add(serverPath);
-        }
-
         public string GetId(string serverPath)
         {
             return _serverPathToId[serverPath].ToString();
@@ -118,6 +124,7 @@ namespace Insight.GitProvider
 
             var newId = Guid.NewGuid();
             _serverPathToId.Add(serverPath, newId);
+            _idToServerPath.Add(newId, serverPath);
             
             return newId.ToString();
         }
@@ -128,7 +135,8 @@ namespace Insight.GitProvider
         public void MergeAdd(string serverPath, Guid id)
         {
             _serverPathToId.Add(serverPath, id);
-            VerifyScope();
+            _idToServerPath.Add(id, serverPath);
+            VerifyScope(); // TODO remove
         }
 
         private void VerifyScope()
@@ -144,6 +152,21 @@ namespace Insight.GitProvider
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public string GetServerPath(Guid id)
+        {
+            return _idToServerPath[id];
+        }
+
+        public string GetServerPathOrDefault(Guid id)
+        {
+            if (_idToServerPath.TryGetValue(id, out var serverPath))
+            {
+                return serverPath;
+            }
+
+            return null;
         }
     }
 }

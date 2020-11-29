@@ -113,6 +113,7 @@ namespace Insight.GitProvider
             return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
         }
 
+
         public Dictionary<string, Contribution> QueryContribution()
         {
             // The contributions are optional

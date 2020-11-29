@@ -76,7 +76,7 @@ namespace Insight
             var tm = new TreeMapViewModel();
             tm.Commands = commands;
             tm.Data = context;
-            tm.Title = title + " (Treemap)";  
+            tm.Title = title + " (Treemap)";
             ShowTab(tm, true);
         }
 
@@ -117,12 +117,14 @@ namespace Insight
             var title = Strings.Warning;
             if (data == null || !data.Any())
             {
-                // Show warnings tab only if there are warnings
-                var vm = _mainViewModel.Tabs.FirstOrDefault(x => x.Title == title);
-                if (vm != null)
-                {
-                    _mainViewModel.Tabs.Remove(vm);
-                }
+                // Show warnings tab only if there are warnings.
+                // Keep old warnings if any.
+
+                //var vm = _mainViewModel.Tabs.FirstOrDefault(x => x.Title == title);
+                //if (vm != null)
+                //{
+                //    _mainViewModel.Tabs.Remove(vm);
+                //}
 
                 return;
             }

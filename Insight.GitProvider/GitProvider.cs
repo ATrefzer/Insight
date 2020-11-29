@@ -1,26 +1,22 @@
-﻿using System;
+﻿using Insight.GitProvider.Debugging;
+using Insight.Shared;
+using Insight.Shared.Model;
+using Insight.Shared.VersionControl;
+using LibGit2Sharp;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-using Insight.GitProvider.Debugging;
-using Insight.Shared;
-using Insight.Shared.Model;
-using Insight.Shared.VersionControl;
-
-using LibGit2Sharp;
-
-using Newtonsoft.Json;
-
 namespace Insight.GitProvider
 {
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
-        private GitDebugHelper _dbg;
-        private Statistics _stats;
         private Repository _repo;
+        private Statistics _stats;
 
         public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
@@ -46,10 +42,7 @@ namespace Insight.GitProvider
 
             using (_repo = new Repository(_startDirectory))
             {
-                using (_dbg = new GitDebugHelper(logDir, _gitCli))
-                {
-                    UpdateHistory(progress);
-                }
+                UpdateHistory(progress);
             }
 
             if (includeWorkData)
@@ -59,10 +52,6 @@ namespace Insight.GitProvider
             }
         }
 
-        private void Log(string logMessage)
-        {
-            _dbg?.Log(logMessage);
-        }
 
         public static string GetClass()
         {
@@ -95,7 +84,7 @@ namespace Insight.GitProvider
         }
 
         /// <summary>
-        /// Raw history. Nothing deleted or cleaned
+        ///     Raw history. Nothing deleted or cleaned
         /// </summary>
         public (ChangeSetHistory, Graph) GetRawHistory(IProgress progress)
         {
@@ -104,11 +93,17 @@ namespace Insight.GitProvider
             using (var repo = new Repository(_startDirectory))
             {
                 // All nodes in current branch reachable from the head.
+
+                progress?.Message("Reading commit graph");
                 graph = GetGraph(repo);
-                history = CreateHistory(repo, graph, _mapper);
+
+                progress?.Message("Creating the history");
+                history = CreateHistory(repo, graph, progress);
             }
+
             return (history, graph);
         }
+
 
         private void UpdateHistory(IProgress progress)
         {
@@ -158,10 +153,13 @@ namespace Insight.GitProvider
         }
 
         /// <summary>
-        /// Creates the history in a form that we can process further from initial commit to the last one.
+        ///     Creates the history in a form that we can process further from initial commit to the last one.
         /// </summary>
-        private ChangeSetHistory CreateHistory(Repository repo, Graph graph, PathMapper mapper)
+        private ChangeSetHistory CreateHistory(Repository repo, Graph graph, IProgress progress)
         {
+            var nodeCount = graph.AllNodes.Count();
+            var currentNode = 0;
+
             var changeSets = new List<ChangeSet>();
 
             var initialNodes = graph.AllNodes.Where(node => node.Parents.Any() is false).ToList();
@@ -175,9 +173,6 @@ namespace Insight.GitProvider
             while (nodesToProcess.Any())
             {
                 var node = nodesToProcess.Dequeue();
-
-                // TODO  Log("\n##############################################################################");
-                // // Log($"Start processing node {node.CommitHash}");
 
                 if (IsMergeWithUnprocessedParents(node))
                 {
@@ -194,17 +189,14 @@ namespace Insight.GitProvider
                     continue;
                 }
 
-                // TODO progress?.Message($"Processing commit {++processing} / {nodeCount}");
+                progress?.Message($"Processing commit {++currentNode} / {nodeCount}");
 
-                //  TODO profile
                 var commit = repo.Lookup<Commit>(node.CommitHash);
                 var differences = CalculateDiffs(repo, commit);
 
-                var (scope, deleted) = UpdateScope(node, differences);
+                var (scope, deletedServerPathToId) = ApplyChangesToScope(node, differences);
                 node.Scope = scope;
 
-                // Slow during debug TODO
-                VerifyScope(node);
 
                 var cs = CreateChangeSet(commit);
                 changeSets.Add(cs);
@@ -212,14 +204,7 @@ namespace Insight.GitProvider
                 // Create change items
                 foreach (var change in differences.ChangesInCommit)
                 {
-                    var item = CreateChangeItemWithoutId(mapper, change);
-
-                    item.Id = scope.GetIdOrDefault(change.Path);
-                    if (item.Id == null)
-                    {
-                        Debug.Assert(change.Status == ChangeKind.Deleted);
-                        item.Id = deleted[change.Path];
-                    }
+                    var item = CreateChangeItem(change, scope, deletedServerPathToId);
                     cs.Items.Add(item);
                 }
 
@@ -230,16 +215,19 @@ namespace Insight.GitProvider
                 }
             }
 
+            VerifyScope(graph.GetNode(repo.Head.Tip.Sha));
+
             var history = new ChangeSetHistory(changeSets.OrderByDescending(cs => cs.Date).ToList());
             return history;
         }
 
+
         /// <summary>
-        /// Returns the deleted files, no longer in scope (server path -> id)
+        ///     Returns the deleted files, no longer in scope (server path -> id)
         /// </summary>
-        private (Scope, Dictionary<string, string>) UpdateScope(GraphNode node, Differences deltas)
+        private (Scope, Dictionary<string, string>) ApplyChangesToScope(GraphNode node, Differences deltas)
         {
-            var deleted = new Dictionary<string, string>();
+            var deletedServerPathToId = new Dictionary<string, string>();
             Scope scope = null;
 
             if (node.Parents.Count == 0)
@@ -247,7 +235,7 @@ namespace Insight.GitProvider
                 // Called once for the first commit.
                 //Log("  This is the first node. So I create a new scope.");
                 scope = new Scope();
-                UpdateScopeSingleOrNoParent(deltas, scope, deleted);
+                UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId);
             }
             else if (node.Parents.Count == 1)
             {
@@ -265,11 +253,11 @@ namespace Insight.GitProvider
                 else
                 {
                     scope = parent.Scope;
-
-                    //Log("  One parent, one child, so I inherit its original scope");
                 }
 
-                UpdateScopeSingleOrNoParent(deltas, scope, deleted);
+                //Log("  One parent, one child, so I inherit its original scope");
+
+                UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId);
             }
             else if (IsMerge(node))
             {
@@ -283,14 +271,14 @@ namespace Insight.GitProvider
 
                 scope = mergeInto.Scope;
 
-              UpdateScopeTwoParents(deltas, mergeInto.Scope, mergeFrom.Scope, deleted);
+                UpdateScopeTwoParents(deltas, mergeInto.Scope, mergeFrom.Scope, deletedServerPathToId);
             }
             else
             {
                 Debug.Assert(false);
             }
 
-            return (scope, deleted);
+            return (scope, deletedServerPathToId);
         }
 
 
@@ -299,63 +287,57 @@ namespace Insight.GitProvider
             foreach (var change in deltas.ChangesInCommit)
             {
                 // These are the changes done on the merge commit itself (fixing conflicts etc)
-                UpdateScope(scope, change, deleted);
+                ApplyChangesToScope(scope, change, deleted);
             }
         }
 
-        private void UpdateScopeTwoParents(Differences deltas, Scope mergeIntoScope, Scope mergeFromScope, Dictionary<string, string> deleted)
+        private void UpdateScopeTwoParents(Differences deltas, Scope mergeIntoScope, Scope mergeFromScope,
+            Dictionary<string, string> deleted)
         {
-            // TODO combine all deltas
-            // 1. Start with mergeInto scope and apply exclusive parent 1 (merge from -> merge into)
-            // 2. What happens with exlusive to parent 2
-            // 3. apply changes made in this commit. Changes to both parents!
-
-            foreach (var change in deltas.DiffExclusiveToParent1) // !! B hat eine ID
+            foreach (var change in deltas.DiffExclusiveToParent1)
             {
                 // These are the changes done on the feature branch. We merge them into the scope.
-                UpdateScope(mergeIntoScope, mergeFromScope, change, deleted);
+                UpdateScopeFromMergeSource(mergeIntoScope, mergeFromScope, change, deleted);
             }
 
             foreach (var change in deltas.ChangesInCommit)
             {
                 // These are the changes done on the merge commit itself (fixing conflicts etc)
-                UpdateScope(mergeIntoScope, change, deleted);
+                ApplyChangesToScope(mergeIntoScope, change, deleted);
             }
-
-//            Debug.Assert(deltas.DiffExclusiveToParent2.Any() is false);
         }
 
-        private void UpdateScope(Scope mergeIntoScope, Scope mergeFromScope, TreeEntryChanges change, Dictionary<string, string> deleted)
+        private void UpdateScopeFromMergeSource(Scope mergeIntoScope, Scope mergeFromScope, TreeEntryChanges change,
+            IDictionary<string, string> deleted)
         {
-            // Merge changes from feature branch.
+            // Merge changes from feature branch. Apply all Ids we can find without ambiguity.
 
             if (change.Status == ChangeKind.Added)
             {
-                var id = mergeFromScope.GetId(change.Path);
-
+                var idFrom = mergeFromScope.GetIdOrDefault(change.Path);
                 var idInto = mergeIntoScope.GetIdOrDefault(change.Path);
-                if (idInto == null)
+                if (idFrom != null && idInto == null &&
+                    mergeIntoScope.GetServerPathOrDefault(Guid.Parse(idFrom)) == null)
                 {
                     // Take the Id from the (feature) branch where the file was added.
-                    mergeIntoScope.MergeAdd(change.Path, Guid.Parse(id));
-                }
-                else
-                {
-                    // If the file was renamed in the feature branch we may end up with and Add / Delete pair here, too.
-                    if (id != idInto)
-                    {
-                        // Reset tracking this file
-                        mergeIntoScope.Remove(change.Path);
-                        mergeIntoScope.Add(change.Path);
-                        Warnings.Add(new WarningMessage("", "Reset tracking"));
-                    }
-                    else
-                    {
-                        // Fine the file is already known in master
-                    }
 
+                    // File is known in "from scope" but not in "into scope" and the id in "from scope" is not in "into scope"
+                    mergeIntoScope.MergeAdd(change.Path, Guid.Parse(idFrom));
+                    return;
                 }
-                
+
+                if (idFrom != null && idFrom == idInto &&
+                    mergeIntoScope.GetServerPath(Guid.Parse(idInto)) == change.Path)
+                {
+                    // Nothing to update
+                    return;
+                }
+
+                // In all other cases reset tracking
+                mergeIntoScope.Remove(change.Path);
+                mergeIntoScope.Add(change.Path);
+                _stats.ResetRenameTrackingOnFile++;
+                Warnings.Add(new WarningMessage("", "Reset tracking"));
             }
             else if (change.Status == ChangeKind.Modified)
             {
@@ -384,7 +366,6 @@ namespace Insight.GitProvider
                 {
                     mergeIntoScope.Update(change.OldPath, change.Path);
                 }
-                
             }
             else
             {
@@ -392,7 +373,8 @@ namespace Insight.GitProvider
             }
         }
 
-        private static void UpdateScope(Scope scope, TreeEntryChanges change, Dictionary<string, string> deleted)
+        private static void ApplyChangesToScope(Scope scope, TreeEntryChanges change,
+            Dictionary<string, string> deleted)
         {
             // Single parent
 
@@ -420,14 +402,25 @@ namespace Insight.GitProvider
             }
         }
 
-
-        private ChangeItem CreateChangeItemWithoutId(PathMapper mapper, TreeEntryChanges change)
+        private ChangeItem CreateChangeItem(TreeEntryChanges change, Scope scope,
+            Dictionary<string, string> deletedServerPathToId)
         {
             var item = new ChangeItem();
             item.Kind = ToChangeKind(change.Status);
             item.ServerPath = change.Path;
             item.FromServerPath = change.OldPath;
-            item.LocalPath = mapper.MapToLocalFile(change.Path);
+            item.LocalPath = _mapper.MapToLocalFile(change.Path);
+
+
+            // Assign id
+            item.Id = scope.GetIdOrDefault(change.Path);
+            if (item.Id == null)
+            {
+                Debug.Assert(change.Status == ChangeKind.Deleted);
+                item.Id = deletedServerPathToId[change.Path];
+            }
+
+
             return item;
         }
 
@@ -442,7 +435,7 @@ namespace Insight.GitProvider
         }
 
         /// <summary>
-        /// Calculates the difference in working tree to each parent
+        ///     Calculates the difference in working tree to each parent
         /// </summary>
         private Differences CalculateDiffs(Repository repo, Commit commit)
         {
@@ -480,12 +473,11 @@ namespace Insight.GitProvider
         }
 
         /// <summary>
-        /// Getting the graph alone is quite fast. For NUnit repository it is less than 300ms
+        ///     Getting the graph alone is quite fast. For NUnit repository it is less than 300ms
         /// </summary>
-        Graph GetGraph(Repository repo)
+        private Graph GetGraph(Repository repo)
         {
             var graph = new Graph();
-
             var head = repo.Head.Tip;
 
             var processed = new HashSet<string>();
@@ -508,7 +500,6 @@ namespace Insight.GitProvider
             return graph;
         }
 
-
         private void VerifyScope(GraphNode node)
         {
             if (node.Scope == null)
@@ -527,20 +518,6 @@ namespace Insight.GitProvider
             }
         }
 
-
-        private bool HasUnmergedCommits(Graph graph)
-        {
-            // I assume the way I request the git log the only commit without children is the head (of the master)
-            var headHash = GetMasterHead();
-            var unfinished = graph.AllNodes.Where(node => node.Children.Any() is false && node.CommitHash != headHash);
-            return unfinished.Any();
-        }
-
-        private void SaveFullGitLog(string fullLog)
-        {
-            File.WriteAllText(Path.Combine(_cachePath, @"git_full.txt"), fullLog);
-        }
-
         private void SaveHistory(ChangeSetHistory history)
         {
             var json = JsonConvert.SerializeObject(history, Formatting.Indented);
@@ -548,7 +525,7 @@ namespace Insight.GitProvider
         }
 
 
-        KindOfChange ToChangeKind(ChangeKind kind)
+        private KindOfChange ToChangeKind(ChangeKind kind)
         {
             switch (kind)
             {

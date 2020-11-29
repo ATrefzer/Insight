@@ -15,11 +15,11 @@ namespace Insight.GitProvider
     /// <summary>
     /// Provides higher level functions and queries on a git repository.
     /// </summary>
-    public sealed class GitProviderMasterOnly : GitProviderBase, ISourceControlProvider
+    public sealed class GitProviderNoRenames : GitProviderBase, ISourceControlProvider
     {
         public static string GetClass()
         {
-            var type = typeof(GitProviderMasterOnly);
+            var type = typeof(GitProviderNoRenames);
             return type.FullName + "," + type.Assembly.GetName().Name;
         }
 

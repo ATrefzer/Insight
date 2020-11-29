@@ -46,7 +46,7 @@ namespace Insight.Dialogs
                 var git = new ProviderDescription
                                     {
                                             Class = GitProvider.GitProvider.GetClass(),
-                                            Name = "Git (Track renames until file with shared history)"
+                                            Name = "Git (Rename heuristic, slow)"
                                     };
 
                 var gitFileByFile = new ProviderDescription
@@ -56,17 +56,17 @@ namespace Insight.Dialogs
                           };
 
 
-                var gitMasterOnly = new ProviderDescription
+                var gitNoRenames = new ProviderDescription
                           {
-                                  Class = GitProvider.GitProviderMasterOnly.GetClass(),
-                                  Name = "Git (Only commits on master, tracks renames)"
+                                  Class = GitProvider.GitProviderNoRenames.GetClass(),
+                                  Name = "Git (No rename tracking)"
                           };
 
                 return new List<ProviderDescription>
                        {
                                git,
                                gitFileByFile,
-                               gitMasterOnly,
+                               gitNoRenames,
                                svn
                        };
             }

@@ -476,14 +476,19 @@ namespace Insight
             // Contributions may be too much if using svn.
             var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
 
+            _tabs.Clear();
+
             try
             {
                 await _backgroundExecution.ExecuteWithProgressAsync(progress =>
                                                                             _analyzer.UpdateCache(progress, includeContributions), true);
 
+                
                 // Don't delete, only extend if necessary
                 var developers = _analyzer.GetAllKnownDevelopers();
                 _colorSchemeManager.UpdateColorScheme(GetColorFilePath(), developers);
+
+                _tabBuilder.ShowWarnings(_analyzer.Warnings);
             }
             catch (Exception ex)
             {
@@ -491,7 +496,7 @@ namespace Insight
             }
             
 
-            _tabs.Clear();
+        
         }
 
         private void ShowException(Exception exception)

@@ -14,6 +14,7 @@ using Insight.Shared.Extensions;
 using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 using Newtonsoft.Json;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Insight.SvnProvider
 {
@@ -36,6 +37,7 @@ namespace Insight.SvnProvider
         private string _historyFile;
         private MovementTracker _tracking;
         private string _workItemRegex;
+        private string _logFile;
 
         /// <summary>
         ///     Returns the paths relative from the working directory
@@ -61,7 +63,7 @@ namespace Insight.SvnProvider
             var changeSetRegex = new Regex(@"^\s*(?<revision>\d+)\s*(?<developerName>\S+)(?<codeLine>.*)",
                 RegexOptions.Compiled | RegexOptions.Multiline);
 
-            // Work by changesets (line by line)
+            // Work by change sets (line by line)
             var matches = changeSetRegex.Matches(blame);
             foreach (Match match in matches)
             {
@@ -124,23 +126,35 @@ namespace Insight.SvnProvider
             _startDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
-            _historyFile = Path.Combine(cachePath, @"svn_history.log");
+            _logFile = Path.Combine(cachePath, @"svn_log.txt");
+            _historyFile = Path.Combine(cachePath, @"svn_history.json");
             _contributionFile = Path.Combine(cachePath, @"contribution.json");
             _svnCli = new SvnCommandLine(_startDirectory);
         }
 
-        /// <summary>
-        ///     You need to call UpdateCache before.
+       /// <summary>
+        /// You need to call UpdateCache before.
         /// </summary>
         public ChangeSetHistory QueryChangeSetHistory()
+        {
+            VerifyHistoryIsCached();
+            var json = File.ReadAllText(_historyFile, Encoding.UTF8);
+            return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
+        }
+        void VerifyHistoryIsCached()
         {
             if (!File.Exists(_historyFile))
             {
                 var msg = $"Log export file '{_historyFile}' not found. You have to 'Sync' first.";
                 throw new FileNotFoundException(msg);
             }
+        }
 
-            return ReadExportFile();
+
+        private void SaveHistory(ChangeSetHistory history)
+        {
+            var json = JsonConvert.SerializeObject(history, Formatting.Indented);
+            File.WriteAllText(_historyFile, json, Encoding.UTF8);
         }
 
         public List<WarningMessage> Warnings { get; private set; }
@@ -158,6 +172,8 @@ namespace Insight.SvnProvider
             GetHistoryCache();
 
             ExportLogToDisk();
+            var history = ReadExportFile();
+            SaveHistory(history);
 
             if (includeWorkData)
             {
@@ -167,7 +183,7 @@ namespace Insight.SvnProvider
 
         public Dictionary<string, Contribution> QueryContribution()
         {
-            /// The contributions are optional
+            // The contributions are optional
             if (!File.Exists(_contributionFile))
             {
                 return null;
@@ -203,6 +219,11 @@ namespace Insight.SvnProvider
             if (File.Exists(_historyFile))
             {
                 File.Delete(_historyFile);
+            }
+
+            if (File.Exists(_logFile))
+            {
+                File.Delete(_logFile);
             }
         }
 
@@ -268,7 +289,7 @@ namespace Insight.SvnProvider
             var log = _svnCli.Log();
 
             // Override existing file
-            File.WriteAllText(_historyFile, log);
+            File.WriteAllText(_logFile, log);
         }
 
         private string GetBlameCache()
@@ -496,7 +517,7 @@ namespace Insight.SvnProvider
             _tracking = new MovementTracker();
             var result = new List<ChangeSet>();
 
-            using (var reader = XmlReader.Create(_historyFile))
+            using (var reader = XmlReader.Create(_logFile))
             {
                 while (reader.Read())
                     if (reader.IsStartElement("logentry"))

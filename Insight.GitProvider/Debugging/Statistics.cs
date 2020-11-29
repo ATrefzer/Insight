@@ -2,7 +2,6 @@
 {
     public sealed class Statistics
     {
-        public int LookupTreeAfterBothBranchesRenamedFile { get; set; }
-        public int RestartWithNewFileIdBecauseAddedInDifferentBranches { get; set; }
+        public int ResetRenameTrackingOnFile { get; set; }
     }
 }
