@@ -203,6 +203,9 @@ namespace Insight.GitProvider
                 var (scope, deleted) = UpdateScope(node, differences);
                 node.Scope = scope;
 
+                // Slow during debug TODO
+                VerifyScope(node);
+
                 var cs = CreateChangeSet(commit);
                 changeSets.Add(cs);
 
@@ -244,7 +247,7 @@ namespace Insight.GitProvider
                 // Called once for the first commit.
                 //Log("  This is the first node. So I create a new scope.");
                 scope = new Scope();
-                UpdateScope(deltas, scope, deleted);
+                UpdateScopeSingleOrNoParent(deltas, scope, deleted);
             }
             else if (node.Parents.Count == 1)
             {
@@ -266,7 +269,7 @@ namespace Insight.GitProvider
                     //Log("  One parent, one child, so I inherit its original scope");
                 }
 
-                UpdateScope(deltas, scope, deleted);
+                UpdateScopeSingleOrNoParent(deltas, scope, deleted);
             }
             else if (IsMerge(node))
             {
@@ -280,13 +283,7 @@ namespace Insight.GitProvider
 
                 scope = mergeInto.Scope;
 
-                // TODO combine all deltas
-                // 1. Start with mergeInto scope and apply exclusive parent 1 (merge from -> merge into)
-                // 2. What happens with exlusive to parent 2
-                // 3. apply changes made in this commit. Changes to both parents!
-
-
-                UpdateScope(deltas, scope, deleted);
+              UpdateScopeTwoParents(deltas, mergeInto.Scope, mergeFrom.Scope, deleted);
             }
             else
             {
@@ -296,28 +293,130 @@ namespace Insight.GitProvider
             return (scope, deleted);
         }
 
-        private void UpdateScope(Differences deltas, Scope scope, Dictionary<string, string> deleted)
+
+        private void UpdateScopeSingleOrNoParent(Differences deltas, Scope scope, Dictionary<string, string> deleted)
         {
             foreach (var change in deltas.ChangesInCommit)
             {
-                if (change.Status == ChangeKind.Added)
+                // These are the changes done on the merge commit itself (fixing conflicts etc)
+                UpdateScope(scope, change, deleted);
+            }
+        }
+
+        private void UpdateScopeTwoParents(Differences deltas, Scope mergeIntoScope, Scope mergeFromScope, Dictionary<string, string> deleted)
+        {
+            // TODO combine all deltas
+            // 1. Start with mergeInto scope and apply exclusive parent 1 (merge from -> merge into)
+            // 2. What happens with exlusive to parent 2
+            // 3. apply changes made in this commit. Changes to both parents!
+
+            foreach (var change in deltas.DiffExclusiveToParent1) // !! B hat eine ID
+            {
+                // These are the changes done on the feature branch. We merge them into the scope.
+                UpdateScope(mergeIntoScope, mergeFromScope, change, deleted);
+            }
+
+            foreach (var change in deltas.ChangesInCommit)
+            {
+                // These are the changes done on the merge commit itself (fixing conflicts etc)
+                UpdateScope(mergeIntoScope, change, deleted);
+            }
+
+//            Debug.Assert(deltas.DiffExclusiveToParent2.Any() is false);
+        }
+
+        private void UpdateScope(Scope mergeIntoScope, Scope mergeFromScope, TreeEntryChanges change, Dictionary<string, string> deleted)
+        {
+            // Merge changes from feature branch.
+
+            if (change.Status == ChangeKind.Added)
+            {
+                var id = mergeFromScope.GetId(change.Path);
+
+                var idInto = mergeIntoScope.GetIdOrDefault(change.Path);
+                if (idInto == null)
                 {
-                    scope.Add(change.Path);
-                }
-                else if (change.Status == ChangeKind.Modified)
-                {
-                    // Scope is not affected
-                }
-                else if (change.Status == ChangeKind.Deleted)
-                {
-                    var id = scope.GetId(change.Path);
-                    scope.Remove(change.Path);
-                    deleted.Add(change.Path, id);
+                    // Take the Id from the (feature) branch where the file was added.
+                    mergeIntoScope.MergeAdd(change.Path, Guid.Parse(id));
                 }
                 else
                 {
-                    Debug.Fail("Not handled!");
+                    // If the file was renamed in the feature branch we may end up with and Add / Delete pair here, too.
+                    if (id != idInto)
+                    {
+                        // Reset tracking this file
+                        mergeIntoScope.Remove(change.Path);
+                        mergeIntoScope.Add(change.Path);
+                        Warnings.Add(new WarningMessage("", "Reset tracking"));
+                    }
+                    else
+                    {
+                        // Fine the file is already known in master
+                    }
+
                 }
+                
+            }
+            else if (change.Status == ChangeKind.Modified)
+            {
+                // Id must be known in main branch.
+                Debug.Assert(mergeIntoScope.IsKnown(change.Path));
+            }
+            else if (change.Status == ChangeKind.Deleted)
+            {
+                // Neither of the (verified against the tree) parent scopes know this file!?!
+
+                var id = mergeIntoScope.GetIdOrDefault(change.Path);
+                if (id != null)
+                {
+                    mergeIntoScope.Remove(change.Path);
+                    deleted.Add(change.Path, id);
+                }
+            }
+            else if (change.Status == ChangeKind.Renamed)
+            {
+                if (mergeIntoScope.IsKnown(change.OldPath) is false)
+                {
+                    mergeIntoScope.Remove(change.Path);
+                    mergeIntoScope.Add(change.Path);
+                }
+                else
+                {
+                    mergeIntoScope.Update(change.OldPath, change.Path);
+                }
+                
+            }
+            else
+            {
+                Debug.Fail("Not handled!");
+            }
+        }
+
+        private static void UpdateScope(Scope scope, TreeEntryChanges change, Dictionary<string, string> deleted)
+        {
+            // Single parent
+
+            if (change.Status == ChangeKind.Added)
+            {
+                scope.Add(change.Path);
+            }
+            else if (change.Status == ChangeKind.Modified)
+            {
+                // Scope is not affected
+            }
+            else if (change.Status == ChangeKind.Deleted)
+            {
+                var id = scope.GetId(change.Path);
+                scope.Remove(change.Path);
+                deleted.Add(change.Path, id);
+            }
+            else if (change.Status == ChangeKind.Renamed)
+            {
+                scope.Update(change.OldPath, change.Path);
+            }
+            else
+            {
+                Debug.Fail("Not handled!");
             }
         }
 

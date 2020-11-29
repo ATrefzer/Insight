@@ -73,15 +73,15 @@ namespace Tests
             Commands.Stage(_repo, fileName);
         }
 
-        public void Commit(string shortMessage = "")
+        public Commit Commit(string shortMessage = "")
         {
-            _repo.Commit(shortMessage, GetSignature(), GetSignature());
+            return _repo.Commit(shortMessage, GetSignature(), GetSignature());
         }
 
         public void Merge(string branchName)
         {
             var branchFrom = _repo.Branches[branchName];
-            _repo.Merge(branchFrom, GetSignature());
+            _repo.Merge(branchFrom, GetSignature(), new MergeOptions{FastForwardStrategy = FastForwardStrategy.NoFastForward});
         }
 
 
@@ -128,6 +128,13 @@ namespace Tests
         static string GetRepoRoot(string repoName)
         {
             return Path.Combine(EnvironmentDirectory, repoName);
+        }
+
+        public void Rename(string source, string destination)
+        {
+            File.Move(Path.Combine(_repoRoot, source), Path.Combine(_repoRoot, destination));
+            Commands.Stage(_repo, source);
+            Commands.Stage(_repo, destination);
         }
     }
 }

@@ -8,17 +8,18 @@ In Progress
 In TODO
 ---------------------------------------
 
-- Bugs in ntg
+- Bug in ntg
+- Bug changing minimum resets zoom level
+- Color editor
 - Runtime error 12000 commits later.
 - Profile
 - Investigate broken svn history. See CalculateChangeCouplings
 - Anonymize developer
-- Color editor
 - Classifier for names!
 - Settings: Filters are applied to the summary. All windows should be cleared.
 
 
-- Commits pro line statt absolute 
+- Commits per line instead of absolute 
 
 - Overlay texts
 

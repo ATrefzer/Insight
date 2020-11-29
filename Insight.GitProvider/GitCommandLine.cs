@@ -109,6 +109,20 @@ namespace Insight.GitProvider
             return result.ExitCode != 0;
         }
 
+
+        public string LogWithoutRenames()
+        {
+            // git log --all --numstat --date=short --pretty=format:'--%h--%ad--%aN' --no-renames 
+            var program = "git";
+
+            var args = $"log --pretty=format:{LogFormat} --date=iso-strict-local --name-status --no-renames";
+
+            //-c diff.renameLimit=99999 log --pretty=format:{START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER --date=iso-strict --name-status --simplify-merges --full-history
+            
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut;
+        }
+
         public string Log()
         {
             // --num_stat Would shows added and removed lines
@@ -122,10 +136,6 @@ namespace Insight.GitProvider
             //
             var args = $"-c diff.renameLimit=99999 log --pretty=format:{LogFormat} --date=iso-strict-local --name-status --simplify-merges --full-history";
 
-            //-c diff.renameLimit=99999 log --pretty=format:{START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER --date=iso-strict --name-status --simplify-merges --full-history
-            
-            
-            // Alternatives: iso-strict, iso
             var result = ExecuteCommandLine(program, args);
             return result.StdOut;
         }

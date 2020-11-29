@@ -87,6 +87,7 @@
     <Compile Include="HierarchicalDataBuilder.cs" />
     <Compile Include="HierarchicalTestExamples.cs" />
     <Compile Include="GitProviderTests.cs" />
+    <Compile Include="LibGit2Tests.cs" />
     <Compile Include="MovementTrackerTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="RangeTests.cs" />
