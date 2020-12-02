@@ -159,7 +159,7 @@ namespace Insight.SvnProvider
 
         public List<WarningMessage> Warnings { get; private set; }
 
-        public void UpdateCache(IProgress progress, bool includeWorkData)
+        public void UpdateCache(IProgress progress, bool includeWorkData, IFilter fileTypeFilter)
         {
             // Including work
             DeleteAllCaches();
@@ -177,7 +177,7 @@ namespace Insight.SvnProvider
 
             if (includeWorkData)
             {
-                UpdateContribution(progress);
+                UpdateContribution(progress, fileTypeFilter);
             }
         }
 
@@ -227,10 +227,12 @@ namespace Insight.SvnProvider
             }
         }
 
-        private void UpdateContribution(IProgress progress)
+        private void UpdateContribution(IProgress progress, IFilter fileTypeFilter)
         {
-            var localFiles = GetAllTrackedLocalFiles();
-            var contribution = CalculateContributionsParallel(progress, localFiles.ToList());
+            var allLocalFiles = GetAllTrackedLocalFiles();
+            var localFiles = allLocalFiles.Where(fileTypeFilter.IsAccepted).ToList();
+
+            var contribution = CalculateContributionsParallel(progress, localFiles);
             var json = JsonConvert.SerializeObject(contribution);
             File.WriteAllText(_contributionFile, json, Encoding.UTF8);
         }

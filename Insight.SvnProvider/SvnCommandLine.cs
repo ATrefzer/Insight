@@ -20,8 +20,9 @@ namespace Insight.SvnProvider
 
         public string BlameFile(string localFile)
         {
+            // Added --force because a text file was recognized as binary.
             var program = "svn";
-            var args = $"blame \"{localFile}\"";
+            var args = $"blame \"{localFile}\" --force";
             return ExecuteCommandLine(program, args);
         }
 

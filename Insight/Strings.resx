@@ -183,7 +183,7 @@
     <value>Cancel</value>
   </data>
   <data name="Filter" xml:space="preserve">
-    <value>Filter</value>
+    <value>Display Filters</value>
   </data>
   <data name="Ok" xml:space="preserve">
     <value>Ok</value>
@@ -300,19 +300,13 @@ Do you want to proceed?</value>
   <data name="SourceControlDirectoyNotFound" xml:space="preserve">
     <value>The source control directory does not exist.</value>
   </data>
-
   <data name="Override" xml:space="preserve">
     <value>Override</value>
   </data>
-
   <data name="Insight" xml:space="preserve">
     <value>Insight</value>
   </data>
-
-  
-
-    <data name="OverrideExistingProject" xml:space="preserve">
+  <data name="OverrideExistingProject" xml:space="preserve">
     <value>The directory '{0}' exists. Do you want to override it?</value>
   </data>
-  
 </root>

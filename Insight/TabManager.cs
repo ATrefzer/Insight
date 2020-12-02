@@ -17,11 +17,11 @@ namespace Insight
     /// <summary>
     /// Shows the various analysis results as tabs inside the main window.
     /// </summary>
-    internal sealed class TabBuilder
+    internal sealed class TabManager
     {
         private readonly MainViewModel _mainViewModel;
 
-        public TabBuilder(MainViewModel mainViewModel)
+        public TabManager(MainViewModel mainViewModel)
         {
             _mainViewModel = mainViewModel;
         }

@@ -146,16 +146,17 @@ namespace Insight.GitProvider
         }
 
 
-        protected void UpdateContribution(IProgress progress)
+        protected void UpdateContribution(IProgress progress, IFilter fileTypeFilter)
         {
             if (File.Exists(_contributionFile))
             {
                 File.Delete(_contributionFile);
             }
 
-            var localFiles = GetAllTrackedLocalFiles();
+            var allLocalFiles = GetAllTrackedLocalFiles();
 
-            var contribution = CalculateContributionsParallel(progress, localFiles.ToList());
+            var localFiles = allLocalFiles.Where(fileTypeFilter.IsAccepted).ToList();
+            var contribution = CalculateContributionsParallel(progress, localFiles);
 
             var json = JsonConvert.SerializeObject(contribution);
 

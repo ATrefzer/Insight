@@ -206,7 +206,7 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filter.
+        ///   Looks up a localized string similar to Display Filters.
         /// </summary>
         public static string Filter {
             get {

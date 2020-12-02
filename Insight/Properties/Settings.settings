@@ -5,9 +5,6 @@
     <Setting Name="Provider" Type="System.String" Scope="User">
       <Value Profile="(Default)">Insight.SvnProvider.SvnProvider,Insight.SvnProvider</Value>
     </Setting>
-    <Setting Name="ExtensionsToInclude" Type="System.String" Scope="User">
-      <Value Profile="(Default)">.cs;.xaml</Value>
-    </Setting>
     <Setting Name="PathsToExclude" Type="System.String" Scope="User">
       <Value Profile="(Default)">\Test\,UnitTest</Value>
     </Setting>
@@ -37,6 +34,9 @@
     </Setting>
     <Setting Name="LastKnownProject" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SupportedFileTypesForAnalysis" Type="System.String" Scope="User">
+      <Value Profile="(Default)">.cs;.xaml</Value>
     </Setting>
   </Settings>
 </SettingsFile>

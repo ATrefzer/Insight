@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
@@ -19,7 +20,7 @@ namespace Insight.Dialogs
         {
             _dialogs = dialogs;
             _mode = mode;
-            UpdatAll();
+            UpdateAll();
         }
 
         public enum Mode
@@ -31,6 +32,7 @@ namespace Insight.Dialogs
         public bool CanUpdate => _mode == Mode.Create;
 
         public ICommand OkCommand => new DelegateCommand<Window>(OkClick);
+
 
         public List<ProviderDescription> AvailableProviders
         {
@@ -114,7 +116,6 @@ namespace Insight.Dialogs
             set => SetValue(value);
         }
 
-
         public string Provider
         {
             get => GetValue<string>();
@@ -162,9 +163,26 @@ namespace Insight.Dialogs
                     }
 
                     break;
+
+                case nameof(ExtensionsToInclude):
+                    if (!IsExtensionsToExcludeValid())
+                    {
+                        return new[] { "invalid_characters" };
+                    }
+
+                    break;
             }
 
             return null;
+        }
+
+        private bool IsExtensionsToExcludeValid()
+        {
+            var userInput = Model.NormalizeFileExtensions(ExtensionsToInclude);
+            var supported = Model.GetSupportedFileTypesForAnalysis();
+
+            var unknown = userInput.Except(supported);
+            return unknown.Any() is false;
         }
 
         private void Cancel(Window wnd)
@@ -243,7 +261,7 @@ namespace Insight.Dialogs
             }
         }
 
-        private void UpdatAll()
+        private void UpdateAll()
         {
             // Reset to the state of the model element.
             ClearModifications();
@@ -251,6 +269,7 @@ namespace Insight.Dialogs
             ValidateNow(nameof(ProjectName));
             ValidateNow(nameof(ProjectParentDirectory));
             ValidateNow(nameof(SourceControlDirectory));
+            ValidateNow(nameof(ExtensionsToInclude));
         }
     }
 }

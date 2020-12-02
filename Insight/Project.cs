@@ -19,7 +19,8 @@ namespace Insight
         bool IsValid();
         void Load(string path);
         ISourceControlProvider CreateProvider();
-        IEnumerable<string> GetNormalizedFileExtensions();
+        
+        string[] GetSupportedFileTypesForAnalysis();
     }
 
 
@@ -129,10 +130,15 @@ namespace Insight
         /// <summary>
         /// For example Xml -> .xml
         /// </summary>
-        public IEnumerable<string> GetNormalizedFileExtensions()
+        public string[] GetSupportedFileTypesForAnalysis()
+        {
+            return NormalizeFileExtensions(Settings.Default.SupportedFileTypesForAnalysis);
+        }
+
+        public string[] NormalizeFileExtensions(string commaSeparatedExtensions)
         {
             var all = new List<string>();
-            var parts = SplitTrimAndToLower(ExtensionsToInclude);
+            var parts = SplitTrimAndToLower(commaSeparatedExtensions);
 
             foreach (var extension in parts)
             {
@@ -148,7 +154,7 @@ namespace Insight
                 all.Add("." + normalized);
             }
 
-            return all.Distinct();
+            return all.Distinct().ToArray();
         }
 
         public bool IsCacheValid()
@@ -163,7 +169,16 @@ namespace Insight
 
         public bool IsValid()
         {
-            return IsSourceControlDirectoryValid() && IsCacheValid() && IsProjectDirectoryValid();
+            return IsSourceControlDirectoryValid() && IsCacheValid() && IsProjectDirectoryValid() && IsFileExtensionsValid();
+        }
+
+        private bool IsFileExtensionsValid()
+        {
+            var userInput = NormalizeFileExtensions(ExtensionsToInclude);
+            var supported = GetSupportedFileTypesForAnalysis();
+
+            var unknown = userInput.Except(supported);
+            return unknown.Any() is false;
         }
 
         public string GetProjectFile()
@@ -255,7 +270,7 @@ namespace Insight
             ProjectParentDirectory = ".\\Project-Parent-Directory";
             SourceControlDirectory = ".\\Source-Control-Directory";
             ProjectName = "Project-Name";
-            ExtensionsToInclude = Settings.Default.ExtensionsToInclude.Trim();
+            ExtensionsToInclude = Settings.Default.SupportedFileTypesForAnalysis.Trim();
             PathsToExclude = Settings.Default.PathsToExclude.Trim();
             PathsToInclude = Settings.Default.PathsToInclude.Trim();
             Provider = Settings.Default.Provider.Trim();
@@ -288,7 +303,7 @@ namespace Insight
             var filters = new List<IFilter>();
             if (!string.IsNullOrEmpty(ExtensionsToInclude))
             {
-                var extensions = GetNormalizedFileExtensions();
+                var extensions = NormalizeFileExtensions(ExtensionsToInclude);
                 filters.Add(new ExtensionIncludeFilter(extensions.ToArray()));
             }
 

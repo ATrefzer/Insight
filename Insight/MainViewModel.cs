@@ -27,7 +27,7 @@ namespace Insight
         private Project _project;
         private readonly ColorSchemeManager _colorSchemeManager;
 
-        private readonly TabBuilder _tabBuilder;
+        private readonly TabManager _tabManager;
         private readonly ViewController _viewController;
 
         private int _selectedIndex = -1;
@@ -37,7 +37,7 @@ namespace Insight
                              Analyzer analyzer,
                              Project lastKnownProject, ColorSchemeManager colorSchemeManager)
         {
-            _tabBuilder = new TabBuilder(this);
+            _tabManager = new TabManager(this);
             _viewController = viewController;
             _analyzer = analyzer;
             _dialogs = dialogs;
@@ -167,7 +167,7 @@ namespace Insight
             {
                 var edges = args.Select(coupling => CreateEdgeData(coupling));
 
-                _tabBuilder.ShowChangeCoupling(edges.ToList());
+                _tabManager.ShowChangeCoupling(edges.ToList());
             }
         }
 
@@ -214,7 +214,7 @@ namespace Insight
         private async void ChangeCouplingClick()
         {
             var couplings = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeChangeCoupling);
-            _tabBuilder.ShowChangeCoupling(couplings);
+            _tabManager.ShowChangeCoupling(couplings);
         }
 
         private async void CodeAgeClick()
@@ -223,15 +223,14 @@ namespace Insight
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands());
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands());
-            _tabBuilder.ShowWarnings(_analyzer.Warnings);
+            _tabManager.ShowHierarchicalDataAsCirclePackaging("Code Age", context, GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsTreeMap("Code Age", context.Clone(), GetDefaultCommands());
         }
 
         private async void CommentsClick()
         {
             var comments = await _backgroundExecution.ExecuteAsync(_analyzer.ExportComments);
-            _tabBuilder.ShowText(comments, "Comments");
+            _tabManager.ShowText(comments, "Comments");
         }
 
         private EdgeData CreateEdgeData(Coupling coupling)
@@ -250,8 +249,8 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands());
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsCirclePackaging("Fragmentation", context, GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsTreeMap("Fragmentation", context.Clone(), GetDefaultCommands());
 
             //_tabBuilder.ShowImage(new BitmapImage(new Uri(path)));
         }
@@ -301,9 +300,8 @@ namespace Insight
 
             var colorScheme = context.ColorScheme;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands());
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands());
-            _tabBuilder.ShowWarnings(_analyzer.Warnings);
+            _tabManager.ShowHierarchicalDataAsCirclePackaging("Hotspots", context, GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsTreeMap("Hotspots", context.Clone(), GetDefaultCommands());
         }
 
         private async void KnowledgeClick()
@@ -313,8 +311,8 @@ namespace Insight
             if (context == null) return;
 
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands());
-            _tabBuilder.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsCirclePackaging("Knowledge", context, GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsTreeMap("Knowledge", context.Clone(), GetDefaultCommands());
         }
 
         private string GetColorFilePath()
@@ -332,8 +330,8 @@ namespace Insight
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper, colorScheme));
             if (context == null) return;
 
-            _tabBuilder.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands());
-            _tabBuilder.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsCirclePackaging($"Loss {forDeveloper}", context, GetDefaultCommands());
+            _tabManager.ShowHierarchicalDataAsTreeMap($"Loss {forDeveloper}", context.Clone(), GetDefaultCommands());
         }
 
         private void PredictHotspotsClick()
@@ -347,7 +345,7 @@ namespace Insight
             {
                 var predictor = new HotspotPredictor(oldFile, newFile);
                 var deltas = predictor.GetHotspotDelta().OrderByDescending(x => x.Delta);
-                _tabBuilder.ShowText(deltas, "Future Hotspots");
+                _tabManager.ShowText(deltas, "Future Hotspots");
             }
             catch (Exception ex)
             {
@@ -413,8 +411,8 @@ namespace Insight
                     }
 
                     var context = new HierarchicalDataContext(data, colorScheme);
-                    _tabBuilder.ShowHierarchicalDataAsCirclePackaging("Loaded", context, null);
-                    _tabBuilder.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), null);
+                    _tabManager.ShowHierarchicalDataAsCirclePackaging("Loaded", context, null);
+                    _tabManager.ShowHierarchicalDataAsTreeMap("Loaded", context.Clone(), null);
                 }
             }
             catch (Exception ex)
@@ -461,7 +459,7 @@ namespace Insight
         {
             var summary = await _backgroundExecution.ExecuteAsync(_analyzer.ExportSummary);
 
-            _tabBuilder.ShowText(summary, "Summary");
+            _tabManager.ShowText(summary, "Summary");
         }
 
         private async void UpdateClick()
@@ -488,7 +486,7 @@ namespace Insight
                 var developers = _analyzer.GetAllKnownDevelopers();
                 _colorSchemeManager.UpdateColorScheme(GetColorFilePath(), developers);
 
-                _tabBuilder.ShowWarnings(_analyzer.Warnings);
+                _tabManager.ShowWarnings(_analyzer.Warnings);
             }
             catch (Exception ex)
             {

@@ -114,7 +114,7 @@
     <Compile Include="Dialogs\SelectDeveloperView.xaml.cs">
       <DependentUpon>SelectDeveloperView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TabBuilder.cs" />
+    <Compile Include="TabManager.cs" />
     <Compile Include="ViewController.cs" />
     <Compile Include="ViewModels\ChordViewModel.cs" />
     <Compile Include="ViewModels\CirclePackingViewModel.cs" />

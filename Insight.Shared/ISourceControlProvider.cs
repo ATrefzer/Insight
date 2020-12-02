@@ -40,7 +40,7 @@ namespace Insight.Shared
         /// Read the history from the source control provider and store it offline in the file system.
         /// Work data is can be very slow to calculate, especially for svn. Therefore it is optional.
         /// </summary>
-        void UpdateCache(IProgress progress, bool includeWorkData);
+        void UpdateCache(IProgress progress, bool includeWorkData, IFilter filtTypeFilter);
 
         /// <summary>
         /// Returns the cached history. You have to call UpdateCache first.

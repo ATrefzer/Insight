@@ -81,10 +81,10 @@ namespace Insight.Metrics
         }
 
 
-        private IEnumerable<string> MapFileExtensionToLanguage(IReadOnlyCollection<string> normalizedFileExtensions)
+        private IEnumerable<string> MapFileExtensionToLanguage(IReadOnlyCollection<string> fileExtensionsWithDot)
         {
             var unknownExtensions =
-                normalizedFileExtensions.Where(ext => !_extensionToLanguage.ContainsKey(ext)).ToList();
+                fileExtensionsWithDot.Where(ext => !_extensionToLanguage.ContainsKey(ext)).ToList();
             if (unknownExtensions.Any())
             {
                 var details = string.Join(",", unknownExtensions);
@@ -93,7 +93,7 @@ namespace Insight.Metrics
             }
 
             // Call ToArray such that the KeyNotFoundException is thrown now!
-            return normalizedFileExtensions.Select(x => _extensionToLanguage[x]).ToArray();
+            return fileExtensionsWithDot.Select(x => _extensionToLanguage[x]).ToArray();
         }
 
 

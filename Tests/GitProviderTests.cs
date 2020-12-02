@@ -355,7 +355,7 @@ namespace Tests
             {
                 var provider = new GitProvider();
                 provider.Initialize(RepoBuilder.GetRepoPath(repoName), cache.ToString(), null);
-                provider.UpdateCache(null, false);
+                provider.UpdateCache(null, false, null);
                 return provider.QueryChangeSetHistory();
             }
         }

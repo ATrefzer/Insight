@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Insight"
         mc:Ignorable="d"
         Title="{x:Static local:Strings.ProjectViewTitle}"
-        Height="385"
+        Height="432"
         Width="440"
         Name="_settingsView">
 

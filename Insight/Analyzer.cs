@@ -261,24 +261,27 @@ namespace Insight
             return gridData;
         }
 
+        
         public void UpdateCache(Progress progress, bool includeContributions)
         {
             Clear();
-
+            
             progress.Message("Updating source control history.");
+
+            var supported = Project.GetSupportedFileTypesForAnalysis();
+            var filter = new ExtensionIncludeFilter(supported);
 
             // Note: You should have the latest code locally such that history and metrics match!
             var provider = Project.CreateProvider();
-            provider.UpdateCache(progress, includeContributions);
+            provider.UpdateCache(progress, includeContributions, filter);
 
             progress.Message("Updating code metrics.");
 
             // Update code metrics
-            _metricsProvider.UpdateLinesOfCodeCache(Project.SourceControlDirectory, Project.Cache, Project.GetNormalizedFileExtensions());
+            _metricsProvider.UpdateLinesOfCodeCache(Project.SourceControlDirectory, Project.Cache, Project.GetSupportedFileTypesForAnalysis());
 
             Warnings = provider.Warnings;
         }
-
 
         internal void Clear()
         {

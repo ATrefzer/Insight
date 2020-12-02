@@ -15,7 +15,7 @@ namespace Tests
             var proj = new Project();
             proj.ExtensionsToInclude = "Xml, .cs; CS   ; JAVA ";
 
-            var normalized = proj.GetNormalizedFileExtensions().ToList();
+            var normalized = proj.NormalizeFileExtensions(proj.ExtensionsToInclude).ToList();
 
             // Distinct values.
             // , or ; are accepted as separator.
@@ -33,12 +33,12 @@ namespace Tests
             proj.ExtensionsToInclude = "";
 
             // empty
-            var normalized = proj.GetNormalizedFileExtensions().ToList();
+            var normalized = proj.NormalizeFileExtensions(proj.ExtensionsToInclude).ToList();
             Assert.AreEqual(0, normalized.Count);
 
             // null
             proj.ExtensionsToInclude = null;
-            normalized = proj.GetNormalizedFileExtensions().ToList();
+            normalized = proj.NormalizeFileExtensions(proj.ExtensionsToInclude).ToList();
             Assert.AreEqual(0, normalized.Count);
         }
     }

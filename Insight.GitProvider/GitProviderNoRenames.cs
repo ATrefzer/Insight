@@ -35,7 +35,7 @@ namespace Insight.GitProvider
             }
         }
 
-        public void UpdateCache(IProgress progress, bool includeWorkData)
+        public void UpdateCache(IProgress progress, bool includeWorkData, IFilter fileTypeFilter)
         {
             DeleteAllCaches();
 
@@ -46,7 +46,7 @@ namespace Insight.GitProvider
             if (includeWorkData)
             {
                 // Optional
-                UpdateContribution(progress);
+                UpdateContribution(progress, fileTypeFilter);
             }
         }
 

@@ -11,12 +11,9 @@ In TODO
 - Bug in ntg
 - Bug changing minimum resets zoom level
 - Color editor
-- Runtime error 12000 commits later.
 - Profile
-- Investigate broken svn history. See CalculateChangeCouplings
 - Anonymize developer
-- Classifier for names!
-- Settings: Filters are applied to the summary. All windows should be cleared.
+- Teamclassifier for names!
 
 
 - Commits per line instead of absolute 
