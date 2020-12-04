@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Insight.Dialogs
+﻿namespace Insight.Dialogs
 {
-    class ColorEditorViewModel
+    sealed class ColorEditorViewModel
     {
+        private readonly IColorSchemeManager _colorSchemeManager;
+
+        public ColorEditorViewModel(IColorSchemeManager colorSchemeManager)
+        {
+            _colorSchemeManager = colorSchemeManager;
+        }
     }
 }

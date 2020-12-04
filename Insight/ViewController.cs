@@ -67,11 +67,10 @@ namespace Insight
             viewer.ShowDialog();
         }
 
-        public void ShowColorEditorViewViewer()
+        public void ShowColorEditorViewViewer(IColorSchemeManager colorSchemeManager)
         {
-            // Show image
             var view = new ColorEditorView();
-            var viewModel = new ColorEditorViewModel();
+            var viewModel = new ColorEditorViewModel(colorSchemeManager);
             view.Owner = _mainWindow;
             view.DataContext = viewModel;
             view.WindowStartupLocation = WindowStartupLocation.CenterOwner;

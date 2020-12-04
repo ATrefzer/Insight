@@ -17,19 +17,25 @@ namespace Insight
     /// is never deleted, only new colors are appended. This keeps the colors the same. Plus it gives the user the option
     /// to edit this file.
     /// </summary>
-    public class ColorSchemeManager
+    public sealed class ColorSchemeManager : IColorSchemeManager
     {
-        public string DefaultFileName = "colors.json";
+        private readonly string _pathToColorFile;
+        public static string DefaultFileName = "colors.json";
+
+        public ColorSchemeManager(string pathToColorFile)
+        {
+            _pathToColorFile = pathToColorFile;
+        }
 
         /// <summary>
         /// Once the color file is created it is not deleted because the user can edit it.
         /// Assume the names are ordered such that the most relevant entries come first.
         /// </summary>
-        public bool UpdateColorScheme(string pathToColorFile, List<string> orderedNames)
+        public bool UpdateColorScheme(List<string> orderedNames)
         {
             var updated = false;
 
-            var scheme = ReadColorSchemeFile(pathToColorFile);
+            var scheme = ReadColorSchemeFile();
             if (scheme == null)
             {
                 // Create a new scheme
@@ -56,27 +62,27 @@ namespace Insight
             if (updated)
             {
                 var json = new JsonFile<ColorScheme>();
-                json.Write(pathToColorFile, scheme);
+                json.Write(_pathToColorFile, scheme);
             }
 
             return updated;
         }
 
 
-        internal IColorScheme GetColorScheme(string pathToColorFile)
+        public IColorScheme GetColorScheme()
         {
-            return ReadColorSchemeFile(pathToColorFile);
+            return ReadColorSchemeFile();
         }
 
-        private ColorScheme ReadColorSchemeFile(string pathToColorFile)
+        private ColorScheme ReadColorSchemeFile()
         {
-            if (!File.Exists(pathToColorFile))
+            if (!File.Exists(_pathToColorFile))
             {
                 return null;
             }
 
             var json = new JsonFile<ColorScheme>();
-            var scheme = json.Read(pathToColorFile);
+            var scheme = json.Read(_pathToColorFile);
 
             return scheme;
         }

@@ -109,6 +109,7 @@
     <Compile Include="Dialogs\ColorEditorViewModel.cs" />
     <Compile Include="Dto\DataGridFriendlyArtifactBasic.cs" />
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
+    <Compile Include="IColorSchemeManager.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="ProgressService.cs" />
     <Compile Include="Dialogs\SelectDeveloperView.xaml.cs">
@@ -340,6 +341,9 @@
   <ItemGroup>
     <Resource Include="Resources\import_32.png" />
     <Resource Include="Resources\import_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\display_16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

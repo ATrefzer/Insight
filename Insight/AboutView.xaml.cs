@@ -21,5 +21,14 @@ namespace Insight
                 _browser.NavigateToStream(info.Stream);
             }
         }
+
+        private void OnNavigating(object sender, System.Windows.Navigation.NavigatingCancelEventArgs e)
+        {
+            if (e.Uri != null)
+            {
+                // Anything not from local resources.
+                e.Cancel = true;
+            }
+        }
     }
 }

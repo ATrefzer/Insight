@@ -46,10 +46,7 @@ namespace Insight
             {
                 project = new Project();
                 project.Load(lastKnownProject);
-                analyzer.Project = project;
             }
-
-            var colorSchemeManager = new ColorSchemeManager();
 
             var mainWindow = new MainWindow();
             var viewController = new ViewController(mainWindow);
@@ -58,9 +55,11 @@ namespace Insight
             var backgroundExecution = new BackgroundExecution(progressService, dialogs);
 
 
-            var mainViewModel = new MainViewModel(viewController, dialogs, backgroundExecution, analyzer, project, colorSchemeManager);
+            var mainViewModel = new MainViewModel(viewController, dialogs, backgroundExecution, analyzer, project);
             mainWindow.DataContext = mainViewModel;
             mainWindow.Show();
         }
+
+     
     }
 }

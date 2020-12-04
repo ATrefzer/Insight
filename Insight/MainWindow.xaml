@@ -128,12 +128,32 @@
                     </StackPanel>
                 </RibbonGroup>
 
-                <RibbonGroup Header="{x:Static local:Strings.Colors}">
+                <RibbonGroup Header="{x:Static local:Strings.Colors}"
+                             IsEnabled="{Binding IsProjectValid}">
                     <StackPanel>
                         <RibbonButton Label="{x:Static local:Strings.EditColors}"
                                       SmallImageSource="Resources/edit_colors_16.png"
                                       Margin="5,0,0,0"
                                       Command="{Binding EditColorsCommand}" />
+
+                        <RibbonToggleButton Margin="5,0,0,0" Command="{Binding ToggleDisplayModeCommand}" 
+                                            SmallImageSource="Resources/display_16.png">
+                            <RibbonToggleButton.Style>
+                                <Style TargetType="RibbonToggleButton">
+                                    <Setter Property="Label" Value="" />
+                                    <Style.Triggers>
+                                  
+                                    <DataTrigger Binding="{Binding DisplayMode}" Value="{x:Static local:PreferredDisplayMode.TreeMap}" >
+                                        <Setter Property="Label" Value="{x:Static local:Strings.PreferTreeMap}" />
+                                    </DataTrigger>
+                                        <DataTrigger Binding="{Binding DisplayMode}" Value="{x:Static local:PreferredDisplayMode.CirclePackaging}" >
+                                            <Setter Property="Label" Value="{x:Static local:Strings.PreferCircle}" />
+                                        </DataTrigger>
+                                </Style.Triggers>
+                                </Style>
+                            </RibbonToggleButton.Style>
+                          
+                        </RibbonToggleButton>
 
                     </StackPanel>
                 </RibbonGroup>

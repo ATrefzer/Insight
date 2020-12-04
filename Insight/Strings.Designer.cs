@@ -397,6 +397,24 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Circle Packaging.
+        /// </summary>
+        public static string PreferCircle {
+            get {
+                return ResourceManager.GetString("PreferCircle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tree Map.
+        /// </summary>
+        public static string PreferTreeMap {
+            get {
+                return ResourceManager.GetString("PreferTreeMap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project.
         /// </summary>
         public static string Project {

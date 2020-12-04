@@ -81,8 +81,9 @@ Before you click Sync your working copy should be up to date.
 ## Icons
 
 Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
-
 Icons made by <a href="https://www.flaticon.com/authors/gregor-cresnar" title="Gregor Cresnar">Gregor Cresnar</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+Icons made by <a href="https://www.flaticon.com/authors/catalin-fertu" title="Catalin Fertu">Catalin Fertu</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+Icons made by <a href="https://www.flaticon.com/de/autoren/darius-dan" title="Darius Dan">Darius Dan</a> from <a href="https://www.flaticon.com/de/" title="Flaticon"> www.flaticon.com</a>
 
 ## Libraries
 
@@ -95,3 +96,6 @@ You have to download it from <a href="https://github.com/AlDanial/cloc/releases/
 See also <a href="https://www.codeproject.com/Articles/1210225/Fast-and-improved-D-Convex-Hull-algorithm-and-its">Fast and improved 2D Convex Hull algorithm and its implementation</a>
 
 <a href="http://www.oxyplot.org/">OxyPlot</a>
+
+<a href="https://github.com/libgit2/libgit2sharp">LibGit2Sharp</a>
+

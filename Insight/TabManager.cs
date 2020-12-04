@@ -50,7 +50,7 @@ namespace Insight
             ShowTab(descr, true);
         }
 
-        public void ShowHierarchicalDataAsCirclePackaging(string title, HierarchicalDataContext context, HierarchicalDataCommands commands)
+        public void ShowHierarchicalDataAsCirclePackaging(string title, HierarchicalDataContext context, HierarchicalDataCommands commands, bool toForeground)
         {
             // Note: The same color scheme is used for both treemap and circle packing.
             if (context == null)
@@ -61,11 +61,11 @@ namespace Insight
             var cp = new CirclePackingViewModel();
             cp.Commands = commands;
             cp.Data = context;
-            cp.Title = title + " (Circle)";  
-            ShowTab(cp, false);
+            cp.Title = title;  
+            ShowTab(cp, toForeground);
         }
 
-        public void ShowHierarchicalDataAsTreeMap(string title, HierarchicalDataContext context, HierarchicalDataCommands commands)
+        public void ShowHierarchicalDataAsTreeMap(string title, HierarchicalDataContext context, HierarchicalDataCommands commands, bool toForeground)
         {
             // Note: The same color scheme is used for both treemap and circle packing.
             if (context == null)
@@ -76,8 +76,8 @@ namespace Insight
             var tm = new TreeMapViewModel();
             tm.Commands = commands;
             tm.Data = context;
-            tm.Title = title + " (Treemap)";
-            ShowTab(tm, true);
+            tm.Title = title;
+            ShowTab(tm, toForeground);
         }
 
 

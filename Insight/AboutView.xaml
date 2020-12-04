@@ -9,5 +9,5 @@
         Height="500"
         Width="650"
         Loaded="AboutView_OnLoaded">
-    <WebBrowser Name="_browser"/>
+    <WebBrowser Name="_browser" Navigating="OnNavigating" />
 </Window>
