@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 
+using Visualization.Controls;
 using Visualization.Controls.Interfaces;
 
 namespace Insight
@@ -12,6 +13,12 @@ namespace Insight
         /// </summary>
         bool UpdateColorScheme(List<string> orderedNames);
 
-        IColorScheme GetColorScheme();
+        /// <summary>
+        /// Updates color assignments done by the user.
+        /// </summary>
+        void UpdateAndSave(IColorScheme colorScheme, List<ColorMapping> updates);
+
+        IColorScheme LoadColorScheme();
+        
     }
 }

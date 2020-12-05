@@ -2,8 +2,8 @@
 In Progress
 ---------------------------------------
 
-- Better GIT parser
-- GIT only supports master branch (Preconditions)
+- Color editor
+	- Set free color / assign color
 
 ---------------------------------------
 In TODO
@@ -11,11 +11,13 @@ In TODO
 
 - Bug in ntg
 - Bug changing minimum resets zoom level
-- Color editor
-- Profile
-- Anonymize developer
-- Teamclassifier for names!
 
+- Teamclassifier / Aliases for names!
+  Allow several mapping files. Each has an associated color scheme. (Can be used as anonymized)
+  The color editor would edit the colors for the selectd mapping!
+- Anonymize developer
+
+- Profile
 
 - Commits per line instead of absolute 
 
@@ -31,3 +33,9 @@ In TODO
 - Chord: Binding errors
 
 - Svn: Refactor parser
+- GIT only supports master branch (Preconditions)
+
+---------------------------------------
+Done
+---------------------------------------
+- Better GIT parser

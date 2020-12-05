@@ -4,9 +4,101 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Insight.Dialogs"
+        xmlns:Controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
+        xmlns:Insight="clr-namespace:Insight"
         mc:Ignorable="d"
-        Title="ColorEditorView" Height="450" Width="800">
+        d:DataContext="{d:DesignInstance Type=local:ColorEditorViewModel,IsDesignTimeCreatable=False}"
+        Title="{x:Static Insight:Strings.EditColors}" Height="450" Width="800" 
+        x:Name="_editor">
+    <Window.Resources>
+
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="InsightStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition  Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <Grid DockPanel.Dock="Left">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+            <TextBox  TextChanged="OnSearchTextChanged"  x:Name="_searchText" Style="{StaticResource TextBoxStyle}"/>
+            <ListBox Grid.Row="1" SelectionMode="Extended"
+                     ItemsSource="{Binding AllMappings}" x:Name="_mappingView"
+                     ContextMenuOpening="OnContextMenuOpening"
+                     >
+
+                <ListBox.ContextMenu>
+                    <ContextMenu x:Name="_contextMenu" >
+                        <MenuItem Header="Merge" Command="{Binding MergeColorsCommand}"  
+
+                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"
+
+                                  x:Name="_mergeMenu" />
+
+                        <MenuItem Header="Release Color" Command="{Binding ReleaseCommand}"  
+
+                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" />
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="Controls:ColorMapping">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="24" Height="24" Margin="0 0 5 0">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{Binding Color}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <Expander x:Name="_expander" Header="" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                  
+                   DockPanel.Dock="Right"   ExpandDirection="Right"
+                   Grid.Row="0"
+                   Grid.Column="1"
+                   >
+       
+            <Grid  Visibility="{Binding ElementName=_expander, Path=IsExpanded, Converter={StaticResource BooleanToVisibility}}" >
+               <TextBlock Text="Show all colors here!" />
+            </Grid>
+
+
+        </Expander>
+
+        <!-- Button footer-->
+        <StackPanel Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="5">
+
+            <Button Content="{x:Static Insight:Strings.Reset}" Command="{Binding ResetCommand}" Style="{StaticResource DialogButtonStyle}"/>
+            <Button Content="{x:Static Insight:Strings.Apply}" Command="{Binding ApplyCommand}" CommandParameter="{Binding ElementName=_editor}" Style="{StaticResource DialogButtonStyle}" Margin="5 0 5 0"/>
+            <Button Content="{x:Static Insight:Strings.Cancel}" Command="{Binding CloseCommand}" CommandParameter="{Binding ElementName=_editor}" Style="{StaticResource DialogButtonStyle}"/>
+        </StackPanel>
+
     </Grid>
 </Window>

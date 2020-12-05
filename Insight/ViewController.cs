@@ -74,7 +74,7 @@ namespace Insight
             view.Owner = _mainWindow;
             view.DataContext = viewModel;
             view.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            view.SizeToContent = SizeToContent.WidthAndHeight;
+            //view.SizeToContent = SizeToContent.WidthAndHeight;
             //view.ResizeMode = ResizeMode.NoResize;
             view.ShowDialog();
         }

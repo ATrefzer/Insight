@@ -107,6 +107,7 @@
       <DependentUpon>ColorEditorView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\ColorEditorViewModel.cs" />
+    <Compile Include="ViewModels\ISearchableViewModel.cs" />
     <Compile Include="Dto\DataGridFriendlyArtifactBasic.cs" />
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
     <Compile Include="IColorSchemeManager.cs" />
@@ -161,6 +162,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\ImageView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\InsightStyles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -11,49 +11,7 @@
         Name="_settingsView">
 
     <Window.Resources>
-        <ResourceDictionary>
-            <Style x:Key="LabelStyle"
-                   TargetType="Label">
-                <Setter Property="VerticalContentAlignment"
-                        Value="Center"/>
-                <Setter Property="Margin"
-                        Value="0 2 0 2"/>
-            </Style>
-            <Style x:Key="TextBlockAsSeparatorStyle"
-                   TargetType="TextBlock">
-                <Setter Property="FontWeight"
-                        Value="Bold"/>
-
-            </Style>
-            <Style x:Key="TextBoxStyle"
-                   TargetType="TextBox">
-                <Setter Property="Height"
-                        Value="23"/>
-                <Setter Property="VerticalContentAlignment"
-                        Value="Center"/>
-            </Style>
-            <Style x:Key="ComboBoxStyle"
-                   TargetType="ComboBox">
-                <Setter Property="Height"
-                        Value="23"/>
-            </Style>
-            <Style x:Key="DialogButtonStyle"
-                   TargetType="Button">
-                <Setter Property="Height"
-                        Value="25"/>
-                <Setter Property="Width"
-                        Value="100"/>
-            </Style>
-            <Style x:Key="FolderButtonStyle"
-                   TargetType="Button">
-                <Setter Property="Height"
-                        Value="23"/>
-                <Setter Property="Width"
-                        Value="23"/>
-                <Setter Property="Content"
-                        Value="..."/>
-            </Style>
-        </ResourceDictionary>
+        <ResourceDictionary Source="InsightStyles.xaml" />
     </Window.Resources>
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom"

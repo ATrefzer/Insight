@@ -247,7 +247,7 @@ Do you want to proceed?</value>
     <value>Knowledge Loss</value>
   </data>
   <data name="SelectDeveloper" xml:space="preserve">
-    <value>Select the developer for knowledge loss</value>
+    <value>Select the main developer for knowledge loss</value>
   </data>
   <data name="SelectDeveloperTitle" xml:space="preserve">
     <value>Select developer</value>
@@ -314,5 +314,11 @@ Do you want to proceed?</value>
   </data>
   <data name="PreferTreeMap" xml:space="preserve">
     <value>Tree Map</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
   </data>
 </root>

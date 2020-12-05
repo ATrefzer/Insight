@@ -27,6 +27,13 @@ namespace Insight
             _pathToColorFile = pathToColorFile;
         }
 
+        public void UpdateAndSave(IColorScheme colorScheme, List<ColorMapping> updates)
+        {
+            var toUpdate = (ColorScheme)colorScheme;
+            toUpdate.Update(updates);
+            Save(toUpdate);
+        }
+
         /// <summary>
         /// Once the color file is created it is not deleted because the user can edit it.
         /// Assume the names are ordered such that the most relevant entries come first.
@@ -52,7 +59,7 @@ namespace Insight
                 {
                     foreach (var newName in missingNames)
                     {
-                        scheme.AddColorFor(newName);
+                        scheme.AssignFreeColor(newName);
                     }
 
                     updated = true;
@@ -61,18 +68,24 @@ namespace Insight
 
             if (updated)
             {
-                var json = new JsonFile<ColorScheme>();
-                json.Write(_pathToColorFile, scheme);
+                Save(scheme);
             }
 
             return updated;
         }
 
 
-        public IColorScheme GetColorScheme()
+        public IColorScheme LoadColorScheme()
         {
             return ReadColorSchemeFile();
         }
+
+        public void Save(IColorScheme colorScheme)
+        {
+            var json = new JsonFile<ColorScheme>();
+            json.Write(_pathToColorFile, (ColorScheme)colorScheme);
+        }
+
 
         private ColorScheme ReadColorSchemeFile()
         {

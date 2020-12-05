@@ -79,6 +79,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apply.
+        /// </summary>
+        public static string Apply {
+            get {
+                return ResourceManager.GetString("Apply", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Cancel {
@@ -451,6 +460,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset.
+        /// </summary>
+        public static string Reset {
+            get {
+                return ResourceManager.GetString("Reset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string Save {
@@ -460,7 +478,7 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select the developer for knowledge loss.
+        ///   Looks up a localized string similar to Select the main developer for knowledge loss.
         /// </summary>
         public static string SelectDeveloper {
             get {

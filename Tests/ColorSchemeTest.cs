@@ -27,12 +27,12 @@ namespace Tests
             var scheme = new ColorScheme();
 
             // Add names until no more colors are available
-            while (scheme.AddColorFor(Guid.NewGuid().ToString()))
+            while (scheme.AssignFreeColor(Guid.NewGuid().ToString()))
             {
                 ;
             }
 
-            Assert.IsFalse(scheme.AddColorFor("me"));
+            Assert.IsFalse(scheme.AssignFreeColor("me"));
 
             // Even if we do not have a color, the name is added.
             // The coloring can be edited later.
@@ -49,8 +49,8 @@ namespace Tests
         public void Serialization()
         {
             var scheme = new ColorScheme();
-            scheme.AddColorFor("me");
-            scheme.AddColorFor("you");
+            scheme.AssignFreeColor("me");
+            scheme.AssignFreeColor("you");
 
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(ColorScheme));
 

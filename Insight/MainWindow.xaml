@@ -23,42 +23,39 @@
             </Ribbon.ApplicationMenu>
 
             <Ribbon.QuickAccessToolBar>
-                <x:Null />
+                <x:Null/>
             </Ribbon.QuickAccessToolBar>
 
             <Ribbon.HelpPaneContent>
-                <x:Null />
+                <x:Null/>
             </Ribbon.HelpPaneContent>
 
             <RibbonTab Header="{x:Static local:Strings.Home}">
-
 
                 <RibbonGroup Header="{x:Static local:Strings.SourceControl}">
 
                     <RibbonButton Label="{x:Static local:Strings.NewProject}"
                                   LargeImageSource="Resources/plus_64.png"
                                   SmallImageSource="Resources/plus_16.png"
-                                  Command="{Binding NewProjectCommand}" />
+                                  Command="{Binding NewProjectCommand}"/>
 
                     <RibbonButton Label="{x:Static local:Strings.Load}"
                                   LargeImageSource="Resources/import_64.png"
                                   SmallImageSource="Resources/import_16.png"
-                                  Command="{Binding LoadProjectCommand}" />
-                    
+                                  Command="{Binding LoadProjectCommand}"/>
+
                     <RibbonButton LargeImageSource="Resources/settings_64.png"
                                   SmallImageSource="Resources/settings_16.png"
                                   Label="{x:Static local:Strings.Settings}"
                                   IsEnabled="{Binding IsProjectLoaded}"
-                                  Command="{Binding SetupCommand}" />
+                                  Command="{Binding SetupCommand}"/>
 
                     <RibbonButton LargeImageSource="Resources/sync_64.png"
                                   SmallImageSource="Resources/sync_16.png"
                                   Label="{x:Static local:Strings.UpdateCache}"
                                   Command="{Binding UpdateCommand}"
-                                  IsEnabled="{Binding IsProjectValid}" />
+                                  IsEnabled="{Binding IsProjectValid}"/>
                 </RibbonGroup>
-
-
 
                 <RibbonGroup Header="{x:Static local:Strings.Analysis}"
                              IsEnabled="{Binding IsProjectValid}">
@@ -66,27 +63,27 @@
                     <RibbonButton LargeImageSource="Resources/fire_64.png"
                                   SmallImageSource="Resources/fire_16.png"
                                   Label="{x:Static local:Strings.Hotspots}"
-                                  Command="{Binding HotspotsCommand}" />
+                                  Command="{Binding HotspotsCommand}"/>
                     <RibbonButton LargeImageSource="Resources/birds-in-love_64.png"
                                   SmallImageSource="Resources/birds-in-love_16.png"
                                   Label="{x:Static local:Strings.Coupling}"
-                                  Command="{Binding ChangeCouplingCommand}" />
+                                  Command="{Binding ChangeCouplingCommand}"/>
                     <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
                                   SmallImageSource="Resources/knowledge-transfer_16.png"
                                   Label="{x:Static local:Strings.Knowledge}"
-                                  Command="{Binding KnowledgeCommand}" />
+                                  Command="{Binding KnowledgeCommand}"/>
                     <RibbonButton LargeImageSource="Resources/knowledge-transfer_64.png"
                                   SmallImageSource="Resources/knowledge-transfer_16.png"
                                   Label="{x:Static local:Strings.KnowledgeLoss}"
-                                  Command="{Binding KnowledgeLossCommand}" />
+                                  Command="{Binding KnowledgeLossCommand}"/>
                     <RibbonButton LargeImageSource="Resources/pie-graph-split_64.png"
                                   SmallImageSource="Resources/pie-graph-split_16.png"
                                   Label="{x:Static local:Strings.Work}"
-                                  Command="{Binding FragmentationCommand}" />
+                                  Command="{Binding FragmentationCommand}"/>
                     <RibbonButton LargeImageSource="Resources/sands-of-time-64.png"
                                   SmallImageSource="Resources/sands-of-time-16.png"
                                   Label="{x:Static local:Strings.CodeAge}"
-                                  Command="{Binding CodeAgeCommand}" />
+                                  Command="{Binding CodeAgeCommand}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.Predictions}"
@@ -94,7 +91,7 @@
                     <RibbonButton LargeImageSource="Resources/crystal-ball_64.png"
                                   SmallImageSource="Resources/crystal-ball_64.png"
                                   Label="{x:Static local:Strings.FutureHotspots}"
-                                  Command="{Binding PredictHotspotsCommand}" />
+                                  Command="{Binding PredictHotspotsCommand}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="{x:Static local:Strings.Export}"
@@ -102,14 +99,13 @@
                     <RibbonButton LargeImageSource="Resources/csv-file-format-extension_64.png"
                                   SmallImageSource="Resources/csv-file-format-extension_16.png"
                                   Label="{x:Static local:Strings.Summary}"
-                                  Command="{Binding SummaryCommand}" />
+                                  Command="{Binding SummaryCommand}"/>
 
                     <RibbonButton LargeImageSource="Resources/chat-comment_64.png"
                                   SmallImageSource="Resources/chat-comment_16.png"
                                   Label="{x:Static local:Strings.Comments}"
-                                  Command="{Binding CommentsCommand}" />
+                                  Command="{Binding CommentsCommand}"/>
                 </RibbonGroup>
-
 
             </RibbonTab>
 
@@ -119,11 +115,11 @@
                         <RibbonButton Label="{x:Static local:Strings.Save}"
                                       SmallImageSource="Resources/export_16.png"
                                       Margin="5,0,0,0"
-                                      Command="{Binding SaveDataCommand}" />
+                                      Command="{Binding SaveDataCommand}"/>
                         <RibbonButton Label="{x:Static local:Strings.Load}"
                                       SmallImageSource="Resources/import_16.png"
                                       Margin="5,0,0,0"
-                                      Command="{Binding LoadDataCommand}" />
+                                      Command="{Binding LoadDataCommand}"/>
 
                     </StackPanel>
                 </RibbonGroup>
@@ -134,25 +130,31 @@
                         <RibbonButton Label="{x:Static local:Strings.EditColors}"
                                       SmallImageSource="Resources/edit_colors_16.png"
                                       Margin="5,0,0,0"
-                                      Command="{Binding EditColorsCommand}" />
+                                      Command="{Binding EditColorsCommand}"/>
 
-                        <RibbonToggleButton Margin="5,0,0,0" Command="{Binding ToggleDisplayModeCommand}" 
+                        <RibbonToggleButton Margin="5,0,0,0"
+                                            Command="{Binding ToggleDisplayModeCommand}"
                                             SmallImageSource="Resources/display_16.png">
                             <RibbonToggleButton.Style>
                                 <Style TargetType="RibbonToggleButton">
-                                    <Setter Property="Label" Value="" />
+                                    <Setter Property="Label"
+                                            Value=""/>
                                     <Style.Triggers>
-                                  
-                                    <DataTrigger Binding="{Binding DisplayMode}" Value="{x:Static local:PreferredDisplayMode.TreeMap}" >
-                                        <Setter Property="Label" Value="{x:Static local:Strings.PreferTreeMap}" />
-                                    </DataTrigger>
-                                        <DataTrigger Binding="{Binding DisplayMode}" Value="{x:Static local:PreferredDisplayMode.CirclePackaging}" >
-                                            <Setter Property="Label" Value="{x:Static local:Strings.PreferCircle}" />
+
+                                        <DataTrigger Binding="{Binding DisplayMode}"
+                                                     Value="{x:Static local:PreferredDisplayMode.CirclePackaging}">
+                                            <Setter Property="Label"
+                                                    Value="{x:Static local:Strings.PreferTreeMap}"/>
                                         </DataTrigger>
-                                </Style.Triggers>
+                                        <DataTrigger Binding="{Binding DisplayMode}"
+                                                     Value="{x:Static local:PreferredDisplayMode.TreeMap}">
+                                            <Setter Property="Label"
+                                                    Value="{x:Static local:Strings.PreferCircle}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
                                 </Style>
                             </RibbonToggleButton.Style>
-                          
+
                         </RibbonToggleButton>
 
                     </StackPanel>
@@ -163,7 +165,7 @@
                         <RibbonButton Label="{x:Static local:Strings.About}"
                                       SmallImageSource="Lightswitch.ico"
                                       Margin="5,0,0,0"
-                                      Command="{Binding AboutCommand}" />
+                                      Command="{Binding AboutCommand}"/>
 
                     </StackPanel>
                 </RibbonGroup>
@@ -180,7 +182,7 @@
                 <DataTemplate DataType="{x:Type ViewModels:TreeMapViewModel}">
                     <controls:TreeMapView DataContext="{Binding Data}"
                                           UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
-                             Path=DataContext.Commands}" />
+                             Path=DataContext.Commands}"/>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type ViewModels:CirclePackingViewModel}">
@@ -188,37 +190,37 @@
                     As soon as we set the DataContext of the CirclePackagingView control UserCommands will use CirclePackagingView.DataContext. -->
                     <controls:CirclePackingView DataContext="{Binding Data}"
                                                 UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
-                             Path=DataContext.Commands}" />
+                             Path=DataContext.Commands}"/>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type ViewModels:TableViewModel}">
                     <controls:DataGridView DataContext="{Binding Data}"
                                            UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
-                             Path=DataContext.Commands}" />
+                             Path=DataContext.Commands}"/>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type ViewModels:ChordViewModel}">
-                    <controls:ChordView DataContext="{Binding Data}" />
+                    <controls:ChordView DataContext="{Binding Data}"/>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type Dialogs:ImageViewModel}">
                     <Image Source="{Binding Data}"
                            HorizontalAlignment="Left"
                            VerticalAlignment="Top"
-                           Stretch="None" />
+                           Stretch="None"/>
                 </DataTemplate>
 
             </TabControl.Resources>
 
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <HeaderedContentControl Header="{Binding Title}" />
+                    <HeaderedContentControl Header="{Binding Title}"/>
                 </DataTemplate>
             </TabControl.ItemTemplate>
 
             <TabControl.ContentTemplate>
                 <DataTemplate>
-                    <ContentControl Content="{Binding}" />
+                    <ContentControl Content="{Binding}"/>
                 </DataTemplate>
             </TabControl.ContentTemplate>
 

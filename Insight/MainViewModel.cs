@@ -146,7 +146,7 @@ namespace Insight
 
         public bool IsProjectValid => _project != null && _project.IsValid();
 
-        public bool IsProjectLoaded => _project != null && _project.IsDefault;
+        public bool IsProjectLoaded => _project != null && !_project.IsDefault;
 
         public ICommand KnowledgeCommand { get; set; }
 
@@ -235,7 +235,7 @@ namespace Insight
         public async void OnShowWork(IHierarchicalData data)
         {
             var fileToAnalyze = data.Tag as string;
-            var colorScheme = _colorSchemeManager.GetColorScheme();
+            var colorScheme = _colorSchemeManager.LoadColorScheme();
             var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme))
                                                  .ConfigureAwait(true);
 
@@ -383,7 +383,7 @@ namespace Insight
 
         private async void KnowledgeClick()
         {
-            var colorScheme = _colorSchemeManager.GetColorScheme();
+            var colorScheme = _colorSchemeManager.LoadColorScheme();
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(colorScheme));
             if (context == null)
             {
@@ -406,7 +406,7 @@ namespace Insight
                 return;
             }
 
-            var colorScheme = _colorSchemeManager.GetColorScheme();
+            var colorScheme = _colorSchemeManager.LoadColorScheme();
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper, colorScheme));
             if (context == null)
             {
@@ -449,7 +449,7 @@ namespace Insight
         }
 
 
-        private string MakeColorsFile(string fileName)
+        private string MakeColorsFilePath(string fileName)
         {
             return fileName + ".colors";
         }
@@ -475,7 +475,7 @@ namespace Insight
                     if (colorScheme != null)
                     {
                         var json = new JsonFile<ColorScheme>();
-                        json.Write(MakeColorsFile(fileName), colorScheme);
+                        json.Write(MakeColorsFilePath(fileName), colorScheme);
                     }
                 }
             }
@@ -495,7 +495,7 @@ namespace Insight
 
                     // Read coloring
                     var colorScheme = new ColorScheme();
-                    var colorFile = MakeColorsFile(fileName);
+                    var colorFile = MakeColorsFilePath(fileName);
                     if (File.Exists(colorFile))
                     {
                         var json = new JsonFile<ColorScheme>();
@@ -592,11 +592,15 @@ namespace Insight
 
             try
             {
+                var developers = new List<string>();
+
                 await _backgroundExecution.ExecuteWithProgressAsync(progress =>
-                                                                            _analyzer.UpdateCache(progress, includeContributions), true);
+                                                                    {
+                                                                        _analyzer.UpdateCache(progress, includeContributions);
+                                                                        developers = _analyzer.GetAllKnownDevelopers();
+                                                                    }, true);
 
                 // Don't delete, only extend if necessary
-                var developers = _analyzer.GetAllKnownDevelopers();
                 _colorSchemeManager.UpdateColorScheme(developers);
 
                 _tabManager.ShowWarnings(_analyzer.Warnings);
