@@ -12,15 +12,13 @@ namespace Insight
     public interface IProject
     {
         string Cache { get; }
-        IFilter Filter { get; set; }
+        IFilter DisplayFilter { get; set; }
         string SourceControlDirectory { get; set; }
 
         bool IsDefault { get; }
         bool IsValid();
         void Load(string path);
         ISourceControlProvider CreateProvider();
-        
-        string[] GetSupportedFileTypesForAnalysis();
     }
 
 
@@ -60,7 +58,7 @@ namespace Insight
         /// Summary filter: Which files from the history are considered for the analysis.
         /// </summary>
         [XmlIgnore]
-        public IFilter Filter { get; set; }
+        public IFilter DisplayFilter { get; set; }
 
         /// <summary>
         /// Need one to reject
@@ -130,12 +128,12 @@ namespace Insight
         /// <summary>
         /// For example Xml -> .xml
         /// </summary>
-        public string[] GetSupportedFileTypesForAnalysis()
+        public static string[] GetSupportedFileTypesForAnalysis()
         {
             return NormalizeFileExtensions(Settings.Default.SupportedFileTypesForAnalysis);
         }
 
-        public string[] NormalizeFileExtensions(string commaSeparatedExtensions)
+        public static string[] NormalizeFileExtensions(string commaSeparatedExtensions)
         {
             var all = new List<string>();
             var parts = SplitTrimAndToLower(commaSeparatedExtensions);
@@ -282,7 +280,7 @@ namespace Insight
         /// <summary>
         /// Split, Trim, and ToLower
         /// </summary>
-        private IEnumerable<string> SplitTrimAndToLower(string splitThis)
+        private static IEnumerable<string> SplitTrimAndToLower(string splitThis)
         {
             if (string.IsNullOrEmpty(splitThis))
             {
@@ -324,7 +322,7 @@ namespace Insight
             filters.Add(new OnlyFilesWithinRootDirectoryFilter(SourceControlDirectory));
 
             // All filters must apply
-            Filter = new Filter(filters.ToArray());
+            DisplayFilter = new Filter(filters.ToArray());
         }
     }
 }

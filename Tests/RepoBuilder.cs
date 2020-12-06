@@ -5,7 +5,7 @@ using LibGit2Sharp;
 
 namespace Tests
 {
-    sealed class RepoBuilder : IDisposable
+    internal sealed class RepoBuilder : IDisposable
     {
         private readonly Repository _repo;
 
@@ -109,7 +109,7 @@ namespace Tests
             }
         }
 
-        static void DeleteDirectory(string path)
+        private static void DeleteDirectory(string path)
         {
             if (Directory.Exists(path))
             {
@@ -125,7 +125,7 @@ namespace Tests
         }
 
 
-        static string GetRepoRoot(string repoName)
+        private static string GetRepoRoot(string repoName)
         {
             return Path.Combine(EnvironmentDirectory, repoName);
         }

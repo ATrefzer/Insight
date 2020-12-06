@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Tests
 {
     [TestFixture]
-    class LibGit2Tests
+    internal class LibGit2Tests
     {
         [Test]
         public void CheckFileInTree()

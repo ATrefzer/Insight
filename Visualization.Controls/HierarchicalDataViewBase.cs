@@ -249,7 +249,7 @@ namespace Visualization.Controls
             _zoomLevel = data;
             _renderer = CreateRenderer();
             _renderer.LoadData(_zoomLevel);
-            _renderer.Highlighing = new Highlighting(_toolViewModel);
+            _renderer.Highlighting = new Highlighting(_toolViewModel);
             GetCanvas().DataContext = _renderer;
         }
 

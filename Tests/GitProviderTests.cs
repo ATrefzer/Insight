@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using Insight.GitProvider;
@@ -11,7 +10,7 @@ namespace Tests
 {
     // TODO Extend tests up to the full ArtifactSummary
     [TestFixture]
-    class GitProviderTests
+    internal class GitProviderTests
     {
         private sealed class FollowResult
         {

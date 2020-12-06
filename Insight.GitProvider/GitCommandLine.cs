@@ -20,11 +20,10 @@ namespace Insight.GitProvider
         /// %P   Parents (all sha1s in one line) First commit does not have a parent!
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
-        const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
+        private const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
 
-        
 
-        readonly string _workingDirectory;
+        private readonly string _workingDirectory;
         private readonly ProcessRunner _runner;
 
         public GitCommandLine(string workingDirectory)
@@ -177,7 +176,7 @@ namespace Insight.GitProvider
             return string.Compare(result.StdOut.Trim('\n'), mainBranch, System.StringComparison.OrdinalIgnoreCase) == 0;
         }
 
-        ProcessResult ExecuteCommandLine(string program, string args)
+        private ProcessResult ExecuteCommandLine(string program, string args)
         {
             var result = _runner.RunProcess(program, args, _workingDirectory);
 

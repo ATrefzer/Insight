@@ -102,12 +102,12 @@ namespace Tests
         /// <summary>
         /// At least 1. When we call this it is already decided that we are a parent node.
         /// </summary>
-        int GetRandmomNumberOfChildren()
+        private int GetRandmomNumberOfChildren()
         {
             return _random.Next(1, 10);
         }
 
-        double GetRandomArea()
+        private double GetRandomArea()
         {
             var value = _random.NextDouble() * _random.Next(1, 100000);
             return Math.Ceiling(value);
@@ -118,7 +118,7 @@ namespace Tests
             return _random.Next(0, 10);
         }
 
-        bool GetRandomIsLeaf()
+        private bool GetRandomIsLeaf()
         {
             // Probability of being a leaf node = 0.2
             var value = _random.NextDouble();

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 
 using Insight.Dialogs;
-using Insight.Shared.Model;
+using Insight.Metrics;
 
 namespace Insight
 {

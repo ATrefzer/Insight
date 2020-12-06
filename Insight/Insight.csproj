@@ -100,6 +100,7 @@
     <Compile Include="AboutView.xaml.cs">
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AliasMapping.cs" />
     <Compile Include="Analyzer.cs" />
     <Compile Include="BackgroundExecution.cs" />
     <Compile Include="Builder\CodeAgeBuilder.cs" />

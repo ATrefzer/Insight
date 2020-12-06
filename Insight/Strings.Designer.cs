@@ -189,9 +189,9 @@ namespace Insight {
         /// <summary>
         ///   Looks up a localized string similar to The directory is not contained in the project base. This is not allowed!.
         /// </summary>
-        public static string ErrorDirectoryNotInProjectBase {
+        public static string ErrorDirectoryNotInBaseDirectory {
             get {
-                return ResourceManager.GetString("ErrorDirectoryNotInProjectBase", resourceCulture);
+                return ResourceManager.GetString("ErrorDirectoryNotInBaseDirectory", resourceCulture);
             }
         }
         

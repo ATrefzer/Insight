@@ -57,7 +57,6 @@ namespace Insight.Dialogs
             }
         }
 
-        // TODO give name of a color scheme for example teams, anonymous etc.
         public ColorEditorViewModel(IColorSchemeManager colorSchemeManager)
         {
             _colorSchemeManager = colorSchemeManager;
@@ -149,14 +148,17 @@ namespace Insight.Dialogs
             SearchText = "";
         }
 
+        /// <summary>
+        /// Reload mappings and discard any changes
+        /// </summary>
         private void Reset()
         {
             _newCustomColors.Clear();
 
-            // Reload mappings and discards any changes
+            // Get existing names
             var names = _colorScheme.GetColorMappings().Select(mapping => mapping.Name).ToArray();
 
-            // Assign default colors
+            // Assign default colors. Since the names are ordered inside ColorScheme we get the same original result.
             var tmpSchema = new ColorScheme(names);
             AllMappings = tmpSchema.GetColorMappings().ToList();
 

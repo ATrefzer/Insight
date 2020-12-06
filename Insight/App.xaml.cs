@@ -38,7 +38,7 @@ namespace Insight
 
             var lastKnownProject = Settings.Default.LastKnownProject;
 
-            var analyzer = new Analyzer(new MetricProvider());
+            var analyzer = new Analyzer(new MetricProvider(), Project.GetSupportedFileTypesForAnalysis());
 
             // If there is an last project load it immediately
             Project project = new Project();

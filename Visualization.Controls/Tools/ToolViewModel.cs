@@ -15,19 +15,19 @@ namespace Visualization.Controls.Tools
         /// <summary>
         /// Sorted list of all areas occurring in the data.
         /// </summary>
-        List<double> _areas;
+        private List<double> _areas;
 
         /// <summary>
         /// Sorted list of all weights occurring in the data.
         /// </summary>
-        List<double> _weights;
+        private List<double> _weights;
 
-        int _minAreaIndex;
-        int _maxAreaIndex;
-        int _minWeightIndex;
-        int _maxWeightIndex;
+        private int _minAreaIndex;
+        private int _maxAreaIndex;
+        private int _minWeightIndex;
+        private int _maxWeightIndex;
 
-        bool _noFilteringJustHightlight;
+        private bool _noFilteringJustHightlight;
 
         /// <summary>
         /// Min area for user feedback.

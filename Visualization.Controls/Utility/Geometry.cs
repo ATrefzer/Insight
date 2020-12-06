@@ -387,7 +387,7 @@ namespace Visualization.Controls.Utility
         public static double PolygonArea(List<Point> points)
         {
             // Return the absolute value of the signed area.
-            // The signed area is negative if the polyogn is
+            // The signed area is negative if the polygon is
             // oriented clockwise.
             return Math.Abs(SignedPolygonArea(points));
         }

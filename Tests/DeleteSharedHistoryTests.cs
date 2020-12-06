@@ -1,19 +1,16 @@
 ﻿using Insight.GitProvider;
 using Insight.Shared.Model;
 using NUnit.Framework;
-using System;
+
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tests
 {
     [TestFixture]
-    class DeleteSharedHistoryTests
+    internal class DeleteSharedHistoryTests
     {
         [Test]
-        public void DeleteSharedHistory_RemovesAllOccurences()
+        public void DeleteSharedHistory_RemovesAllOccurrences()
         {
             // Graph
             var graph = new Graph();

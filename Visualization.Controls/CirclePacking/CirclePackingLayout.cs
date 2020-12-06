@@ -317,21 +317,21 @@ namespace Visualization.Controls.CirclePacking
                 }
                 else
                 {
-                    // Use the specified indicies  from the last front chain update.
+                    // Use the specified indices  from the last front chain update.
                 }
 
                 // Calc solutions
 
-                // Test front chain Both violate-> deltete and try to fix whole.
+                // Test front chain Both violate-> delete and try to fix whole.
 
                 var solutions = FindTangentCircle(mNode.Value, nNode.Value, iLayout.Radius);
 
-                var tmpCircle = SelectCircleExperimential(mNode.Value, nNode.Value, solutions.Item1, solutions.Item2);
+                var tmpCircle = SelectCircle(mNode.Value, nNode.Value, solutions.Item1, solutions.Item2);
 
                 Debug.Assert(tmpCircle != null);
 
-                // Find overlappings with circles in the front chain.Does one intersect with the just calculated circle?
-                // Exclude mIndex and nIndex Overlapping with itself is detected due to rounding erros.
+                // Find overlapping with circles in the front chain.Does one intersect with the just calculated circle?
+                // Exclude mIndex and nIndex Overlapping with itself is detected due to rounding errors.
                 var jNode = FindOverlappingCircleOnFrontChain(frontChain, tmpCircle);
                 if (jNode != null && adjustingFrontChain)
                 {
@@ -408,12 +408,12 @@ namespace Visualization.Controls.CirclePacking
         /// I assume the polygon goes always in direction m to n.
         /// We chose the solution that is outside the polygon. I want to grow outside.
         /// 1. Calculate segment m-n
-        /// 2. Calculate normal vector to this form
+        /// 2. Calculate normal vector form
         /// 3. Chose m as vector to the segment
         /// 4. Use vector normal form to check if solution1 or solution2 is outside or inside.
         /// Both scalars may be positive or negative. So I chose the larger on. Not quite sure if this is ok.
         /// </summary>
-        private CircularLayoutInfo SelectCircleExperimential(CircularLayoutInfo m, CircularLayoutInfo n, CircularLayoutInfo circle1, CircularLayoutInfo circle2)
+        private CircularLayoutInfo SelectCircle(CircularLayoutInfo m, CircularLayoutInfo n, CircularLayoutInfo circle1, CircularLayoutInfo circle2)
         {
             Debug.Assert(IsPointValid(circle1.Center) || IsPointValid(circle2.Center));
 

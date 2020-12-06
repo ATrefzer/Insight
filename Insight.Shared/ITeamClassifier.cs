@@ -4,6 +4,6 @@ namespace Insight.Shared
 {
     public interface ITeamClassifier
     {
-        string GetAssociatedTeam(string committer, DateTime checkinDate);
+        string GetAssociatedTeam(string committer, DateTime checkInDate);
     }
 }

@@ -15,10 +15,10 @@ namespace Tests
     /// top down from the newest to the oldest commit.
     /// </summary>
     [TestFixture]
-    sealed class MovementTrackerTests
+    internal sealed class MovementTrackerTests
     {
-        ChangeSet _currentChangeSet;
-        MovementTracker _tracker;
+        private ChangeSet _currentChangeSet;
+        private MovementTracker _tracker;
 
 
         // Ok this test convinced me that my strategy does not apply to git :)
@@ -345,41 +345,41 @@ namespace Tests
         }
 
 
-        List<ChangeItem> EndChangeSet()
+        private List<ChangeItem> EndChangeSet()
         {
             var result = new List<ChangeItem>();
             _tracker.ApplyChangeSet(result);
             return result;
         }
 
-        void StartChangeSet()
+        private void StartChangeSet()
         {
             _currentChangeSet = new ChangeSet();
             _currentChangeSet.Id = Guid.NewGuid().ToString();
             _tracker.BeginChangeSet(_currentChangeSet);
         }
 
-        ChangeItem Track_Add(string previousServerPath, string currentServerPath)
+        private ChangeItem Track_Add(string previousServerPath, string currentServerPath)
         {
             return TrackOperation(KindOfChange.Add, currentServerPath, previousServerPath);
         }
 
-        ChangeItem Track_Delete(string currentServerPath)
+        private ChangeItem Track_Delete(string currentServerPath)
         {
             return TrackOperation(KindOfChange.Delete, currentServerPath, null);
         }
 
-        ChangeItem Track_Edit(string currentServerPath)
+        private ChangeItem Track_Edit(string currentServerPath)
         {
             return TrackOperation(KindOfChange.Edit, currentServerPath, null);
         }
 
-        ChangeItem Track_Rename(string fromServerPath, string toServerPath)
+        private ChangeItem Track_Rename(string fromServerPath, string toServerPath)
         {
             return TrackOperation(KindOfChange.Rename, toServerPath, fromServerPath);
         }
 
-        ChangeItem TrackOperation(KindOfChange kind, string currentServerPath, string previousServerPath)
+        private ChangeItem TrackOperation(KindOfChange kind, string currentServerPath, string previousServerPath)
         {
             // Note arg order changed here!
             var ci = new ChangeItem

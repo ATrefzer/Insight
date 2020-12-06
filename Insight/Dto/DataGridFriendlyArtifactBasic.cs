@@ -1,7 +1,7 @@
 ﻿namespace Insight.Dto
 {
     /// <summary>
-    /// DO NOT FORMAT
+    /// DO NOT FORMAT. Defines order in grid view.
     /// </summary>
     public sealed class DataGridFriendlyArtifactBasic
     {

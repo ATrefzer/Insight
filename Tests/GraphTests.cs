@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 using Insight.GitProvider;
-using Insight.Shared.Model;
 
 using NUnit.Framework;
 
 namespace Tests
 {
     [TestFixture]
-    class GraphTests
+    internal class GraphTests
     {
         [Test]
         public void Enumerate_Breadth_First()

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Visualization.Controls.Data;
 
 namespace Visualization.Controls.Interfaces
 {
     public interface IHierarchicalData
     {
         /// <summary>
-        /// Attached layouting information. This proeprty is not cloned
+        /// Attached layout information. This property is not cloned
         /// </summary>
         LayoutInfo Layout { get; set; }
 

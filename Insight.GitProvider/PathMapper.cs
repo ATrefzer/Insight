@@ -4,7 +4,7 @@ namespace Insight.GitProvider
 {
     public sealed class PathMapper
     {
-        readonly string _startDirectory;
+        private readonly string _startDirectory;
 
         public PathMapper(string startDirectory)
         {

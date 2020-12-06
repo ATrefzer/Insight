@@ -50,7 +50,7 @@ namespace Insight.WpfCore
         {
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
 
-            // TODO Eigentlich zu oft geworfen, auch wenn es bereits Fehler gab.
+            // TODO This is also thrown if the error already exists.
             OnPropertyChanged(nameof(HasErrors));
         }
     }

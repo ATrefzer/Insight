@@ -7,7 +7,7 @@ namespace Insight.GitProvider
 {
     public static class Decoder
     {
-        static readonly Regex _regex = new Regex(@"(?<Value>(\\[a-zA-Z0-9]{3})+)", RegexOptions.Compiled);
+        private static readonly Regex _regex = new Regex(@"(?<Value>(\\[a-zA-Z0-9]{3})+)", RegexOptions.Compiled);
 
         /// <summary>
         /// From git manual: "Path names are encoded in UTF-8 normalization form C"
