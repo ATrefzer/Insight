@@ -36,28 +36,6 @@ namespace Visualization.Controls
         public static readonly DependencyProperty BrewedColorProperty =
                 DependencyProperty.Register("BrewedColor", typeof(Color), typeof(ColorBrewer), new PropertyMetadata(default(Color), OnColorChanged));
 
-     
-
-        private static bool IsValid(object value)
-        {
-            
-            if (value is string str)
-            {
-                return IsValid(str);
-            }
-
-            if (value is int intVal)
-            {
-                if (intVal < byte.MinValue || intVal > byte.MaxValue)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-
-            return false;
-        }
 
 
         public Color BrewedColor

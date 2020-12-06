@@ -16,10 +16,10 @@ namespace Insight.GitProvider
     /// </summary>
     public sealed class Parser
     {
-        readonly PathMapper _mapper;
-        string endHeaderMarker = "END_HEADER";
-        readonly string recordMarker = "START_HEADER";
-        string _lastLine;
+        private readonly PathMapper _mapper;
+        private string endHeaderMarker = "END_HEADER";
+        private readonly string recordMarker = "START_HEADER";
+        private string _lastLine;
 
         public Parser(PathMapper mapper)
         {
@@ -52,7 +52,7 @@ namespace Insight.GitProvider
         }
 
 
-        void CreateChangeItem(ChangeSet cs, string changeItem)
+        private void CreateChangeItem(ChangeSet cs, string changeItem)
         {
             var ci = new ChangeItem();
 

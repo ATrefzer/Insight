@@ -18,9 +18,9 @@ namespace Visualization.Controls.Bitmap
         }
 
 
-        public static System.Drawing.Brush ToDrawingBrush(System.Windows.Media.SolidColorBrush mediaBrush)
+        public static Brush ToDrawingBrush(System.Windows.Media.SolidColorBrush mediaBrush)
         {
-            return new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(mediaBrush.Color.A, mediaBrush.Color.R, mediaBrush.Color.G, mediaBrush.Color.B));
+            return new SolidBrush(Color.FromArgb(mediaBrush.Color.A, mediaBrush.Color.R, mediaBrush.Color.G, mediaBrush.Color.B));
         }
 
         public void CreateLegendBitmap(string file)

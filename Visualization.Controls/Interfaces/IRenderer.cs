@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Tools;
 
 namespace Visualization.Controls.Interfaces
@@ -13,6 +12,6 @@ namespace Visualization.Controls.Interfaces
         void LoadData(IHierarchicalData zoomLevel);
         Point Transform(Point mousePosition);
 
-        IHighlighting Highlighing { get; set; }
+        IHighlighting Highlighting { get; set; }
     }
 }

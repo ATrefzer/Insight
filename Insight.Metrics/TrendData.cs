@@ -1,7 +1,6 @@
-﻿using Insight.Metrics;
-using System;
+﻿using System;
 
-namespace Insight.Shared.Model
+namespace Insight.Metrics
 {
     public sealed class TrendData
     {

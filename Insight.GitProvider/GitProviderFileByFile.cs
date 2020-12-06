@@ -42,8 +42,8 @@ namespace Insight.GitProvider
     /// </summary>
     public sealed class GitProviderFileByFile : GitProviderBase, ISourceControlProvider
     {
-        readonly object _lockObj = new object();
-        Graph _graph;
+        private readonly object _lockObj = new object();
+        private Graph _graph;
 
         /// <summary>
         /// Debugging!
@@ -90,7 +90,7 @@ namespace Insight.GitProvider
             }
         }
 
-        void PrepareLogDirectory()
+        private void PrepareLogDirectory()
         {
             var logPath = Path.Combine(_cachePath, "logs");
             if (!Directory.Exists(logPath))
@@ -148,7 +148,7 @@ namespace Insight.GitProvider
 
 
         // ReSharper disable once UnusedMember.Local
-        void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
+        private void DebugWriteLogForSingleFile(string gitFileLog, string forLocalFile)
         {
             var logPath = Path.Combine(_cachePath, "logs");
 
@@ -159,7 +159,7 @@ namespace Insight.GitProvider
             File.WriteAllText(file, gitFileLog);
         }
 
-        void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> history)
+        private void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> history)
         {
             var id = Guid.NewGuid().ToString();
             _idToLocalFile.Add(id, localPath);
@@ -218,7 +218,7 @@ namespace Insight.GitProvider
             }
         }
 
-        List<ChangeSet> RebuildHistory(List<string> localPaths, IProgress progress)
+        private List<ChangeSet> RebuildHistory(List<string> localPaths, IProgress progress)
         {
             var count = localPaths.Count;
             var counter = 0;
@@ -239,12 +239,12 @@ namespace Insight.GitProvider
             return history.Values.OrderByDescending(x => x.Date).ToList();
         }
 
-        void SaveRecoveredLogToDisk(List<ChangeSet> commits, Graph graph)
+        private void SaveRecoveredLogToDisk(List<ChangeSet> commits, Graph graph)
         {
             GitDebugHelper.Dump(Path.Combine(_cachePath, "git_recovered_history.txt"), commits, graph);
         }
 
-        void UpdateHistory(IProgress progress)
+        private void UpdateHistory(IProgress progress)
         {
             // Git graph
             _graph = new Graph();

@@ -18,7 +18,7 @@ namespace Tests
 
         private string _resourceDirectory;
 
-        void GenerateTestHierarchicalReferenceFile(string path, double width, double height)
+        private void GenerateTestHierarchicalReferenceFile(string path, double width, double height)
         {
             // Generate reference hierarchical data with layout info
             var generator = new HierarchicalDataBuilder();

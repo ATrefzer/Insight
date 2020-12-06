@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace Tests
 {
     [TestFixture]
-    class GitCommandlineTests
+    internal class GitCommandlineTests
     {
         [Test]
         //[Test, Ignore("")]

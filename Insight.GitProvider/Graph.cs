@@ -3,21 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 using LibGit2Sharp;
 
 namespace Insight.GitProvider
 {
     // TODO 
-    class GitNode
+    internal class GitNode
     {
         public Scope Scope { get; set; }
         public Commit Commit { get; set; }
     }
 
     // TODO
-    class GraphNode<T>
+    internal class GraphNode<T>
     {
         public GraphNode(T value)
         {

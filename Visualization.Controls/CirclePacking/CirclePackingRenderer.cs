@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Tools;
@@ -22,7 +21,7 @@ namespace Visualization.Controls.CirclePacking
             _colorScheme = colorScheme;
         }
 
-        public IHighlighting Highlighing { get; set; }
+        public IHighlighting Highlighting { get; set; }
 
         public void LoadData(IHierarchicalData data)
         {
@@ -92,7 +91,7 @@ namespace Visualization.Controls.CirclePacking
 
         private SolidColorBrush GetBrush(IHierarchicalData data)
         {
-            if (Highlighing != null && Highlighing.IsHighlighted(data))
+            if (Highlighting != null && Highlighting.IsHighlighted(data))
             {
                 return DefaultDrawingPrimitives.HighlightBrush;
             }

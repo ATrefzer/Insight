@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using Insight.Shared.Model;
+using Insight.Metrics;
 using Insight.WpfCore;
 
 using OxyPlot;

@@ -2,7 +2,7 @@
 {
     public sealed class EdgeData
     {
-        public double Strength; // [0...1]
+        public readonly double Strength; // [0...1]
 
         /// <summary>
         /// If no display name is set for the node, the id is used.

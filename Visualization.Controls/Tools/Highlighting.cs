@@ -1,10 +1,9 @@
-﻿using Visualization.Controls.Data;
-using Visualization.Controls.Interfaces;
+﻿using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.Tools
 {
     /// <summary>
-    /// Condition which HierachicalData item shall be shown highlighted in any graph.
+    /// Condition which HierarchicalData item shall be shown highlighted in any graph.
     /// Created from the ToolViewModel that contains all highlighting related settings.
     /// </summary>
     internal sealed class Highlighting : IHighlighting

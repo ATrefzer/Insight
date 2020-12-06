@@ -2,8 +2,6 @@
 using System.Globalization;
 using System.Windows;
 
-using Visualization.Controls.TreeMap;
-
 namespace Visualization.Controls.CirclePacking
 {
     [Serializable]

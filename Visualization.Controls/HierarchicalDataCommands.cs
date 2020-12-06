@@ -5,7 +5,6 @@ using System.Windows.Controls;
 
 using Prism.Commands;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls

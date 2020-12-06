@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Tools;
@@ -75,7 +74,7 @@ namespace Visualization.Controls.TreeMap
         */
 
 
-        public IHighlighting Highlighing { get; set; }
+        public IHighlighting Highlighting { get; set; }
 
         /// <summary>
         /// Enusre that SumAreaMetrics and NomrmalizeWeightMetric was called and
@@ -115,7 +114,7 @@ namespace Visualization.Controls.TreeMap
 
         private SolidColorBrush GetBrush(IHierarchicalData data)
         {
-            if (Highlighing != null && Highlighing.IsHighlighted(data))
+            if (Highlighting != null && Highlighting.IsHighlighted(data))
             {
                 return DefaultDrawingPrimitives.HighlightBrush;
             }

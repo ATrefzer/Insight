@@ -170,7 +170,7 @@ namespace Visualization.Controls
             var angleStep = 2 * Math.PI / idToLabel.Keys.Count;
             var angle = 0.0;
 
-            // Calculate initial location of verticies and labels
+            // Calculate initial location of vertices and labels
             foreach (var vertexInfo in idToLabel)
             {
                 var label = vertexInfo.Value;

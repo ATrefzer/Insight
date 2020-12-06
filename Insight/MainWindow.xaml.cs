@@ -1,9 +1,4 @@
-﻿using Insight.Metrics;
-using System.ComponentModel;
-using System.IO;
-using System.Windows;
-
-using Insight.Properties;
+﻿using System.ComponentModel;
 
 namespace Insight
 {

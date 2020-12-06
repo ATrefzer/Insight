@@ -10,10 +10,10 @@ using Decoder = Insight.GitProvider.Decoder;
 namespace Tests
 {
     [TestFixture]
-    sealed class DecoderTests
+    internal sealed class DecoderTests
     {
         [Test]
-        public void DecodeEscaptedPaths()
+        public void DecodeEscapedPaths()
         {
             var escaped = @"file_with_umlauts_\303\244\303\266\303\274.txt";
             var expected = "file_with_umlauts_äöü.txt";

@@ -1,6 +1,6 @@
 ﻿namespace Insight.Shared.Model
 {
-    public class MainDeveloper
+    public sealed class MainDeveloper
     {
         public MainDeveloper(string mainDeveloper, double percent)
         {

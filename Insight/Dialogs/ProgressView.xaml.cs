@@ -4,9 +4,6 @@ using System.Windows.Interop;
 
 namespace Insight.Dialogs
 {
-    /// <summary>
-    /// Interaction logic for ProgressViewxaml.xaml
-    /// </summary>
     public sealed partial class ProgressView
     {   
         public ProgressView()
@@ -18,7 +15,7 @@ namespace Insight.Dialogs
 
         protected override void OnSourceInitialized(EventArgs e)
         {
-            // This event is raised to support interoperation with Win32
+            // This event is raised to support interoperability with Win32
             base.OnSourceInitialized(e);
 
             // Disable X button in menu.

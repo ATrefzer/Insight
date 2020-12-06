@@ -2,7 +2,6 @@
 using Insight.Metrics;
 using Insight.Shared.Model;
 
-using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder

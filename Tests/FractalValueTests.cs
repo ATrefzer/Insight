@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 
-using Insight.Analyzers;
 using Insight.Calculation;
 using NUnit.Framework;
 
@@ -10,7 +9,7 @@ namespace Tests
     internal sealed class FractalValueTests
     {
         [Test]
-        public void UnderstandingTheFomrula()
+        public void UnderstandingTheFormula()
         {
             Dictionary<string, uint> developerToContribution;
             double value;
