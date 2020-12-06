@@ -77,6 +77,9 @@
     <Compile Include="Bitmap\LegendBitmap.cs" />
     <Compile Include="Chord\Edge.cs" />
     <Compile Include="Chord\Constants.cs" />
+    <Compile Include="ColorBrewer.xaml.cs">
+      <DependentUpon>ColorBrewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ColorMapping.cs" />
     <Compile Include="DataGridView.xaml.cs">
       <DependentUpon>DataGridView.xaml</DependentUpon>
@@ -113,6 +116,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CirclePackingView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ColorBrewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

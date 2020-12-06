@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Windows.Media;
 
 using Visualization.Controls;
 using Visualization.Controls.Interfaces;
@@ -16,7 +17,7 @@ namespace Insight
         /// <summary>
         /// Updates color assignments done by the user.
         /// </summary>
-        void UpdateAndSave(IColorScheme colorScheme, List<ColorMapping> updates);
+        void UpdateAndSave(IColorScheme colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors);
 
         IColorScheme LoadColorScheme();
         

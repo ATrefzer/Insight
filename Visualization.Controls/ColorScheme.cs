@@ -25,12 +25,38 @@ namespace Visualization.Controls
         [DataMember]
         private readonly Dictionary<string, int> _nameToArgb = new Dictionary<string, int>();
 
-        public void Update(List<ColorMapping> update)
+        public ColorScheme()
+        {
+            CreateColorsDefinitions();
+        }
+
+        public ColorScheme(IEnumerable<string> names)
+        {
+            CreateColorsDefinitions();
+            foreach (var name in names.OrderBy(name => name))
+            {
+                AssignFreeColor(name);
+            }
+        }
+
+        public void Update(IEnumerable<ColorMapping> update)
         {
             foreach (var mapping in update)
             {
+                // Ensure all used colors exist
+                AddColor(mapping.Color);
                 AssignColor(mapping);
             }
+        }
+
+        public IEnumerable<ColorMapping> GetColorMappings()
+        {
+            return _nameToArgb.Select(pair => new ColorMapping { Name = pair.Key, Color = FromArgb(pair.Value) });
+        }
+
+        public IEnumerable<Color> GetAllColors()
+        {
+            return _defaultColors.Select(color => FromArgb(color));
         }
 
         /// <summary>
@@ -69,6 +95,22 @@ namespace Visualization.Controls
             }
 
             return brush;
+        }
+
+        public bool AddColor(Color newColor)
+        {
+            var argb = ToArgb(newColor);
+            if (_defaultColors.Contains(argb))
+            {
+                return false;
+            }
+
+            var newIndex = _defaultColors.Length;
+            var tmp = new int[_defaultColors.Length + 1];
+            _defaultColors.CopyTo(tmp, 0);
+            tmp[newIndex] = argb;
+            _defaultColors = tmp;
+            return true;
         }
 
         private static SolidColorBrush CreateBrushFromColor(Color color)
@@ -147,19 +189,7 @@ namespace Visualization.Controls
         }
 
 
-        public ColorScheme()
-        {
-            CreateColorsDefinitions();
-        }
-
-        public ColorScheme(string[] names)
-        {
-            CreateColorsDefinitions();
-            foreach (var name in names)
-            {
-                AssignFreeColor(name);
-            }
-        }
+   
 
         /// <summary>
         /// Returns false if the name got a default color assigned.

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Media;
 
 using Insight.Shared;
 
@@ -27,18 +28,24 @@ namespace Insight
             _pathToColorFile = pathToColorFile;
         }
 
-        public void UpdateAndSave(IColorScheme colorScheme, List<ColorMapping> updates)
+        public void UpdateAndSave(IColorScheme colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors)
         {
-            var toUpdate = (ColorScheme)colorScheme;
-            toUpdate.Update(updates);
-            Save(toUpdate);
+            var colorSchemeObj = (ColorScheme)colorScheme;
+
+            // Ensure all new colors exist even if not used in the mappings.
+            foreach (var color in newColors)
+            {
+                colorSchemeObj.AddColor(color);
+            }
+
+            colorSchemeObj.Update(updates);
+            Save(colorSchemeObj);
         }
 
         /// <summary>
         /// Once the color file is created it is not deleted because the user can edit it.
-        /// Assume the names are ordered such that the most relevant entries come first.
         /// </summary>
-        public bool UpdateColorScheme(List<string> orderedNames)
+        public bool UpdateColorScheme(List<string> names)
         {
             var updated = false;
 
@@ -46,13 +53,13 @@ namespace Insight
             if (scheme == null)
             {
                 // Create a new scheme
-                scheme = new ColorScheme(orderedNames.ToArray());
+                scheme = new ColorScheme(names);
                 updated = true;
             }
             else
             {
                 // Add missing developers not present the time the file was created. (keep sort order)
-                var missingNames = orderedNames.ToList();
+                var missingNames = names.ToList();
                 missingNames.RemoveAll(name => scheme.Names.Contains(name));
 
                 if (missingNames.Any())

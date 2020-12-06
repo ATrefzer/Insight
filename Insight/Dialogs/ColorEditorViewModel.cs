@@ -21,6 +21,9 @@ namespace Insight.Dialogs
         private readonly IColorScheme _colorScheme;
         private List<ColorMapping> _allMappings;
 
+        /// <summary>
+        /// AllMappings is initialized only once. We only change the colors.
+        /// </summary>
         public List<ColorMapping> AllMappings
         {
             get => _allMappings;
@@ -34,10 +37,25 @@ namespace Insight.Dialogs
         public ICommand MergeColorsCommand { get; set; }
         public ICommand ResetCommand { get; set; }
         public ICommand ApplyCommand { get; set; }
-
         public ICommand CloseCommand { get; set; }
-
         public ICommand ReleaseCommand { get; set; }
+        public ICommand ColorAssignmentCommand { get; set; }
+
+        public ICommand AddCustomColorCommand { get; set; }
+
+
+        private string _searchText;
+        private List<Color> _allColors;
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+            }
+        }
 
         // TODO give name of a color scheme for example teams, anonymous etc.
         public ColorEditorViewModel(IColorSchemeManager colorSchemeManager)
@@ -50,19 +68,138 @@ namespace Insight.Dialogs
             ApplyCommand = new DelegateCommand<Window>(OnApplyClick);
             ResetCommand = new DelegateCommand(OnResetClick);
             CloseCommand = new DelegateCommand<Window>(OnCloseClick);
+            ColorAssignmentCommand = new DelegateCommand<IReadOnlyList<object>>(OnColorAssignmentClick);
+            AddCustomColorCommand = new DelegateCommand<Color?>(AddCustomColorClick);
 
-            Reset();
+            ShowOnlyFreeColors = false;
+
+            Init();
+        }
+
+        private readonly List<Color> _newCustomColors = new List<Color>();
+
+        private void AddCustomColorClick(Color? newColor)
+        {
+            if (!newColor.HasValue)
+            {
+                return;
+            }
+
+            if (_colorScheme.GetAllColors().Contains(newColor.Value) || _newCustomColors.Contains(newColor.Value))
+            {
+                // The color already exists
+                AssignmentColor = newColor.Value;
+            }
+            else
+            {
+                _newCustomColors.Add(newColor.Value);
+
+                // Ensure new color is shown.
+                UpdateAssignableColors();
+            }
+        }
+
+        public Color AssignmentColor
+        {
+            get { return _assignmentColor; }
+            set
+            {
+                _assignmentColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private Color _assignmentColor = DefaultDrawingPrimitives.DefaultColor;
+
+
+        private void OnColorAssignmentClick(IReadOnlyList<object> untypedMappings)
+        {
+            var mappings = untypedMappings.OfType<ColorMapping>().ToList();
+            foreach (var mapping in mappings)
+            {
+                mapping.Color = AssignmentColor;
+            }
+
+            if (ShowOnlyFreeColors == true)
+            {
+                UpdateAssignableColors();
+            }
+        }
+
+        void UpdateAssignableColors()
+        {
+            var allColors = _colorScheme.GetAllColors().Union(_newCustomColors);
+            if (ShowOnlyFreeColors == true)
+            {
+                // Note: AllMappings is initialized only once
+                var usedColors = AllMappings.Select(mapping => mapping.Color).Distinct();
+                VisibleColors = allColors.Except(usedColors).ToList();
+            }
+            else
+            {
+                VisibleColors = allColors.ToList();
+            }
+        }
+
+        private void Init()
+        {
+            // Load initial mappings and colors.
+            AllMappings = _colorScheme.GetColorMappings().ToList();
+            UpdateAssignableColors();
+            SearchText = "";
         }
 
         private void Reset()
         {
+            _newCustomColors.Clear();
+
             // Reload mappings and discards any changes
-            AllMappings = _colorScheme.ToList();
+            var names = _colorScheme.GetColorMappings().Select(mapping => mapping.Name).ToArray();
 
-            // If there is no color scheme create a new one!
+            // Assign default colors
+            var tmpSchema = new ColorScheme(names);
+            AllMappings = tmpSchema.GetColorMappings().ToList();
 
-            var allColors = _allMappings.Select(pair => pair.Color).ToList();
+            UpdateAssignableColors();
+            SearchText = "";
         }
+
+        public List<Color> AllColors
+        {
+            get => _allColors;
+            set
+            {
+                _allColors = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+        public List<Color> VisibleColors
+        {
+            get => _visibleColors;
+            set
+            {
+                _visibleColors = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private List<Color> _visibleColors;
+
+        public bool? ShowOnlyFreeColors
+        {
+            get => _showOnlyFreeColors;
+            set
+            {
+                _showOnlyFreeColors = value;
+                UpdateAssignableColors();
+                OnPropertyChanged();
+            }
+        }
+
+        private bool? _showOnlyFreeColors;
+
 
         private void OnMergeColorsClick(IReadOnlyList<object> selectedItems)
         {
@@ -97,7 +234,7 @@ namespace Insight.Dialogs
 
         public void OnApplyClick(Window wnd)
         {
-            _colorSchemeManager.UpdateAndSave(_colorScheme, AllMappings);
+            _colorSchemeManager.UpdateAndSave(_colorScheme, AllMappings, _newCustomColors);
             wnd.Close();
         }
 

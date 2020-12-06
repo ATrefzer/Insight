@@ -6,99 +6,174 @@
         xmlns:local="clr-namespace:Insight.Dialogs"
         xmlns:Controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
         xmlns:Insight="clr-namespace:Insight"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=local:ColorEditorViewModel,IsDesignTimeCreatable=False}"
-        Title="{x:Static Insight:Strings.EditColors}" Height="450" Width="800" 
+        Title="{x:Static Insight:Strings.EditColors}"
+        Height="650"
+        Width="800"
         x:Name="_editor">
     <Window.Resources>
 
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-            <ResourceDictionary Source="InsightStyles.xaml" />
+                <ResourceDictionary Source="InsightStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibility"/>
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition  Width="auto"/>
-        </Grid.ColumnDefinitions>
+    <DockPanel >
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="auto" />
-        </Grid.RowDefinitions>
-        <Grid DockPanel.Dock="Left">
-
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-            <TextBox  TextChanged="OnSearchTextChanged"  x:Name="_searchText" Style="{StaticResource TextBoxStyle}"/>
-            <ListBox Grid.Row="1" SelectionMode="Extended"
-                     ItemsSource="{Binding AllMappings}" x:Name="_mappingView"
-                     ContextMenuOpening="OnContextMenuOpening"
-                     >
-
-                <ListBox.ContextMenu>
-                    <ContextMenu x:Name="_contextMenu" >
-                        <MenuItem Header="Merge" Command="{Binding MergeColorsCommand}"  
-
-                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"
-
-                                  x:Name="_mergeMenu" />
-
-                        <MenuItem Header="Release Color" Command="{Binding ReleaseCommand}"  
-
-                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}" />
-                    </ContextMenu>
-                </ListBox.ContextMenu>
-
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="Controls:ColorMapping">
-                        <StackPanel Orientation="Horizontal">
-                            <Rectangle Width="24" Height="24" Margin="0 0 5 0">
-                                <Rectangle.Fill>
-                                    <SolidColorBrush Color="{Binding Color}" />
-                                </Rectangle.Fill>
-                            </Rectangle>
-
-                            <TextBlock Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
-        <Expander x:Name="_expander" Header="" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                  
-                   DockPanel.Dock="Right"   ExpandDirection="Right"
-                   Grid.Row="0"
-                   Grid.Column="1"
-                   >
-       
-            <Grid  Visibility="{Binding ElementName=_expander, Path=IsExpanded, Converter={StaticResource BooleanToVisibility}}" >
-               <TextBlock Text="Show all colors here!" />
-            </Grid>
-
-
-        </Expander>
 
         <!-- Button footer-->
-        <StackPanel Grid.Row="1"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="2"
+        <StackPanel DockPanel.Dock="Bottom" 
+                  
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
+                    
                     Margin="5">
 
-            <Button Content="{x:Static Insight:Strings.Reset}" Command="{Binding ResetCommand}" Style="{StaticResource DialogButtonStyle}"/>
-            <Button Content="{x:Static Insight:Strings.Apply}" Command="{Binding ApplyCommand}" CommandParameter="{Binding ElementName=_editor}" Style="{StaticResource DialogButtonStyle}" Margin="5 0 5 0"/>
-            <Button Content="{x:Static Insight:Strings.Cancel}" Command="{Binding CloseCommand}" CommandParameter="{Binding ElementName=_editor}" Style="{StaticResource DialogButtonStyle}"/>
+            <Button Content="{x:Static Insight:Strings.Reset}"
+                    Command="{Binding ResetCommand}"
+                    Style="{StaticResource DialogButtonStyle}"/>
+            <Button Content="{x:Static Insight:Strings.Apply}"
+                    Command="{Binding ApplyCommand}"
+                    CommandParameter="{Binding ElementName=_editor}"
+                    Style="{StaticResource DialogButtonStyle}"
+                    Margin="5 0 5 0"/>
+            <Button Content="{x:Static Insight:Strings.Cancel}"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="{Binding ElementName=_editor}"
+                    Style="{StaticResource DialogButtonStyle}"/>
         </StackPanel>
 
-    </Grid>
+        <!-- All above the buttons -->
+
+        <Grid DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Mappings list and search box-->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBox Text="{Binding SearchText}"
+                     TextChanged="OnSearchTextChanged"
+                     x:Name="_searchText"
+                     HorizontalAlignment="Stretch"
+                     Style="{StaticResource TextBoxStyle}"/>
+                <ListBox Grid.Row="1"
+                     SelectionMode="Extended"
+                     ItemsSource="{Binding AllMappings}"
+                     x:Name="_mappingView"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch"
+                     ContextMenuOpening="OnContextMenuOpening">
+
+                    <ListBox.ContextMenu>
+                        <ContextMenu x:Name="_contextMenu">
+                            <MenuItem Header="Merge"
+                                  Command="{Binding MergeColorsCommand}"
+                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"
+                                  x:Name="_mergeMenu"/>
+
+                            <MenuItem Header="Release Color"
+                                  Command="{Binding ReleaseCommand}"
+                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="Controls:ColorMapping">
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="24"
+                                       Height="24"
+                                       Margin="0 0 5 0">
+                                    <Rectangle.Fill>
+                                        <SolidColorBrush Color="{Binding Color}"/>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+
+                                <TextBlock Text="{Binding Name}"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- Without the HorizontalAlignment="Center" the splitter creates an increasing gap on the left when moving to the right -->
+            <GridSplitter Grid.Column="1" Grid.Row="0" Width="5" HorizontalAlignment="Center" ShowsPreview="False"/>
+
+            <!-- Right side -->
+            <GroupBox  Grid.Row="0" Grid.Column="2" >
+                <GroupBox.Header>
+                    <TextBlock Text="Palette" FontWeight="Bold" />
+                </GroupBox.Header>
+                <StackPanel  Orientation="Vertical">
+
+                    <ListBox ItemsSource="{Binding VisibleColors}" HorizontalAlignment="Left" VerticalAlignment="Top" SelectedValue="{Binding AssignmentColor}">
+
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="MouseDoubleClick">
+                                <i:InvokeCommandAction Command="{Binding ColorAssignmentCommand}" CommandParameter="{Binding ElementName=_mappingView, Path=SelectedItems}"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <!-- Don't stretch the grid. This leads to gaps between the rows -->
+                                <UniformGrid HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0"/>
+                            </Style>
+
+                        </ListBox.ItemContainerStyle>
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Rectangle Width="24" Height="24" Margin="0" >
+                                    <Rectangle.Fill>
+                                        <SolidColorBrush Color="{Binding}"/>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <CheckBox Content="Show only free colors. Refresh when color is assigned"  IsChecked="{Binding ShowOnlyFreeColors}" IsThreeState="False"
+                              Margin="0 5  5 5"/>
+
+                    <GroupBox HorizontalAlignment="Left" Header="Brew your own color"  Margin="0 5 0 0">
+                        <StackPanel Orientation="Vertical">
+
+                            <Controls:ColorBrewer  HorizontalAlignment="Left" x:Name="_brewer"/>
+
+                            <Button Content="Add custom color" Margin="0 10 0 0" Command="{Binding AddCustomColorCommand}" CommandParameter="{Binding ElementName=_brewer, Path=BrewedColor}"/>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+
+
+
+
+    </DockPanel>
 </Window>
