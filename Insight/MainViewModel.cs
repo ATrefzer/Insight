@@ -41,7 +41,6 @@ namespace Insight
         private readonly DialogService _dialogs;
 
         private Project _project;
-        private IColorSchemeManager _colorSchemeManager;
 
         private readonly TabManager _tabManager;
         private readonly ViewController _viewController;
@@ -50,6 +49,7 @@ namespace Insight
         private ObservableCollection<TabContentViewModel> _tabs = new ObservableCollection<TabContentViewModel>();
         private PreferredDisplayMode _displayMode = PreferredDisplayMode.TreeMap;
         private List<ResultData> _activeData = new List<ResultData>();
+        private bool _isAliasMappingActive;
 
         public MainViewModel(ViewController viewController, DialogService dialogs, BackgroundExecution backgroundExecution,
                              Analyzer analyzer,
@@ -108,17 +108,67 @@ namespace Insight
             }
         }
 
+        bool IsAliasMappingActive
+        {
+            get => _isAliasMappingActive;
+            set
+            {
+                _isAliasMappingActive = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string GetAliasMappingPath()
+        {
+            return Path.Combine(_project.GetProjectDirectory(), "alias.txt");
+        }
+
         private void UpdateProject(Project project)
         {
             _project = project;
-            _analyzer.Project = _project;
-            _colorSchemeManager = _project == null ? null : new ColorSchemeManager(GetColorFilePath());
 
+            if (_project != null)
+            {
+                _analyzer.Configure(_project.CreateProvider(), _project.Cache, _project.DisplayFilter);
+            }
+            
             _tabs.Clear();
             _analyzer.Clear();
 
             // Update Ribbon
             Refresh();
+        }
+
+        IColorSchemeManager CreateColorSchemeManager()
+        {
+            ColorSchemeManager colorSchemeManager;
+            if (IsAliasMappingActive)
+            {
+                colorSchemeManager = new ColorSchemeManager(GetColorFilePathForAlias());
+            }
+            else
+            {
+                colorSchemeManager = new ColorSchemeManager(GetColorFilePath());
+            }
+
+            return colorSchemeManager;
+        }
+
+        IAliasMapping CreateAliasMapping()
+        {
+            IAliasMapping aliasMapping;
+            if (IsAliasMappingActive)
+            {
+                var obj = new AliasMapping(GetAliasMappingPath());
+                obj.Load();
+                aliasMapping = obj;
+            }
+            else
+            {
+                aliasMapping = new NullAliasMapping();
+            }
+
+            return aliasMapping;
         }
 
         public string Title { get; set; } = "Insight";
@@ -200,7 +250,7 @@ namespace Insight
         {
             if (IsProjectValid)
             {
-                _viewController.ShowColorEditorViewViewer(_colorSchemeManager);
+                _viewController.ShowColorEditorViewViewer(CreateColorSchemeManager());
             }
         }
 
@@ -235,7 +285,10 @@ namespace Insight
         public async void OnShowWork(IHierarchicalData data)
         {
             var fileToAnalyze = data.Tag as string;
-            var colorScheme = _colorSchemeManager.LoadColorScheme();
+            
+            var colorSchemeManager = CreateColorSchemeManager();
+            var colorScheme = colorSchemeManager.LoadColorScheme();
+
             var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme))
                                                  .ConfigureAwait(true);
 
@@ -383,7 +436,9 @@ namespace Insight
 
         private async void KnowledgeClick()
         {
-            var colorScheme = _colorSchemeManager.LoadColorScheme();
+            var colorSchemeManager = CreateColorSchemeManager();
+            var colorScheme = colorSchemeManager.LoadColorScheme();
+
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(colorScheme));
             if (context == null)
             {
@@ -398,6 +453,11 @@ namespace Insight
             return Path.Combine(_project.GetProjectDirectory(), ColorSchemeManager.DefaultFileName);
         }
 
+        private string GetColorFilePathForAlias()
+        {
+            return Path.Combine(_project.GetProjectDirectory(), "colors_alias.json");
+        }
+
         private async void KnowledgeLossClick()
         {
             var forDeveloper = GetDeveloperForKnowledgeLoss();
@@ -406,7 +466,9 @@ namespace Insight
                 return;
             }
 
-            var colorScheme = _colorSchemeManager.LoadColorScheme();
+            var colorSchemeManager = CreateColorSchemeManager();
+            var colorScheme = colorSchemeManager.LoadColorScheme();
+
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper, colorScheme));
             if (context == null)
             {
@@ -592,23 +654,48 @@ namespace Insight
 
             try
             {
-                var developers = new List<string>();
+             
 
                 await _backgroundExecution.ExecuteWithProgressAsync(progress =>
                                                                     {
                                                                         _analyzer.UpdateCache(progress, includeContributions);
-                                                                        developers = _analyzer.GetAllKnownDevelopers();
+                                                                        var developers = _analyzer.GetAllKnownDevelopers();
+
+                                                                        UpdateDeveloperColorScheme(developers);
+                                                                        UpdateDeveloperAliasMappings(developers);
+
+                                                                        // Note: We do not update the colors for alias mappings.
+
                                                                     }, true);
-
-                // Don't delete, only extend if necessary
-                _colorSchemeManager.UpdateColorScheme(developers);
-
+             
+                
                 _tabManager.ShowWarnings(_analyzer.Warnings);
             }
             catch (Exception ex)
             {
                 ShowException(ex);
             }
+        }
+
+        /// <summary>
+        /// Color scheme for developers
+        /// Don't delete, only extend if necessary.
+        /// </summary>
+        private void UpdateDeveloperColorScheme(List<string> developers)
+        {
+            var colorSchemeManager = new ColorSchemeManager(GetColorFilePath());
+            colorSchemeManager.UpdateColorScheme(developers);
+        }
+
+        /// <summary>
+        /// Alias mappings (for example anonymity or teams)
+        /// Don't delete, only extend if necessary.
+        /// </summary>
+        void UpdateDeveloperAliasMappings(IEnumerable<string> developers)
+        {
+            // Ensure every developer is part of the mapping file.
+            var aliasMappings = new AliasMapping(GetAliasMappingPath());
+            aliasMappings.CreateDefaultAliases(developers);
         }
 
         private void ShowException(Exception exception)

@@ -41,7 +41,7 @@ namespace Insight.Metrics
         }
 
 
-        public Dictionary<string, LinesOfCode> QueryCachedLinesOfCode(string cacheDirectory)
+        public Dictionary<string, LinesOfCode> QueryLinesOfCode(string cacheDirectory)
         {
             var metricsFile = Path.Combine(cacheDirectory, "metrics.json");
             if (!File.Exists(metricsFile))

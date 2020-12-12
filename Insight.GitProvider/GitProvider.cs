@@ -50,7 +50,7 @@ namespace Insight.GitProvider
 
             VerifyGitPreConditions();
 
-            using (_repo = new Repository(_startDirectory))
+            using (_repo = new Repository(_projectBase))
             {
                 UpdateHistory(progress);
             }
@@ -94,7 +94,7 @@ namespace Insight.GitProvider
         {
             Graph graph;
             ChangeSetHistory history;
-            using (var repo = new Repository(_startDirectory))
+            using (var repo = new Repository(_projectBase))
             {
                 // All nodes in current branch reachable from the head.
 

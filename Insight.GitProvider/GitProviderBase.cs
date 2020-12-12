@@ -25,10 +25,15 @@ namespace Insight.GitProvider
         protected string _contributionFile;
 
         protected PathMapper _mapper;
-        protected string _startDirectory;
+        protected string _projectBase;
         protected string _workItemRegex;
 
         public List<WarningMessage> Warnings { get; protected set; }
+
+        /// <summary>
+        /// The start directory.
+        /// </summary>
+        public string BaseDirectory => _projectBase;
 
         /// <summary>
         /// <inheritdoc cref="ISourceControlProvider.CalculateDeveloperWork"/>
@@ -136,7 +141,7 @@ namespace Insight.GitProvider
 
         protected string GetMasterHead()
         {
-            var masterRefPath = Path.Combine(_startDirectory, ".git\\refs\\heads\\master");
+            var masterRefPath = Path.Combine(_projectBase, ".git\\refs\\heads\\master");
             if (!File.Exists(masterRefPath))
             {
                 throw new Exception("Can't locate master's head.");
@@ -199,7 +204,7 @@ namespace Insight.GitProvider
 
         protected void VerifyGitPreConditions()
         {
-            if (!Directory.Exists(Path.Combine(_startDirectory, ".git")))
+            if (!Directory.Exists(Path.Combine(_projectBase, ".git")))
             {
                 // We need the root (containing .git) because of the function MapToLocalFile.
                 throw new ArgumentException("The given start directory is not the root of a git repository.");
@@ -268,16 +273,16 @@ namespace Insight.GitProvider
 
         public virtual void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
-            _startDirectory = projectBase;
+            _projectBase = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
 
             _historyFile = Path.Combine(cachePath, "git_history.json");
             _contributionFile = Path.Combine(cachePath, "contribution.json");
-            _gitCli = new GitCommandLine(_startDirectory);
+            _gitCli = new GitCommandLine(_projectBase);
 
             // "/" maps to _startDirectory
-            _mapper = new PathMapper(_startDirectory);
+            _mapper = new PathMapper(_projectBase);
         }
 
         protected void SaveFullLogToDisk()

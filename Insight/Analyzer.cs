@@ -19,6 +19,7 @@ namespace Insight
     public sealed class Analyzer
     {
         private readonly IMetricProvider _metricsProvider;
+        private readonly string[] _supportedFileTypesForAnalysis;
 
         /// <summary>
         /// Local path -> contribution
@@ -27,19 +28,29 @@ namespace Insight
 
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
+        private IFilter _displayFilter;
+        private ISourceControlProvider _sourceProvider;
+        private string _outputPath;
 
 
-        // TODO atr remove this property and pass required information to method calls
-        // We only need filter, cache directory and source code provider
-
-        public Analyzer(IMetricProvider metricProvider)
+        public Analyzer(IMetricProvider metricProvider, string[] supportedFileTypesForAnalysis)
         {
             _metricsProvider = metricProvider;
+            _supportedFileTypesForAnalysis = supportedFileTypesForAnalysis;
+        }
+
+        /// <summary>
+        /// Set all properties that are associated with a selected project.
+        /// Call this whenever you load a new project or change an existing project.
+        /// </summary>
+        public void Configure(ISourceControlProvider provider, string outputPath, IFilter displayFilter)
+        {
+            _sourceProvider = provider;
+            _outputPath = outputPath;
+            _displayFilter = displayFilter;
         }
 
         public List<WarningMessage> Warnings { get; private set; }
-
-        public IProject Project { get; set; }
 
         public List<Coupling> AnalyzeChangeCoupling()
         {
@@ -47,12 +58,14 @@ namespace Insight
 
             // Pair wise couplings
             var couplingAnalyzer = new ChangeCouplingAnalyzer();
-            var couplings = couplingAnalyzer.CalculateChangeCouplings(_history, Project.Filter);
+            var couplings = couplingAnalyzer.CalculateChangeCouplings(_history, _displayFilter);
             var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
-            Csv.Write(Path.Combine(Project.Cache, "change_couplings.csv"), sortedCouplings);
+            Csv.Write(Path.Combine(_outputPath, "change_couplings.csv"), sortedCouplings);
 
+
+            // TODO I removed this from the wiki
             // Same with classified folders (show this one if available)
-            var mappingFile = Path.Combine(Project.Cache, "logical_components.xml");
+            var mappingFile = Path.Combine(_outputPath, "logical_components.xml");
             if (File.Exists(mappingFile))
             {
                 return AnalyzeLogicalComponentChangeCoupling(mappingFile);
@@ -66,8 +79,10 @@ namespace Insight
             LoadHistory();
             LoadMetrics();
 
+            // TODO merge metric files with the display filter!
+
             // Get summary of all files
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
 
             var builder = new CodeAgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
@@ -86,7 +101,7 @@ namespace Insight
             LoadMetrics();
             LoadContributions(false);
 
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
             var fileToFractalValue = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
 
             var builder = new FragmentationBuilder();
@@ -104,7 +119,7 @@ namespace Insight
             LoadMetrics();
 
             // Get summary of all files
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
 
             var builder = new HotspotBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
@@ -120,14 +135,14 @@ namespace Insight
             LoadMetrics();
             LoadContributions(false);
 
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Assign a color to each developer
             var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct().ToList();
 
             var legend = new LegendBitmap(mainDevelopers, colorScheme);
-            legend.CreateLegendBitmap(Path.Combine(Project.Cache, "knowledge_color.bmp"));
+            legend.CreateLegendBitmap(Path.Combine(_outputPath, "knowledge_color.bmp"));
 
             // Build the knowledge data
             var builder = new KnowledgeBuilder();
@@ -150,7 +165,7 @@ namespace Insight
             LoadMetrics();
             LoadContributions(false);
 
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
             var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Build the knowledge data
@@ -167,10 +182,8 @@ namespace Insight
         {
             var trend = new List<TrendData>();
 
-            var provider = Project.CreateProvider();
-
             // Log on this file to get all revisions
-            var fileHistory = provider.ExportFileHistory(localFile);
+            var fileHistory = _sourceProvider.ExportFileHistory(localFile);
 
             // For each file we need to calculate the metrics LOC and inverted whitespace.
             foreach (var file in fileHistory)
@@ -186,13 +199,12 @@ namespace Insight
 
         public string AnalyzeWorkOnSingleFile(string fileName, IColorScheme colorScheme)
         {
-            var provider = Project.CreateProvider();
-            var workByDeveloper = provider.CalculateDeveloperWork(fileName);
+            var workByDeveloper = _sourceProvider.CalculateDeveloperWork(fileName);
 
             var bitmap = new FractionBitmap();
 
             var fi = new FileInfo(fileName);
-            var path = Path.Combine(Project.Cache, fi.Name) + ".bmp";
+            var path = Path.Combine(_outputPath, fi.Name) + ".bmp";
 
 
             // TODO atr bitmap?
@@ -235,7 +247,7 @@ namespace Insight
                            });
             }
 
-            Csv.Write(Path.Combine(Project.Cache, "comments.csv"), result);
+            Csv.Write(Path.Combine(_outputPath, "comments.csv"), result);
             return result;
         }
 
@@ -245,7 +257,7 @@ namespace Insight
             LoadMetrics();
             LoadContributions(true); // silent
 
-            var summary = _history.GetArtifactSummary(Project.Filter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
             var hotspotCalculator = new HotspotCalculator(summary, _metrics);
 
             var orderedByLocalPath = summary.OrderBy(x => x.LocalPath).ToList();
@@ -257,7 +269,7 @@ namespace Insight
 
             var now = DateTime.Now.ToIsoShort();
 
-            Csv.Write(Path.Combine(Project.Cache, $"summary-{now}.csv"), gridData);
+            Csv.Write(Path.Combine(_outputPath, $"summary-{now}.csv"), gridData);
             return gridData;
         }
 
@@ -268,19 +280,17 @@ namespace Insight
             
             progress.Message("Updating source control history.");
 
-            var supported = Project.GetSupportedFileTypesForAnalysis();
-            var filter = new ExtensionIncludeFilter(supported);
+            var supportedFilesFilter = new ExtensionIncludeFilter(_supportedFileTypesForAnalysis);
 
             // Note: You should have the latest code locally such that history and metrics match!
-            var provider = Project.CreateProvider();
-            provider.UpdateCache(progress, includeContributions, filter);
+            _sourceProvider.UpdateCache(progress, includeContributions, supportedFilesFilter);
 
             progress.Message("Updating code metrics.");
 
             // Update code metrics
-            _metricsProvider.UpdateLinesOfCodeCache(Project.SourceControlDirectory, Project.Cache, Project.GetSupportedFileTypesForAnalysis());
+            _metricsProvider.UpdateLinesOfCodeCache(_sourceProvider.BaseDirectory, _outputPath, _supportedFileTypesForAnalysis);
 
-            Warnings = provider.Warnings;
+            Warnings = _sourceProvider.Warnings;
         }
 
         internal void Clear()
@@ -329,7 +339,7 @@ namespace Insight
             Func<string, string> classifier = localPath => { return mapper.MapLocalPathToLogicalComponent(localPath); };
 
             var classifiedCouplings = couplingAnalyzer.CalculateClassifiedChangeCouplings(_history, classifier);
-            Csv.Write(Path.Combine(Project.Cache, "classified_change_couplings.csv"), classifiedCouplings);
+            Csv.Write(Path.Combine(_outputPath, "classified_change_couplings.csv"), classifiedCouplings);
 
             return classifiedCouplings;
         }
@@ -396,8 +406,7 @@ namespace Insight
         {
             if (_contributions == null)
             {
-                var provider = Project.CreateProvider();
-                _contributions = provider.QueryContribution();
+                _contributions = _sourceProvider.QueryContribution();
 
                 if (_contributions == null && !silent)
                 {
@@ -410,10 +419,8 @@ namespace Insight
         {
             if (_history == null)
             {
-                var provider = Project.CreateProvider();
-
                 // Assume the history was already cleaned such that it only contains tracked files and no deletes.
-                _history = provider.QueryChangeSetHistory();
+                _history = _sourceProvider.QueryChangeSetHistory();
             }
         }
 
@@ -422,7 +429,7 @@ namespace Insight
             // Get code metrics (all files from the cache!)
             if (_metricsProvider != null)
             {
-                _metrics = _metricsProvider.QueryCachedLinesOfCode(Project.Cache);
+                _metrics = _metricsProvider.QueryLinesOfCode(_outputPath);
             }
         }
     }

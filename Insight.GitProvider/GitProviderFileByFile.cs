@@ -61,6 +61,7 @@ namespace Insight.GitProvider
             base.Initialize(projectBase, cachePath, workItemRegex);
         }
 
+
         private void DeleteAllCaches()
         {
             if (File.Exists(_contributionFile))

@@ -20,6 +20,8 @@ namespace Insight.Shared
         /// <param name="workItemRegex">Optional regular expression to parse commit comments.</param>
         void Initialize(string projectBase, string cachePath, string workItemRegex);
 
+        string BaseDirectory {get;}
+
         /// <summary>
         /// Developer name -> number of lines modified in the given file.
         /// </summary>

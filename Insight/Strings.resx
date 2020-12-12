@@ -218,7 +218,7 @@
   <data name="Visualize" xml:space="preserve">
     <value>Visualize</value>
   </data>
-  <data name="ErrorDirectoryNotInProjectBase" xml:space="preserve">
+  <data name="ErrorDirectoryNotInBaseDirectory" xml:space="preserve">
     <value>The directory is not contained in the project base. This is not allowed!</value>
   </data>
   <data name="SyncInstructions" xml:space="preserve">

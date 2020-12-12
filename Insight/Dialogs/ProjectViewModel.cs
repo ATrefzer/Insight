@@ -178,8 +178,8 @@ namespace Insight.Dialogs
 
         private bool IsExtensionsToExcludeValid()
         {
-            var userInput = Model.NormalizeFileExtensions(ExtensionsToInclude);
-            var supported = Model.GetSupportedFileTypesForAnalysis();
+            var userInput = Project.NormalizeFileExtensions(ExtensionsToInclude);
+            var supported = Project.GetSupportedFileTypesForAnalysis();
 
             var unknown = userInput.Except(supported);
             return unknown.Any() is false;

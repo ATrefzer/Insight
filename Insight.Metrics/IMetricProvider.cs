@@ -30,7 +30,7 @@ namespace Insight.Metrics
         /// Returns a mapping from full file path to lines of code metric.
         /// Throws a FileNotFoundException if the cache file does not exist.
         /// </summary>
-        Dictionary<string, LinesOfCode> QueryCachedLinesOfCode(string cacheDirectory);
+        Dictionary<string, LinesOfCode> QueryLinesOfCode(string cacheDirectory);
 
         /// <summary>
         /// Rebuilds the metric cache file.
