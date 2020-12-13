@@ -4,6 +4,7 @@ using System.Windows;
 
 using Insight.Dialogs;
 using Insight.Metrics;
+using Insight.Shared;
 
 namespace Insight
 {
@@ -67,7 +68,7 @@ namespace Insight
             viewer.ShowDialog();
         }
 
-        public void ShowColorEditorViewViewer(IColorSchemeManager colorSchemeManager)
+        public void ShowColorEditorViewViewer(IColorSchemeManager colorSchemeManager, IAliasMapping aliasMapping)
         {
             var view = new ColorEditorView();
             var viewModel = new ColorEditorViewModel(colorSchemeManager);

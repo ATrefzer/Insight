@@ -49,7 +49,6 @@ namespace Insight
         private ObservableCollection<TabContentViewModel> _tabs = new ObservableCollection<TabContentViewModel>();
         private PreferredDisplayMode _displayMode = PreferredDisplayMode.TreeMap;
         private List<ResultData> _activeData = new List<ResultData>();
-        private bool _isAliasMappingActive;
 
         public MainViewModel(ViewController viewController, DialogService dialogs, BackgroundExecution backgroundExecution,
                              Analyzer analyzer,
@@ -108,16 +107,6 @@ namespace Insight
             }
         }
 
-        bool IsAliasMappingActive
-        {
-            get => _isAliasMappingActive;
-            set
-            {
-                _isAliasMappingActive = value;
-                OnPropertyChanged();
-            }
-        }
-
         public string GetAliasMappingPath()
         {
             return Path.Combine(_project.GetProjectDirectory(), "alias.txt");
@@ -125,6 +114,9 @@ namespace Insight
 
         private void UpdateProject(Project project)
         {
+            _tabs.Clear();
+            _analyzer.Clear();
+            
             _project = project;
 
             if (_project != null)
@@ -132,43 +124,34 @@ namespace Insight
                 _analyzer.Configure(_project.CreateProvider(), _project.Cache, _project.DisplayFilter);
             }
             
-            _tabs.Clear();
-            _analyzer.Clear();
-
             // Update Ribbon
             Refresh();
         }
 
+        /// <summary>
+        /// Create an color scheme manager on the fly.
+        /// This ensure the file can be changed while the app is running.
+        /// </summary>
         IColorSchemeManager CreateColorSchemeManager()
         {
-            ColorSchemeManager colorSchemeManager;
-            if (IsAliasMappingActive)
-            {
-                colorSchemeManager = new ColorSchemeManager(GetColorFilePathForAlias());
-            }
-            else
-            {
-                colorSchemeManager = new ColorSchemeManager(GetColorFilePath());
-            }
-
+            var colorSchemeManager = new ColorSchemeManager(GetColorFilePath());
             return colorSchemeManager;
         }
 
+        /// <summary>
+        /// Create an alias mapping on the fly.
+        /// This ensure the file can be changed while the app is running.
+        /// </summary>
         IAliasMapping CreateAliasMapping()
         {
-            IAliasMapping aliasMapping;
-            if (IsAliasMappingActive)
+            if (!File.Exists(GetAliasMappingPath()))
             {
-                var obj = new AliasMapping(GetAliasMappingPath());
-                obj.Load();
-                aliasMapping = obj;
-            }
-            else
-            {
-                aliasMapping = new NullAliasMapping();
+                return new NullAliasMapping();
             }
 
-            return aliasMapping;
+            var mapping = new AliasMapping(GetAliasMappingPath());
+            mapping.Load();
+            return mapping;
         }
 
         public string Title { get; set; } = "Insight";
@@ -250,7 +233,7 @@ namespace Insight
         {
             if (IsProjectValid)
             {
-                _viewController.ShowColorEditorViewViewer(CreateColorSchemeManager());
+                _viewController.ShowColorEditorViewViewer(CreateColorSchemeManager(), CreateAliasMapping());
             }
         }
 
@@ -350,7 +333,7 @@ namespace Insight
 
         private async void FragmentationClick()
         {
-            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation());
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeFragmentation(CreateAliasMapping()));
             if (context == null)
             {
                 return;
@@ -377,7 +360,7 @@ namespace Insight
             string forDeveloper;
             try
             {
-                var mainDevelopers = _analyzer.GetMainDevelopers();
+                var mainDevelopers = _analyzer.GetMainDevelopers(CreateAliasMapping());
                 forDeveloper = _viewController.SelectDeveloper(mainDevelopers);
             }
             catch (Exception ex)
@@ -405,14 +388,14 @@ namespace Insight
 
         private async void HotspotsClick()
         {
+            var mapping = CreateAliasMapping();
+
             // Analyze hotspots from summary and code metrics
-            var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeHotspots);
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeHotspots());
             if (context == null)
             {
                 return;
             }
-
-            var colorScheme = context.ColorScheme;
 
             ShowHierarchicalData("Hotspots", context, GetDefaultCommands(), true);
         }
@@ -438,8 +421,9 @@ namespace Insight
         {
             var colorSchemeManager = CreateColorSchemeManager();
             var colorScheme = colorSchemeManager.LoadColorScheme();
+            var aliasMapping = CreateAliasMapping();
 
-            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(colorScheme));
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(colorScheme, aliasMapping));
             if (context == null)
             {
                 return;
@@ -453,11 +437,6 @@ namespace Insight
             return Path.Combine(_project.GetProjectDirectory(), ColorSchemeManager.DefaultFileName);
         }
 
-        private string GetColorFilePathForAlias()
-        {
-            return Path.Combine(_project.GetProjectDirectory(), "colors_alias.json");
-        }
-
         private async void KnowledgeLossClick()
         {
             var forDeveloper = GetDeveloperForKnowledgeLoss();
@@ -468,8 +447,9 @@ namespace Insight
 
             var colorSchemeManager = CreateColorSchemeManager();
             var colorScheme = colorSchemeManager.LoadColorScheme();
+            var aliasMapping = CreateAliasMapping();
 
-            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper, colorScheme));
+            var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper, colorScheme, aliasMapping));
             if (context == null)
             {
                 return;
@@ -630,7 +610,8 @@ namespace Insight
 
         private async void SummaryClick()
         {
-            var summary = await _backgroundExecution.ExecuteAsync(_analyzer.ExportSummary);
+            var aliasMapping = CreateAliasMapping();
+            var summary = await _backgroundExecution.ExecuteAsync(() => _analyzer.ExportSummary(aliasMapping));
 
             _tabManager.ShowText(summary, "Summary");
         }

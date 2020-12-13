@@ -35,14 +35,14 @@ namespace Insight.Shared
     {
         private readonly HashSet<string> _acceptedFiles;
 
-        public FileFilter(List<string> acceptedFiles)
+        public FileFilter(IEnumerable<string> acceptedFiles)
         {
             _acceptedFiles = new HashSet<string>(acceptedFiles.Select(x => x.ToLowerInvariant()));
         }
 
         public bool IsAccepted(string path)
         {
-            var accepted = _acceptedFiles.Contains(path.ToLower());
+            var accepted = _acceptedFiles.Contains(path.ToLowerInvariant());
             return accepted;
         }
     }

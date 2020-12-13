@@ -133,6 +133,7 @@
                                       Command="{Binding EditColorsCommand}"/>
 
                         <RibbonToggleButton Margin="5,0,0,0"
+                                            HorizontalAlignment="Left"
                                             Command="{Binding ToggleDisplayModeCommand}"
                                             SmallImageSource="Resources/display_16.png">
                             <RibbonToggleButton.Style>
@@ -144,12 +145,12 @@
                                         <DataTrigger Binding="{Binding DisplayMode}"
                                                      Value="{x:Static local:PreferredDisplayMode.CirclePackaging}">
                                             <Setter Property="Label"
-                                                    Value="{x:Static local:Strings.PreferTreeMap}"/>
+                                                    Value="{x:Static local:Strings.SwitchToTreeMap}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding DisplayMode}"
                                                      Value="{x:Static local:PreferredDisplayMode.TreeMap}">
                                             <Setter Property="Label"
-                                                    Value="{x:Static local:Strings.PreferCircle}"/>
+                                                    Value="{x:Static local:Strings.SwitchToCircles}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -225,28 +226,7 @@
             </TabControl.ContentTemplate>
 
         </TabControl>
-        <!--
-        <TabControl Name="_tabControl">
-            <TabItem Header="Circle Packaging View">
-                <controls:CirclePackagingView Name="_circlePackaging"/>
-            </TabItem>
-            <TabItem Header="TreeMap View">
-                <controls:TreeMapView Name="_treeMap"/>
-            </TabItem>
-            <TabItem Header="Image View">
-                <Image Name="_img"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Top"
-                       Stretch="None"/>
-            </TabItem>
-            <TabItem Header="Data View">
-                <controls:DataGridView Name="_data" />
-            </TabItem>
-            <TabItem Header="Chord View">
-                <controls:ChordView Name="_chord"/>
-            </TabItem>
-        </TabControl>
-        -->
+     
 
     </DockPanel>
 </RibbonWindow>

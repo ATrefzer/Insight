@@ -23,7 +23,7 @@ namespace Insight.Shared.Model
         /// <summary>
         ///     Returns a flat summary of all artifacts found in the commit history.
         /// </summary>
-        public List<Artifact> GetArtifactSummary(IFilter filter, HashSet<string> metricFiles)
+        public List<Artifact> GetArtifactSummary(IFilter filter, IAliasMapping aliasMapping)
         {
             // Item id -> artifact
             var artifacts = new Dictionary<string, Artifact>();
@@ -31,7 +31,7 @@ namespace Insight.Shared.Model
             var set = new HashSet<string>();
 
             // Files we already know we skip are not checked again!
-            var ignore = new HashSet<string>();
+            var ignoredIds = new HashSet<string>();
 
             foreach (var changeset in ChangeSets)
             {
@@ -49,7 +49,7 @@ namespace Insight.Shared.Model
                     // The first time we see a file (id) it is the latest version of the file.
                     // Either add it to the summary or ignore list.
                     var id = item.Id;
-                    if (ignore.Contains(id))
+                    if (ignoredIds.Contains(id))
                     {
                         // Files we already know to be skipped are not checked again! (Performance)
                         continue;
@@ -57,7 +57,7 @@ namespace Insight.Shared.Model
 
                     if (filter != null && !filter.IsAccepted(item.LocalPath))
                     {
-                        ignore.Add(id);
+                        ignoredIds.Add(id);
                         continue;
                     }
 
@@ -65,17 +65,14 @@ namespace Insight.Shared.Model
                     {
                         // The changeset where we see the item the first time is the latest revision!
 
-                        if (!Exists(item, metricFiles))
+                        if (!Exists(item))
                         {
-                            // Because I delete now no longer tracked files from the history we should never end up here!
-                            // However in git it is possible because we may see a commit with a modify after a delete.
-
                             // This may still happen because we skip large merges that may contain a final rename.
                             // So we have a code metric but still believe that the file is at its former location
 
                             // TODO show as warning!
                             Trace.WriteLine($"Ignored file: '{item.LocalPath}'. It should exist. Possible cause: Ignored commit with too much work items containing a final rename.");
-                            ignore.Add(id);
+                            ignoredIds.Add(id);
                             continue;
                         }
 
@@ -88,11 +85,12 @@ namespace Insight.Shared.Model
                     }
 
                     var artifact = artifacts[id];
+                    var committerAlias = aliasMapping.GetAlias(changeset.Committer);
 
                     // Aggregate information from earlier commits (for example number of commits etc)
                     // TODO ApplyTeams(teamClassifier, artifact, changeset);
                     ApplyCommits(artifact);
-                    ApplyCommitters(artifact, changeset);
+                    ApplyCommitter(artifact, committerAlias);
                     ApplyWorkItems(artifact, changeset);
                 }
             }
@@ -102,15 +100,16 @@ namespace Insight.Shared.Model
             return artifacts.Where(pair => !pair.Value.IsDeleted).Select(pair => pair.Value).ToList();
         }
 
+        private static void ApplyCommitter(Artifact artifact, string committer)
+        {
+            artifact.Committers.Add(committer);
+        }
+
         private static void ApplyCommits(Artifact artifact)
         {
             artifact.Commits = artifact.Commits + 1;
         }
 
-        private static void ApplyCommitters(Artifact artifact, ChangeSet changeset)
-        {
-            artifact.Committers.Add(changeset.Committer);
-        }
 
         private static void ApplyTeams(ITeamClassifier teamClassifier, Artifact artifact, ChangeSet changeset)
         {
@@ -201,14 +200,8 @@ namespace Insight.Shared.Model
             }
         }
 
-        private bool Exists(ChangeItem item, HashSet<string> localFiles)
+        private bool Exists(ChangeItem item)
         {
-            if (localFiles != null && localFiles.Any())
-            {
-                // Performance optimization
-                return localFiles.Contains(item.LocalPath.ToLowerInvariant());
-            }
-
             return item.Exists();
         }
 

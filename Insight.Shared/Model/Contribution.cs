@@ -8,6 +8,7 @@ namespace Insight.Shared.Model
 {
     /// <summary>
     /// Contributions for a single file or logical component.
+    /// Note: There is no alias mapping involved here.
     /// </summary>
     [Serializable]
     public sealed class Contribution

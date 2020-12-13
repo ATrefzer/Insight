@@ -42,6 +42,7 @@
     <Compile Include="CsvWriter.cs" />
     <Compile Include="Exceptions\ProviderException.cs" />
     <Compile Include="Calculation\FractalValue.cs" />
+    <Compile Include="IAliasMapping.cs" />
     <Compile Include="IProgress.cs" />
     <Compile Include="JsonFile.cs" />
     <Compile Include="LogicalComponentMapper.cs" />

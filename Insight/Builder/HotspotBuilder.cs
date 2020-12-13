@@ -46,8 +46,8 @@ namespace Insight.Builder
             var area = GetArea(item);
             var weight = GetWeight(item);
 
-            // File must have a size (lines of code) and must have been at least 2 times committed.
-            return area > Thresholds.MinLinesOfCodeForHotspot && weight > Thresholds.MinCommitsForHotspots;
+            // File must have a size (lines of code) of 1 and must have been at least 3 times committed.
+            return area >= Thresholds.MinLinesOfCodeForHotspot && weight >= Thresholds.MinCommitsForHotspots;
         }
     }
 }

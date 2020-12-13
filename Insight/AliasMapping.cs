@@ -3,30 +3,30 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Insight.Shared;
 
 namespace Insight
 {
-    public interface IAliasMapping
-    {
-        string TryGetAlias(string name);
-    }
-
     class NullAliasMapping : IAliasMapping
     {
-        public string TryGetAlias(string name)
+        public string GetAlias(string name)
         {
             return name;
         }
+
+        public IEnumerable<string> GetReverse(string alias)
+        {
+            return new List<string>{alias};
+        }
     }
 
-    class AliasMapping : IAliasMapping
+    public class AliasMapping : IAliasMapping
     {
         readonly Dictionary<string, string> _aliasMapping = new Dictionary<string, string>();
 
         private readonly string _fileName;
 
-        const string Separator = "%>%";
-        private const string Ignore = "%ignore%";
+        const string Separator = ">>";
 
         public AliasMapping(string fileName)
         {
@@ -84,6 +84,7 @@ namespace Insight
         public void Save()
         {
             var builder = new StringBuilder();
+            builder.AppendLine("# Every developer not mentioned in this file is mapped to his own name");
             foreach (var mapping in _aliasMapping)
             {
                 builder.AppendLine($"{mapping.Key} {Separator} {mapping.Value}");
@@ -92,19 +93,20 @@ namespace Insight
             File.WriteAllText(_fileName, builder.ToString());
         }
 
-        public string TryGetAlias(string name)
+        public string GetAlias(string name)
         {
             if (!_aliasMapping.TryGetValue(name, out var value))
             {
-                return null;
-            }
-
-            if (value.ToLowerInvariant() == Ignore)
-            {
-                return null;
+                return name;
             }
 
             return value;
+        }
+
+        public IEnumerable<string> GetReverse(string alias)
+        {
+            var names = _aliasMapping.Where(m => m.Value == alias).Select(m => m.Key);
+            return names.ToList();
         }
     }
 }

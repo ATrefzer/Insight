@@ -77,7 +77,7 @@ namespace Visualization.Controls.TreeMap
         public IHighlighting Highlighting { get; set; }
 
         /// <summary>
-        /// Enusre that SumAreaMetrics and NomrmalizeWeightMetric was called and
+        /// Ensure that SumAreaMetrics and NormalizeWeightMetric was called and
         /// no node has an area of 0.
         /// </summary>
         public void LoadData(IHierarchicalData data)

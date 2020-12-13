@@ -309,10 +309,10 @@ Do you want to proceed?</value>
   <data name="OverrideExistingProject" xml:space="preserve">
     <value>The directory '{0}' exists. Do you want to override it?</value>
   </data>
-  <data name="PreferCircle" xml:space="preserve">
+  <data name="SwitchToCircles" xml:space="preserve">
     <value>Circle Packaging</value>
   </data>
-  <data name="PreferTreeMap" xml:space="preserve">
+  <data name="SwitchToTreeMap" xml:space="preserve">
     <value>Tree Map</value>
   </data>
   <data name="Apply" xml:space="preserve">
@@ -321,4 +321,14 @@ Do you want to proceed?</value>
   <data name="Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
+
+  <data name="SwitchToNoAlias" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+
+  <data name="SwitchToAlias" xml:space="preserve">
+    <value>Alias</value>
+  </data>
+  
+
 </root>

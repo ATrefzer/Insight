@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
 using Visualization.Controls.Interfaces;
@@ -28,7 +29,7 @@ namespace Insight
 
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
-        private IFilter _displayFilter;
+        private IFilter _extendedDisplayFilter;
         private ISourceControlProvider _sourceProvider;
         private string _outputPath;
 
@@ -45,20 +46,24 @@ namespace Insight
         /// </summary>
         public void Configure(ISourceControlProvider provider, string outputPath, IFilter displayFilter)
         {
+            Clear();
             _sourceProvider = provider;
             _outputPath = outputPath;
-            _displayFilter = displayFilter;
+            _extendedDisplayFilter = displayFilter;
+
+            LoadCachedData();
+
+            // Needs metrics
+            _extendedDisplayFilter = CreateExtendedFilter(displayFilter);
         }
 
         public List<WarningMessage> Warnings { get; private set; }
 
         public List<Coupling> AnalyzeChangeCoupling()
         {
-            LoadHistory();
-
             // Pair wise couplings
             var couplingAnalyzer = new ChangeCouplingAnalyzer();
-            var couplings = couplingAnalyzer.CalculateChangeCouplings(_history, _displayFilter);
+            var couplings = couplingAnalyzer.CalculateChangeCouplings(_history, _extendedDisplayFilter);
             var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
             Csv.Write(Path.Combine(_outputPath, "change_couplings.csv"), sortedCouplings);
 
@@ -74,15 +79,25 @@ namespace Insight
             return sortedCouplings;
         }
 
-        public HierarchicalDataContext AnalyzeCodeAge()
+        /// <summary>
+        /// Extends the display filter from project to accept only files from the metrics list.
+        /// </summary>
+        IFilter CreateExtendedFilter(IFilter displayFilter)
         {
-            LoadHistory();
             LoadMetrics();
 
-            // TODO merge metric files with the display filter!
+            // This is way faster than File.Exists. I already know these files exist because I calculated a metric
+            var localFiles = new HashSet<string>(_metrics.Keys);
 
+            var onlyMetricFiles = new FileFilter(localFiles);
+            return new Filter(displayFilter, onlyMetricFiles);
+        }
+
+
+        public HierarchicalDataContext AnalyzeCodeAge()
+        {
             // Get summary of all files
-            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, new NullAliasMapping());
 
             var builder = new CodeAgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
@@ -95,14 +110,13 @@ namespace Insight
         /// <summary>
         /// Analyzes the fragmentation per file.
         /// </summary>
-        public HierarchicalDataContext AnalyzeFragmentation()
+        public HierarchicalDataContext AnalyzeFragmentation(IAliasMapping aliasMapping)
         {
-            LoadHistory();
-            LoadMetrics();
             LoadContributions(false);
+            var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
 
-            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
-            var fileToFractalValue = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
+            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
+            var fileToFractalValue = localFileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
 
             var builder = new FragmentationBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, fileToFractalValue);
@@ -115,11 +129,8 @@ namespace Insight
 
         public HierarchicalDataContext AnalyzeHotspots()
         {
-            LoadHistory();
-            LoadMetrics();
-
             // Get summary of all files
-            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, new NullAliasMapping());
 
             var builder = new HotspotBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
@@ -129,14 +140,47 @@ namespace Insight
             return dataContext;
         }
 
-        public HierarchicalDataContext AnalyzeKnowledge(IColorScheme colorScheme)
+        /// <summary>
+        /// The contributions are calculated by the source control providers.
+        /// In order to use developer aliases we have to transform the contributions, too.
+        /// If two developers are mapped to the same alias their contribution is shared.
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, Contribution> AliasTransformContribution(Dictionary<string, Contribution> localFilesToContribution, IAliasMapping aliasMapping)
         {
-            LoadHistory();
-            LoadMetrics();
-            LoadContributions(false);
+            var localFileToAliasContribution = new Dictionary<string, Contribution>();
 
-            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
-            var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
+            foreach (var fileToContribution in localFilesToContribution)
+            {
+                var localFile = fileToContribution.Key;
+                var aliasToWork = new Dictionary<string, uint>();
+                var developerToWork = fileToContribution.Value.DeveloperToContribution;
+
+                // Group by alias
+                var groups = developerToWork.GroupBy(pair => aliasMapping.GetAlias(pair.Key));
+                foreach (var group in groups)
+                {
+                    var sumContribution = (uint)group.Sum(g => g.Value);
+                    var alias = group.Key;
+                    aliasToWork.Add(alias, sumContribution);
+                }
+
+                localFileToAliasContribution.Add(localFile, new Contribution(aliasToWork));
+            }
+                
+            
+            // local file -> contribution
+            return localFileToAliasContribution;
+        }
+
+        public HierarchicalDataContext AnalyzeKnowledge(IColorScheme colorScheme, IAliasMapping aliasMapping)
+        {
+            LoadContributions(false);
+            var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
+
+            
+            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
+            var fileToMainDeveloper = localFileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Assign a color to each developer
             var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct().ToList();
@@ -159,14 +203,15 @@ namespace Insight
         /// <summary>
         /// Same as knowledge but uses a different color scheme
         /// </summary>
-        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer, IColorScheme colorScheme)
+        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer, IColorScheme colorScheme, IAliasMapping aliasMapping)
         {
-            LoadHistory();
-            LoadMetrics();
             LoadContributions(false);
+            var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
 
-            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
-            var fileToMainDeveloper = _contributions.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
+            developer = aliasMapping.GetAlias(developer);
+
+            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
+            var fileToMainDeveloper = localFileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Build the knowledge data
             var builder = new KnowledgeBuilder(developer);
@@ -251,20 +296,18 @@ namespace Insight
             return result;
         }
 
-        public List<object> ExportSummary()
+        public List<object> ExportSummary(IAliasMapping aliasMapping)
         {
-            LoadHistory();
-            LoadMetrics();
             LoadContributions(true); // silent
 
-            var summary = _history.GetArtifactSummary(_displayFilter, new HashSet<string>(_metrics.Keys));
+            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
             var hotspotCalculator = new HotspotCalculator(summary, _metrics);
 
             var orderedByLocalPath = summary.OrderBy(x => x.LocalPath).ToList();
             var gridData = new List<object>();
             foreach (var artifact in orderedByLocalPath)
             {
-                gridData.Add(CreateDataGridFriendlyArtifact(artifact, hotspotCalculator));
+                gridData.Add(CreateDataGridFriendlyArtifact(artifact, hotspotCalculator, aliasMapping));
             }
 
             var now = DateTime.Now.ToIsoShort();
@@ -291,6 +334,14 @@ namespace Insight
             _metricsProvider.UpdateLinesOfCodeCache(_sourceProvider.BaseDirectory, _outputPath, _supportedFileTypesForAnalysis);
 
             Warnings = _sourceProvider.Warnings;
+
+            LoadCachedData();
+        }
+
+        private void LoadCachedData()
+        {
+            LoadHistory();
+            LoadMetrics();
         }
 
         internal void Clear()
@@ -300,10 +351,12 @@ namespace Insight
             _contributions = null;
         }
 
-        internal List<string> GetMainDevelopers()
+        internal List<string> GetMainDevelopers(IAliasMapping aliasMapping)
         {
             LoadContributions(false);
-            return _contributions.Select(x => x.Value.GetMainDeveloper().Developer).Distinct().ToList();
+            var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
+            var mainDevelopers = localFileToContribution.Select(x => x.Value.GetMainDeveloper().Developer).Distinct();
+            return mainDevelopers.ToList();
         }
 
         private static string ClassifyDirectory(string localPath)
@@ -363,14 +416,18 @@ namespace Insight
         }
 
 
-        private object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator)
+        private object CreateDataGridFriendlyArtifact(Artifact artifact, HotspotCalculator hotspotCalculator, IAliasMapping aliasMapping)
         {
             var linesOfCode = (int) hotspotCalculator.GetLinesOfCode(artifact);
             if (_contributions != null)
             {
+                // TODO #alias contributions to mapped contributions
+                
                 var result = new DataGridFriendlyArtifact();
-                var artifactContribution = _contributions[artifact.LocalPath.ToLowerInvariant()];
-                var mainDev = artifactContribution.GetMainDeveloper();
+
+                var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
+                var contribution = localFileToContribution[artifact.LocalPath.ToLowerInvariant()];
+                var mainDev = contribution.GetMainDeveloper();
 
                 result.LocalPath = artifact.LocalPath;
                 result.Revision = artifact.Revision;
@@ -382,7 +439,7 @@ namespace Insight
                 result.Hotspot = hotspotCalculator.GetHotspotValue(artifact);
 
                 // Work related information
-                result.FractalValue = artifactContribution.CalculateFractalValue();
+                result.FractalValue = contribution.CalculateFractalValue();
                 result.MainDev = mainDev.Developer;
                 result.MainDevPercent = mainDev.Percent;
                 return result;

@@ -406,24 +406,6 @@ namespace Insight {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Circle Packaging.
-        /// </summary>
-        public static string PreferCircle {
-            get {
-                return ResourceManager.GetString("PreferCircle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Tree Map.
-        /// </summary>
-        public static string PreferTreeMap {
-            get {
-                return ResourceManager.GetString("PreferTreeMap", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Project.
         /// </summary>
         public static string Project {
@@ -546,6 +528,42 @@ namespace Insight {
         public static string Summary {
             get {
                 return ResourceManager.GetString("Summary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias.
+        /// </summary>
+        public static string SwitchToAlias {
+            get {
+                return ResourceManager.GetString("SwitchToAlias", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Circle Packaging.
+        /// </summary>
+        public static string SwitchToCircles {
+            get {
+                return ResourceManager.GetString("SwitchToCircles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal.
+        /// </summary>
+        public static string SwitchToNoAlias {
+            get {
+                return ResourceManager.GetString("SwitchToNoAlias", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tree Map.
+        /// </summary>
+        public static string SwitchToTreeMap {
+            get {
+                return ResourceManager.GetString("SwitchToTreeMap", resourceCulture);
             }
         }
         
