@@ -15,9 +15,9 @@ namespace Insight
         bool UpdateColorScheme(List<string> orderedNames);
 
         /// <summary>
-        /// Updates color assignments done by the user.
+        /// Writes an updated color palette back to the disk.
         /// </summary>
-        void UpdateAndSave(IColorPalette colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors);
+        void Save(IColorScheme colorPalette);
 
         IColorScheme LoadColorScheme();
         

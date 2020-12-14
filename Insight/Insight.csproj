@@ -106,6 +106,7 @@
     <Compile Include="Builder\CodeAgeBuilder.cs" />
     <Compile Include="Builder\FragmentationBuilder.cs" />
     <Compile Include="ColorSchemeManager.cs" />
+    <Compile Include="Dialogs\AliasColorScheme.cs" />
     <Compile Include="Dialogs\ColorEditorView.xaml.cs">
       <DependentUpon>ColorEditorView.xaml</DependentUpon>
     </Compile>

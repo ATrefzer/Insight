@@ -28,19 +28,6 @@ namespace Insight
             _pathToColorFile = pathToColorFile;
         }
 
-        public void UpdateAndSave(IColorPalette colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors)
-        {
-            var colorSchemeObj = (ColorScheme)colorScheme;
-
-            // Ensure all new colors exist even if not used in the mappings.
-            foreach (var color in newColors)
-            {
-                colorSchemeObj.AddColor(color);
-            }
-
-            colorSchemeObj.Update(updates);
-            Save(colorSchemeObj);
-        }
 
         /// <summary>
         /// Once the color file is created it is not deleted because the user can edit it.

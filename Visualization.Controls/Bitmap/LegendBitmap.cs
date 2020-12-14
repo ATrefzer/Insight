@@ -45,7 +45,7 @@ namespace Visualization.Controls.Bitmap
 
                 graphics.FillRectangle(brush, x, y, 20, 20);
 
-                graphics.DrawString("(" + _brushFactory.GetColorName(name) + ")",
+                graphics.DrawString("(" + GetColorName(name) + ")",
                     new Font(FontFamily.GenericSansSerif, 12), Brushes.Black, x + offsetColorName, y);
                 graphics.DrawString(name, new Font(FontFamily.GenericSansSerif, 12), Brushes.Black,
                     x + offsetDeveloperName, y);
@@ -63,9 +63,21 @@ namespace Visualization.Controls.Bitmap
             {
                 foreach (var name in _names) // dump only used developers!
                 {
-                    file.WriteLine(name + "\t" + _brushFactory.GetColorName(name));
+                    var colorName = GetColorName(name);
+                    file.WriteLine(name + "\t" + colorName);
                 }
             }
         }
+
+        private string GetColorName(string name)
+        {
+            var brush = _brushFactory.GetBrush(name);
+            var argb = ColorConverter.ToArgb(brush.Color);
+            var colorName = "#" + argb.ToString("X");
+            return colorName;
+        }
     }
 }
+
+
+ 

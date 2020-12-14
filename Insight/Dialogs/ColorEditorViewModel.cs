@@ -17,107 +17,18 @@ namespace Insight.Dialogs
 {
     static class ColorPaletteExtensions
     {
-        public static IColorPalette ForAlias(this IColorPalette palette, IAliasMapping aliasMapping)
+        public static IColorScheme ForAlias(this IColorScheme palette, IAliasMapping aliasMapping)
         {
             return new AliasColorScheme(palette, aliasMapping);
         }
     }
 
-    class AliasColorScheme : IColorPalette
-    {
-        private readonly IColorPalette _colorPalette;
-        private readonly IAliasMapping _aliasMapping;
 
-        public AliasColorScheme(IColorPalette colorPalette, IAliasMapping aliasMapping)
-        {
-            _colorPalette = colorPalette;
-            _aliasMapping = aliasMapping;
-        }
-
-        public IEnumerable<ColorMapping> GetColorMappings()
-        {
-            var allMappings = _colorPalette.GetColorMappings().ToList();
-
-            var nameToColor = allMappings.ToDictionary(m => m.Name, m => m.Color);
-            var aliasToColorMapping = new Dictionary<string, ColorMapping>();
-
-            // Convert to alias names
-            foreach (var mapping in allMappings)
-            {
-                var name = mapping.Name;
-                var alias = _aliasMapping.GetAlias(mapping.Name);
-                var color = mapping.Color;
-
-                if (aliasToColorMapping.ContainsKey(alias))
-                {
-                    // We may map more than one name to the same alias.
-                    continue;
-                }
-
-                if (nameToColor.ContainsKey(alias))
-                {
-                    // This alias is an existing developer name, so we use the color instead.
-                    // Otherwise we take the color of the first developer mapped to this alias
-                    // by default.
-                    color = nameToColor[alias];
-                }
-
-                aliasToColorMapping.Add(alias, new ColorMapping { Name = alias, Color = color });
-            }
-
-
-            return aliasToColorMapping.Values.OrderBy(x => x.Name).ToList();
-        }
-
-        public void Update(IEnumerable<ColorMapping> aliasUpdates)
-        {
-            var updates = new List<ColorMapping>();
-            foreach (var mapping in aliasUpdates)
-            {
-                var alias = mapping.Name;
-                var names = _aliasMapping.GetReverse(alias).ToList();
-
-                // If the alias itself is a developer name add it to the list, too
-                if (_colorPalette.IsKnown(alias))
-                {
-                    // x -> a
-                    // a is a developer name without mapping (so it is not contained in _aliasMapping)
-
-                    names.Add(alias);
-                }
-
-                foreach (var name in names)
-                {
-                    // We may multiply the color mappings here because many developers may share the same alias.
-                    updates.Add(new ColorMapping { Name = name, Color = mapping.Color });
-                }
-            }
-            
-            _colorPalette.Update(updates);
-        }
-
-        public bool AddColor(Color newColor)
-        {
-            return _colorPalette.AddColor(newColor);
-        }
-
-        public IEnumerable<Color> GetAllColors()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsKnown(string alias)
-        {
-            throw new NotImplementedException();
-        }
-    }
-    
-    
     sealed class ColorEditorViewModel : ViewModelBase, ISearchableViewModel
     {
         private readonly IColorSchemeManager _colorSchemeManager;
-        private readonly IAliasMapping _aliasMapping;
-        private readonly IColorPalette _colorScheme;
+        private readonly IColorScheme _sourcePalette;
+        private readonly IColorPalette _aliasPalette;
         private List<ColorMapping> _allMappings;
 
         /// <summary>
@@ -158,8 +69,9 @@ namespace Insight.Dialogs
         public ColorEditorViewModel(IColorSchemeManager colorSchemeManager, IAliasMapping aliasMapping)
         {
             _colorSchemeManager = colorSchemeManager;
-            _aliasMapping = aliasMapping;
-            _colorScheme = _colorSchemeManager.LoadColorScheme();
+
+            _sourcePalette = _colorSchemeManager.LoadColorScheme();
+            _aliasPalette = _sourcePalette.ForAlias(aliasMapping);
 
             MergeColorsCommand = new DelegateCommand<IReadOnlyList<object>>(OnMergeColorsClick);
             ReleaseCommand = new DelegateCommand<IReadOnlyList<object>>(OnReleaseColorClick);
@@ -183,7 +95,7 @@ namespace Insight.Dialogs
                 return;
             }
 
-            if (_colorScheme.GetAllColors().Contains(newColor.Value) || _newCustomColors.Contains(newColor.Value))
+            if (_aliasPalette.GetAllColors().Contains(newColor.Value) || _newCustomColors.Contains(newColor.Value))
             {
                 // The color already exists
                 AssignmentColor = newColor.Value;
@@ -226,7 +138,7 @@ namespace Insight.Dialogs
 
         void UpdateAssignableColors()
         {
-            var allColors = _colorScheme.GetAllColors().Union(_newCustomColors);
+            var allColors = _aliasPalette.GetAllColors().Union(_newCustomColors);
             if (ShowOnlyFreeColors == true)
             {
                 // Note: AllMappings is initialized only once
@@ -242,25 +154,24 @@ namespace Insight.Dialogs
         private void Init()
         {
             // Load initial mappings and colors.
-            AllMappings = LoadInitialColorMappings(_colorScheme, _aliasMapping);
+            AllMappings = _aliasPalette.GetColorMappings().ToList();
             UpdateAssignableColors();
             SearchText = "";
         }
 
         /// <summary>
-        /// Reload mappings and discard any changes
+        /// Makes an automatic new assignment to default colors.
+        /// The new color assignments are not stored yet. Only in the color editor.
         /// </summary>
         private void Reset()
         {
             _newCustomColors.Clear();
 
-            // Get existing names
-            var names = _colorScheme.GetColorMappings().Select(mapping => mapping.Name).ToArray();
+            // Get existing alias names
+            var names = _aliasPalette.GetColorMappings().Select(mapping => mapping.Name).ToArray();
 
-            // TODO #alias Keep both original and alias. Reset original and then create a new alias
-            
-            // Assign default colors. Since the names are ordered inside ColorScheme we get the same original result.
-            AllMappings  = LoadInitialColorMappings(new ColorScheme(names), _aliasMapping);
+            var tmpPalette = new ColorScheme(names);
+            AllMappings  = tmpPalette.GetColorMappings().ToList();
 
             UpdateAssignableColors();
             SearchText = "";
@@ -322,20 +233,23 @@ namespace Insight.Dialogs
             wnd.Close();
         }
 
-
         public void OnApplyClick(Window wnd)
         {
             // AllMappings contain the alias names
             // Here we have to map back the color to the developers.
-            
             // We assign the same color to each developer that shares the same alias.
-            
 
-            // TODO #alias Move to AliasColorPalette
             
-         
-            
-            _colorSchemeManager.UpdateAndSave(_colorScheme, AllMappings, _newCustomColors);
+            foreach (var color in _newCustomColors)
+            {
+                // Ensure all new colors exist even if not used in the mappings.
+                _sourcePalette.AddColor(color);
+            }
+
+            // Write through to the source palette.
+            _aliasPalette.Update(AllMappings);
+
+            _colorSchemeManager.Save(_sourcePalette);
             wnd.Close();
         }
 

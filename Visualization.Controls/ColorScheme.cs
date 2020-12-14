@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -25,6 +24,9 @@ namespace Visualization.Controls
         [DataMember]
         private readonly Dictionary<string, int> _nameToArgb = new Dictionary<string, int>();
 
+        [DataMember]
+        private int[] _defaultColors;
+
         public ColorScheme()
         {
             CreateColorsDefinitions();
@@ -49,57 +51,34 @@ namespace Visualization.Controls
             }
         }
 
+        public SolidColorBrush GetBrush(string name)
+        {
+            if (!_nameToArgb.TryGetValue(name, out var argb))
+            {
+                return DefaultDrawingPrimitives.DefaultBrush;
+            }
+
+            return BrushCache.GetBrush(ColorConverter.FromArgb(argb));
+        }
+
         public IEnumerable<ColorMapping> GetColorMappings()
         {
-            return _nameToArgb.Select(pair => new ColorMapping { Name = pair.Key, Color = FromArgb(pair.Value) });
+            return _nameToArgb.Select(pair => new ColorMapping { Name = pair.Key, Color = ColorConverter.FromArgb(pair.Value) });
         }
 
         public IEnumerable<Color> GetAllColors()
         {
-            return _defaultColors.Select(color => FromArgb(color));
+            return _defaultColors.Select(color => ColorConverter.FromArgb(color));
         }
-
-        /// <summary>
-        /// Additionally store System.Windows.Media.SolidColorBrushes for Wpf application.
-        /// </summary>
-        private Dictionary<int, SolidColorBrush> _argbToBrushCache;
 
         public List<string> Names
         {
             get { return _nameToArgb.Keys.ToList(); }
         }
 
-        SolidColorBrush GetBrushFromCache(string name)
-        {
-            if (_argbToBrushCache == null)
-            {
-                _argbToBrushCache = new Dictionary<int, SolidColorBrush>();
-            }
-
-            if (!_nameToArgb.ContainsKey(name))
-            {
-                return DefaultDrawingPrimitives.DefaultBrush;
-            }
-
-            SolidColorBrush brush;
-            var argb = _nameToArgb[name];
-            if (!_argbToBrushCache.ContainsKey(argb))
-            {
-                var color = FromArgb(argb);
-                brush = CreateBrushFromColor(color);
-                _argbToBrushCache.Add(argb, brush);
-            }
-            else
-            {
-                brush = _argbToBrushCache[argb];
-            }
-
-            return brush;
-        }
-
         public bool AddColor(Color newColor)
         {
-            var argb = ToArgb(newColor);
+            var argb = ColorConverter.ToArgb(newColor);
             if (_defaultColors.Contains(argb))
             {
                 return false;
@@ -117,16 +96,6 @@ namespace Visualization.Controls
         {
             return _nameToArgb.ContainsKey(alias);
         }
-
-        private static SolidColorBrush CreateBrushFromColor(Color color)
-        {
-            SolidColorBrush brush = new SolidColorBrush(color);
-            brush.Freeze();
-            return brush;
-        }
-
-        [DataMember]
-        private int[] _defaultColors;
 
         /// <summary>
         /// Defines a predefined set of colors that can be distinguished by the eye.
@@ -171,31 +140,6 @@ namespace Visualization.Controls
             _defaultColors = paletteA.Select(argb => int.Parse(argb, NumberStyles.HexNumber)).ToArray();
         }
 
-
-        public static int ToArgb(Color color)
-        {
-            int argb = (color.A << 24) | (color.R << 16) | (color.G << 8) | color.B;
-            return argb;
-
-            //byte[] bytes = new byte[] { color.A, color.R, color.G, color.B };
-            //return BitConverter.ToInt32(bytes, 0);
-        }
-
-        public static Color FromArgb(int argb)
-        {
-            // Format is little endian
-            byte a = (byte) ((argb & 0xff000000) >> 24);
-            byte r = (byte) ((argb & 0x00ff0000) >> 16);
-            byte g = (byte) ((argb & 0x0000ff00) >> 8);
-            byte b = (byte) (argb & 0x000000ff);
-
-            var color = Color.FromArgb(a, r, g, b);
-            return color;
-        }
-
-
-   
-
         /// <summary>
         /// Returns false if the name got a default color assigned.
         /// There are enough colors.
@@ -218,7 +162,7 @@ namespace Visualization.Controls
             else
             {
                 // Not enough colors!
-                _nameToArgb[name] = ToArgb(DefaultDrawingPrimitives.DefaultColor);
+                _nameToArgb[name] = ColorConverter.ToArgb(DefaultDrawingPrimitives.DefaultColor);
             }
 
             return uniqueColor;
@@ -226,38 +170,9 @@ namespace Visualization.Controls
 
         private void AssignColor(ColorMapping mapping)
         {
-            var argb = ToArgb(mapping.Color);
+            var argb = ColorConverter.ToArgb(mapping.Color);
             _nameToArgb.Remove(mapping.Name);
             _nameToArgb.Add(mapping.Name, argb);
-        }
-
-        public string GetColorName(string name)
-        {
-            var argb = ToArgb(DefaultDrawingPrimitives.DefaultColor);
-            if (_nameToArgb.ContainsKey(name))
-            {
-                argb = _nameToArgb[name];
-            }
-
-            return "#" + argb.ToString("X");
-        }
-
-        public SolidColorBrush GetBrush(string name)
-        {
-            return GetBrushFromCache(name);
-        }
-
-        public IEnumerator<ColorMapping> GetEnumerator()
-        {
-            foreach (var dev in _nameToArgb)
-            {
-                yield return new ColorMapping { Name = dev.Key, Color = FromArgb(dev.Value) };
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }

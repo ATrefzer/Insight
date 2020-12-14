@@ -3,6 +3,7 @@ using System.Windows.Media;
 
 namespace Visualization.Controls.Interfaces
 {
+    // TODO #alias cleanup Palette or Scheme?
     public interface IColorPalette
     {
         /// <summary>
@@ -28,13 +29,10 @@ namespace Visualization.Controls.Interfaces
     public interface IBrushFactory
     {
         SolidColorBrush GetBrush(string name);
-
-        string GetColorName(string name);
     }
-    
-    public interface IColorScheme : IEnumerable<ColorMapping>, IBrushFactory, IColorPalette
-    {      
-      
+
+    public interface IColorScheme : IBrushFactory, IColorPalette
+    {
 
     }
 }

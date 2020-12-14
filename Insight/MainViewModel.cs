@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows.Input;
 
 using Insight.Analyzers;
+using Insight.Dialogs;
 using Insight.Shared;
 using Insight.Shared.Model;
 using Insight.ViewModels;
@@ -270,9 +271,10 @@ namespace Insight
             var fileToAnalyze = data.Tag as string;
             
             var colorSchemeManager = CreateColorSchemeManager();
-            var colorScheme = colorSchemeManager.LoadColorScheme();
+            var aliasMapping = CreateAliasMapping();
+            var colorScheme = colorSchemeManager.LoadColorScheme().ForAlias(aliasMapping);
 
-            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme))
+            var path = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeWorkOnSingleFile(fileToAnalyze, colorScheme, aliasMapping))
                                                  .ConfigureAwait(true);
 
             if (path == null)
@@ -338,8 +340,6 @@ namespace Insight
             {
                 return;
             }
-
-            var colorScheme = context.BrushFactory;
 
             ShowHierarchicalData("Fragmentation", context, GetDefaultCommands(), true);
 
@@ -420,8 +420,8 @@ namespace Insight
         private async void KnowledgeClick()
         {
             var colorSchemeManager = CreateColorSchemeManager();
-            var colorScheme = colorSchemeManager.LoadColorScheme();
             var aliasMapping = CreateAliasMapping();
+            var colorScheme = colorSchemeManager.LoadColorScheme().ForAlias(aliasMapping);
 
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledge(colorScheme, aliasMapping));
             if (context == null)
@@ -446,8 +446,8 @@ namespace Insight
             }
 
             var colorSchemeManager = CreateColorSchemeManager();
-            var colorScheme = colorSchemeManager.LoadColorScheme();
             var aliasMapping = CreateAliasMapping();
+            var colorScheme = colorSchemeManager.LoadColorScheme().ForAlias(aliasMapping);
 
             var context = await _backgroundExecution.ExecuteAsync(() => _analyzer.AnalyzeKnowledgeLoss(forDeveloper, colorScheme, aliasMapping));
             if (context == null)

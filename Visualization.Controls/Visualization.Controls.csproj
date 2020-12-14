@@ -75,11 +75,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bitmap\LegendBitmap.cs" />
+    <Compile Include="BrushCache.cs" />
     <Compile Include="Chord\Edge.cs" />
     <Compile Include="Chord\Constants.cs" />
     <Compile Include="ColorBrewer.xaml.cs">
       <DependentUpon>ColorBrewer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ColorConverter.cs" />
     <Compile Include="ColorMapping.cs" />
     <Compile Include="DataGridView.xaml.cs">
       <DependentUpon>DataGridView.xaml</DependentUpon>

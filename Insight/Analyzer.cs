@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
 using Visualization.Controls.Interfaces;
@@ -153,39 +153,61 @@ namespace Insight
             foreach (var fileToContribution in localFilesToContribution)
             {
                 var localFile = fileToContribution.Key;
-                var aliasToWork = new Dictionary<string, uint>();
                 var developerToWork = fileToContribution.Value.DeveloperToContribution;
-
-                // Group by alias
-                var groups = developerToWork.GroupBy(pair => aliasMapping.GetAlias(pair.Key));
-                foreach (var group in groups)
-                {
-                    var sumContribution = (uint)group.Sum(g => g.Value);
-                    var alias = group.Key;
-                    aliasToWork.Add(alias, sumContribution);
-                }
-
+                var aliasToWork = AliasTransformWork(aliasMapping, developerToWork);
                 localFileToAliasContribution.Add(localFile, new Contribution(aliasToWork));
             }
                 
-            
             // local file -> contribution
             return localFileToAliasContribution;
         }
 
-        public HierarchicalDataContext AnalyzeKnowledge(IColorScheme colorScheme, IAliasMapping aliasMapping)
+        private static Dictionary<string, uint> AliasTransformWork(IAliasMapping aliasMapping, Dictionary<string, uint> developerToWork)
+        {
+            var aliasToWork = new Dictionary<string, uint>();
+
+            // Group by alias
+            var groups = developerToWork.GroupBy(pair => aliasMapping.GetAlias(pair.Key));
+            foreach (var group in groups)
+            {
+                var sumContribution = (uint) @group.Sum(g => g.Value);
+                var alias = @group.Key;
+                aliasToWork.Add(alias, sumContribution);
+            }
+
+            return aliasToWork;
+        }
+
+        public string AnalyzeWorkOnSingleFile(string fileName, IBrushFactory brushFactory, IAliasMapping aliasMapping)
+        {
+            var workByDeveloper = _sourceProvider.CalculateDeveloperWork(fileName);
+
+            var workByAlias = AliasTransformWork(aliasMapping, workByDeveloper);
+
+            var bitmap = new FractionBitmap();
+
+            var fi = new FileInfo(fileName);
+            var path = Path.Combine(_outputPath, fi.Name) + ".bmp";
+
+
+            // TODO atr bitmap?
+            bitmap.Create(path, workByAlias, brushFactory, true);
+
+            return path;
+        }
+
+        public HierarchicalDataContext AnalyzeKnowledge(IBrushFactory brushFactory, IAliasMapping aliasMapping)
         {
             LoadContributions(false);
             var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
 
-            
             var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
             var fileToMainDeveloper = localFileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Assign a color to each developer
             var mainDevelopers = fileToMainDeveloper.Select(pair => pair.Value.Developer).Distinct().ToList();
 
-            var legend = new LegendBitmap(mainDevelopers, colorScheme);
+            var legend = new LegendBitmap(mainDevelopers, brushFactory);
             legend.CreateLegendBitmap(Path.Combine(_outputPath, "knowledge_color.bmp"));
 
             // Build the knowledge data
@@ -193,7 +215,7 @@ namespace Insight
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
             // TODO atr This should be moved to the view model.
-            var dataContext = new HierarchicalDataContext(hierarchicalData, colorScheme);
+            var dataContext = new HierarchicalDataContext(hierarchicalData, brushFactory);
             dataContext.AreaSemantic = Strings.LinesOfCode;
             dataContext.WeightSemantic = Strings.NotAvailable;
             return dataContext;
@@ -203,7 +225,7 @@ namespace Insight
         /// <summary>
         /// Same as knowledge but uses a different color scheme
         /// </summary>
-        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer, IColorScheme colorScheme, IAliasMapping aliasMapping)
+        public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer, IBrushFactory brushFactory, IAliasMapping aliasMapping)
         {
             LoadContributions(false);
             var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
@@ -217,7 +239,7 @@ namespace Insight
             var builder = new KnowledgeBuilder(developer);
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
-            var dataContext = new HierarchicalDataContext(hierarchicalData, colorScheme);
+            var dataContext = new HierarchicalDataContext(hierarchicalData, brushFactory);
             dataContext.AreaSemantic = Strings.LinesOfCode;
             dataContext.WeightSemantic = Strings.NotAvailable;
             return dataContext;
@@ -240,22 +262,6 @@ namespace Insight
             }
 
             return trend;
-        }
-
-        public string AnalyzeWorkOnSingleFile(string fileName, IColorScheme colorScheme)
-        {
-            var workByDeveloper = _sourceProvider.CalculateDeveloperWork(fileName);
-
-            var bitmap = new FractionBitmap();
-
-            var fi = new FileInfo(fileName);
-            var path = Path.Combine(_outputPath, fi.Name) + ".bmp";
-
-
-            // TODO atr bitmap?
-            bitmap.Create(path, workByDeveloper, colorScheme, true);
-
-            return path;
         }
 
 
@@ -421,8 +427,6 @@ namespace Insight
             var linesOfCode = (int) hotspotCalculator.GetLinesOfCode(artifact);
             if (_contributions != null)
             {
-                // TODO #alias contributions to mapped contributions
-                
                 var result = new DataGridFriendlyArtifact();
 
                 var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);

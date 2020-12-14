@@ -3,7 +3,11 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Windows.Media;
+
 using Visualization.Controls;
+
+using ColorConverter = Visualization.Controls.ColorConverter;
 
 namespace Tests
 {
@@ -14,9 +18,9 @@ namespace Tests
         public void ArgbConversion()
         {
             int argb1 = 0x12345678;
-            var color = ColorScheme.FromArgb(argb1);
+            var color = ColorConverter.FromArgb(argb1);
 
-            int argb2 = ColorScheme.ToArgb(color);
+            int argb2 = ColorConverter.ToArgb(color);
             Assert.AreEqual(argb1, argb2);
         }
 
@@ -39,7 +43,7 @@ namespace Tests
             Assert.IsTrue(scheme.Names.Contains("me"));
 
             // me has the default color
-            var name = scheme.GetColorName("me");
+            var name = scheme.GetBrush("me").Color;
             var defaultColor = DefaultDrawingPrimitives.DefaultColor.ToString();
             Assert.AreEqual(defaultColor, name);
 
@@ -66,8 +70,6 @@ namespace Tests
             var deserialized = (ColorScheme)serializer.ReadObject(stream);
 
             // Colors are the same
-            Assert.AreEqual(scheme.GetColorName("me"), deserialized.GetColorName("me"));
-            Assert.AreEqual(scheme.GetColorName("you"), deserialized.GetColorName("you"));
             Assert.AreEqual(scheme.GetBrush("me").ToString(), deserialized.GetBrush("me").ToString());
             Assert.AreEqual(scheme.GetBrush("you").ToString(), deserialized.GetBrush("you").ToString());
         }
