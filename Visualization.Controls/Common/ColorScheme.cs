@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 using Visualization.Controls.Interfaces;
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Common
 {
     /// <summary>
     /// Maps color keys to brushes.
@@ -68,13 +68,10 @@ namespace Visualization.Controls
 
         public IEnumerable<Color> GetAllColors()
         {
-            return _defaultColors.Select(color => ColorConverter.FromArgb(color));
+            return _defaultColors.Select(ColorConverter.FromArgb);
         }
 
-        public List<string> Names
-        {
-            get { return _nameToArgb.Keys.ToList(); }
-        }
+        public List<string> Names => _nameToArgb.Keys.ToList();
 
         public bool AddColor(Color newColor)
         {

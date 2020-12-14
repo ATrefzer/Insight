@@ -23,7 +23,7 @@ namespace Insight.Metrics
         /// If a file is processed depends on its file extension.
         /// Normalized file extensions means: Lower case, including the dot.
         /// </summary>
-        Dictionary<string, LinesOfCode> CalculateLinesOfCode(System.IO.DirectoryInfo rootDir, IEnumerable<string> normalizedFileExtensions);
+        Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo rootDir, IEnumerable<string> normalizedFileExtensions);
 
         /// <summary>
         /// Reads the cached metric file. <see cref="UpdateLinesOfCodeCache" />.

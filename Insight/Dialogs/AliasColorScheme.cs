@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 using Insight.Shared;
 
-using Visualization.Controls;
+using Visualization.Controls.Common;
 using Visualization.Controls.Interfaces;
 
 namespace Insight.Dialogs
@@ -27,7 +27,7 @@ namespace Insight.Dialogs
             InitAliasColorMappings();
         }
 
-        void InitAliasColorMappings()
+        private void InitAliasColorMappings()
         {
             if (_aliasToColorMapping != null)
             {

@@ -8,7 +8,7 @@ using LibGit2Sharp;
 
 namespace Insight.GitProvider
 {
-    // TODO 
+    // TODO Separate graph stuff from concrete git use case
     internal class GitNode
     {
         public Scope Scope { get; set; }

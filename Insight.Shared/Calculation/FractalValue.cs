@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Insight.Calculation
+namespace Insight.Shared.Calculation
 {
     public static class FractalValue
     {

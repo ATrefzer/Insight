@@ -21,7 +21,7 @@ namespace Insight.SvnProvider
         public string BlameFile(string localFile)
         {
             // Added --force because a text file was recognized as binary.
-            var program = "svn";
+            const string program = "svn";
             var args = $"blame \"{localFile}\" --force";
             return ExecuteCommandLine(program, args);
         }
@@ -35,14 +35,14 @@ namespace Insight.SvnProvider
 
         public string GetAllTrackedFiles()
         {
-            var program = "svn";
-            var args = $"list --recursive -r HEAD";
+            const string program = "svn";
+            const string args = "list --recursive -r HEAD";
             return ExecuteCommandLine(program, args);
         }
 
         public string GetRevisionsForLocalFile(string localFile)
         {
-            var program = "svn";
+            const string program = "svn";
             var args = $"log \"{localFile}\" --xml";
             return ExecuteCommandLine(program, args);
         }
@@ -50,8 +50,8 @@ namespace Insight.SvnProvider
         public bool HasModifications()
         {
             // Quiet hides files not under version control
-            var program = "svn";
-            var args = $"status -q";
+            const string program = "svn";
+            const string args = "status -q";
             var stdOut = ExecuteCommandLine(program, args);
             return !string.IsNullOrEmpty(stdOut.Trim());
         }
@@ -61,22 +61,22 @@ namespace Insight.SvnProvider
         /// </summary>
         public string Info()
         {
-            var program = "svn";
-            var args = $"info --xml";
+            const string program = "svn";
+            const string args = "info --xml";
             return ExecuteCommandLine(program, args);
         }
 
 
         public string Info(string obj)
         {
-            var program = "svn";
+            const string program = "svn";
             var args = $"info {obj} --xml";
             return ExecuteCommandLine(program, args);
         }
 
         public string Log(Id revision)
         {
-            var program = "svn";
+            const string program = "svn";
             var args = $"log -v --xml -r {revision}:HEAD";
             return ExecuteCommandLine(program, args);
         }
@@ -85,14 +85,14 @@ namespace Insight.SvnProvider
         public void UpdateWorkingCopy()
         {
             var program = "svn";
-            var args = $"update";
+            var args = "update";
             ExecuteCommandLine(program, args);
         }
 
         internal string Log()
         {
-            var program = "svn";
-            var args = $"log -v --xml";
+            const string program = "svn";
+            const string args = "log -v --xml";
             return ExecuteCommandLine(program, args);
         }
 

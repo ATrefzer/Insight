@@ -14,7 +14,7 @@ namespace Insight.Shared
     /// </summary>
     public class LogicalComponentMapper
     {
-        Dictionary<string, string> _mappings;
+        private Dictionary<string, string> _mappings;
 
         public bool LowerCase { get; private set; }
 
@@ -43,7 +43,7 @@ namespace Insight.Shared
 
         public string MapLocalPathToLogicalComponent(string localPath)
         {
-            int longestMatch = 0;
+            var longestMatch = 0;
             var mapping = string.Empty; // Not used if this is returned.
             foreach (var key in _mappings.Keys)
             {

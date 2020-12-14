@@ -24,9 +24,7 @@ namespace Tests
             var commit_parent = new ChangeSet();
             commit_parent.Id = "parent";
 
-            var commits = new List<ChangeSet>();
-            commits.Add(commit_child);
-            commits.Add(commit_parent);
+            var commits = new List<ChangeSet> { commit_child, commit_parent };
             commit_child.Items.Add(new ChangeItem { Id = "fileAId", ServerPath = "server_path" });
             commit_child.Items.Add(new ChangeItem { Id = "fileBId", ServerPath = "server_path" });
             commit_parent.Items.Add(new ChangeItem { Id = "fileAId", ServerPath = "server_path" });

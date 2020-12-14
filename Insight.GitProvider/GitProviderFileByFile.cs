@@ -291,7 +291,7 @@ namespace Insight.GitProvider
         /// In each commit remove the files that are ancestors for more than one file.
         /// For each file to remove we traverse the whole graph from the starting commit.
         /// </summary>
-        public void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove)
+        public void DeleteSharedHistory(IEnumerable<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove)
         {
             lock (_lockObj)
             {
@@ -299,7 +299,7 @@ namespace Insight.GitProvider
             }
         }
 
-        public static void DeleteSharedHistory(List<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove, Graph graph)
+        public static void DeleteSharedHistory(IEnumerable<ChangeSet> historyToModify, Dictionary<string, HashSet<string>> filesToRemove, Graph graph)
         {
             // filesToRemove: 
             // fileId -> commit hash (change set id) where we start removing the file

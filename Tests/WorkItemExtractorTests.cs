@@ -12,8 +12,8 @@ namespace Tests
         [Test]
         public void Extract()
         {
-            var text = "s50xTm-444,s23dtm-ffff s50er-5lkll";
-            var regex = @"[a-zA-Z]+[a-zA-Z0-9]+\-[0-9]+";
+            const string text = "s50xTm-444,s23dtm-ffff s50er-5lkll";
+            const string regex = @"[a-zA-Z]+[a-zA-Z0-9]+\-[0-9]+";
 
             var extractor = new WorkItemExtractor(regex);
             var result = extractor.Extract(text);

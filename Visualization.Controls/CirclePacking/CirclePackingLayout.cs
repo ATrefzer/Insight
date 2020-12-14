@@ -358,7 +358,7 @@ namespace Visualization.Controls.CirclePacking
                     frontChain.Delete(jNode, nNode);
                     Debug.Assert(frontChain.Count() >= 3);
 
-                    // Adjust the indicies
+                    // Adjust the indices
                     mNode = jNode;
 
                     // nNode stays the same
@@ -433,8 +433,8 @@ namespace Visualization.Controls.CirclePacking
             var segment_m_n = m.Center - n.Center;
             var anyNormal = new Vector(-segment_m_n.Y, segment_m_n.X)
                 - new Vector(segment_m_n.Y, -segment_m_n.X);
-            var value1 = Vector.Multiply(circle1.Center - m.Center, (Vector)anyNormal);
-            var value2 = Vector.Multiply(circle2.Center - m.Center, (Vector)anyNormal);
+            var value1 = Vector.Multiply(circle1.Center - m.Center, anyNormal);
+            var value2 = Vector.Multiply(circle2.Center - m.Center, anyNormal);
 
             if (value1 > 0 && value2 < 0)
             {

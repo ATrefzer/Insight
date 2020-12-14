@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 using Insight.ViewModels;
 
-using Visualization.Controls;
+using Visualization.Controls.Common;
 
 namespace Insight.Dialogs
 {
@@ -27,8 +27,7 @@ namespace Insight.Dialogs
 
         private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
         {
-            var textBox = sender as TextBox;
-            if (textBox == null)
+            if (!(sender is TextBox textBox))
             {
                 return;
             }
@@ -54,7 +53,7 @@ namespace Insight.Dialogs
                 }
                 else
                 {
-                    _mergeMenu.Header = $"Merge color";
+                    _mergeMenu.Header =  Strings.MergeColor;
                     _mergeMenu.IsEnabled = false;
                 }
             }

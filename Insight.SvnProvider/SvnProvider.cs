@@ -31,15 +31,13 @@ namespace Insight.SvnProvider
 
         private MappingInfo _mappingInfo;
 
-        private string _baseDirectory;
-
         private SvnCommandLine _svnCli;
         private string _historyFile;
         private MovementTracker _tracking;
         private string _workItemRegex;
         private string _logFile;
 
-        public string BaseDirectory => _baseDirectory;
+        public string BaseDirectory { get; private set; }
 
         /// <summary>
         ///     Returns the paths relative from the working directory
@@ -125,13 +123,13 @@ namespace Insight.SvnProvider
 
         public void Initialize(string projectBase, string cachePath, string workItemRegex)
         {
-            _baseDirectory = projectBase;
+            BaseDirectory = projectBase;
             _cachePath = cachePath;
             _workItemRegex = workItemRegex;
-            _logFile = Path.Combine(cachePath, @"svn_log.txt");
-            _historyFile = Path.Combine(cachePath, @"svn_history.json");
-            _contributionFile = Path.Combine(cachePath, @"contribution.json");
-            _svnCli = new SvnCommandLine(_baseDirectory);
+            _logFile = Path.Combine(cachePath, "svn_log.txt");
+            _historyFile = Path.Combine(cachePath, "svn_history.json");
+            _contributionFile = Path.Combine(cachePath, "contribution.json");
+            _svnCli = new SvnCommandLine(BaseDirectory);
         }
 
        /// <summary>
@@ -143,7 +141,8 @@ namespace Insight.SvnProvider
             var json = File.ReadAllText(_historyFile, Encoding.UTF8);
             return JsonConvert.DeserializeObject<ChangeSetHistory>(json);
         }
-        void VerifyHistoryIsCached()
+
+       private void VerifyHistoryIsCached()
         {
             if (!File.Exists(_historyFile))
             {
@@ -346,6 +345,7 @@ namespace Insight.SvnProvider
             var dom = new XmlDocument();
             dom.LoadXml(xml);
             var url = dom.SelectSingleNode("//wcroot-abspath");
+            Debug.Assert(url != null, nameof(url) + " != null");
             var value = url.InnerText.Trim('^', ' ').Replace("/", "\\").TrimEnd('/', '\\');
 
             // Checkout folder in local file system. It may be above the base directory.
@@ -357,10 +357,12 @@ namespace Insight.SvnProvider
             dom = new XmlDocument();
             dom.LoadXml(xml);
             url = dom.SelectSingleNode("//relative-url");
+            Debug.Assert(url != null, nameof(url) + " != null");
             value = url.InnerText.Trim('^', ' ').Replace("/", "\\").TrimEnd('/', '\\');
             mappingInfo.RelativeUrlToStartDirectory = Uri.UnescapeDataString(value);
 
             url = dom.SelectSingleNode("//relative-url");
+            Debug.Assert(url != null, nameof(url) + " != null");
             value = url.InnerText.Trim('^', ' ').Replace("/", "\\").TrimEnd('/', '\\');
             mappingInfo.RelativeUrlToCheckoutDirectory = Uri.UnescapeDataString(value);
 
@@ -392,7 +394,7 @@ namespace Insight.SvnProvider
         {
             if (_mappingInfo == null)
             {
-                _mappingInfo = GetMappingInfo(_baseDirectory);
+                _mappingInfo = GetMappingInfo(BaseDirectory);
             }
 
             var serverNormalized = serverPath.Replace("/", "\\").TrimEnd('\\');
@@ -409,7 +411,7 @@ namespace Insight.SvnProvider
             // Simplified version when requesting the path. Server is relative to the starting directory!
 
             var serverNormalized = serverPath.Replace("/", "\\");
-            var localPath = Path.Combine(_baseDirectory, serverNormalized);
+            var localPath = Path.Combine(BaseDirectory, serverNormalized);
             return localPath;
         }
 

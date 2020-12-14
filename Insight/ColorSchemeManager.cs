@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Media;
-
 using Insight.Shared;
 
-using Visualization.Controls;
+using Visualization.Controls.Common;
 using Visualization.Controls.Interfaces;
 
 namespace Insight
@@ -21,7 +19,7 @@ namespace Insight
     public sealed class ColorSchemeManager : IColorSchemeManager
     {
         private readonly string _pathToColorFile;
-        public static string DefaultFileName = "colors.json";
+        public const string DefaultFileName = "colors.json";
 
         public ColorSchemeManager(string pathToColorFile)
         {
@@ -32,7 +30,7 @@ namespace Insight
         /// <summary>
         /// Once the color file is created it is not deleted because the user can edit it.
         /// </summary>
-        public bool UpdateColorScheme(List<string> names)
+        public bool UpdateColorScheme(IEnumerable<string> names)
         {
             var updated = false;
 

@@ -323,6 +323,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Merge color.
+        /// </summary>
+        public static string MergeColor {
+            get {
+                return ResourceManager.GetString("MergeColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New.
         /// </summary>
         public static string NewProject {

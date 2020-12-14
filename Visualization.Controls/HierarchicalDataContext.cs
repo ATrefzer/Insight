@@ -1,4 +1,5 @@
-﻿using Visualization.Controls.Interfaces;
+﻿using Visualization.Controls.Common;
+using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls
 {

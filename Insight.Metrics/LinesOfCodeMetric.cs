@@ -58,7 +58,7 @@ namespace Insight.Metrics
             return result.StdOut;
         }
 
-        private string CallClocForSingleFile(FileInfo file)
+        private string CallClocForSingleFile(FileSystemInfo file)
         {
             var args = $"\"{file.FullName}\" --csv --quiet";
 

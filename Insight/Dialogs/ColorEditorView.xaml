@@ -7,6 +7,7 @@
         xmlns:Controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
         xmlns:Insight="clr-namespace:Insight"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:Common="clr-namespace:Visualization.Controls.Common;assembly=Visualization.Controls"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=local:ColorEditorViewModel,IsDesignTimeCreatable=False}"
         Title="{x:Static Insight:Strings.EditColors}"
@@ -94,7 +95,7 @@
                         </ContextMenu>
                     </ListBox.ContextMenu>
                     <ListBox.ItemTemplate>
-                        <DataTemplate DataType="Controls:ColorMapping">
+                        <DataTemplate DataType="Common:ColorMapping">
                             <StackPanel Orientation="Horizontal">
                                 <Rectangle Width="24"
                                        Height="24"

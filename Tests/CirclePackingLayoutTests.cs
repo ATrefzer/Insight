@@ -57,8 +57,8 @@ namespace Tests
             // Loads a HierarchicalData bin file that includes the layout information and checks
             // if the layouting still produces the same result.
 
-            double width = 100;
-            double height = 100;
+            const double width = 100;
+            const double height = 100;
 
 
             var path = Path.Combine(_resourceDirectory, "large_hierarchical_example_circle1.bin");
@@ -118,8 +118,8 @@ namespace Tests
             // Loads a HierarchicalData bin file that includes the layout information and checks
             // if the layouting still produces the same result.
 
-            double width = 100;
-            double height = 300;
+            const double width = 100;
+            const double height = 300;
 
             var path = Path.Combine(_resourceDirectory, "large_hierarchical_example_circle3.bin");
 
@@ -137,8 +137,8 @@ namespace Tests
         [SetUp]
         public void Setup()
         {
-            var assembly = Assembly.GetAssembly(this.GetType());
-            var directory = new FileInfo(assembly.Location).Directory.FullName;
+            var assembly = Assembly.GetAssembly(GetType());
+            var directory = new FileInfo(assembly.Location).Directory?.FullName ?? ".";
             _resourceDirectory = Path.Combine(directory, @"..\Tests\Resources");
         }
     }

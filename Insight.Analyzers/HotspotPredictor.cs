@@ -36,7 +36,7 @@ namespace Insight.Analyzers
             return result;
         }
 
-        private static int GetHotspotIndex(List<string> captions)
+        private static int GetHotspotIndex(IList<string> captions)
         {
             var hotspotIndex = captions.IndexOf("Hotspot");
             if (hotspotIndex == -1)

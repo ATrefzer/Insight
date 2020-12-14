@@ -2,6 +2,6 @@
 {
     internal static class Constants
     {
-        public static double MaxLabelWidth = 200;
+        public const double MaxLabelWidth = 200;
     }
 }

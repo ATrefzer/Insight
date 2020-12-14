@@ -123,7 +123,7 @@ namespace Insight.Shared.VersionControl
                         item.Kind = KindOfChange.Add;
 
                         var msg = $"Convert rename to add because source is modified later: '{item.ServerPath}' (from '{item.FromServerPath}')";
-                        Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
+                        Warnings.Add(new WarningMessage(_cs.Id, msg));
                     }
                 }
                 else if (item.IsTypeChange())
@@ -165,7 +165,7 @@ namespace Insight.Shared.VersionControl
                     convertToRename.AddRange(copies);
 
                     var msg = $"Convert add/delete pair to rename: '{item.ServerPath}' (from '{item.FromServerPath}')";
-                    Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
+                    Warnings.Add(new WarningMessage(_cs.Id, msg));
                 }
             }
 
@@ -195,7 +195,7 @@ namespace Insight.Shared.VersionControl
                     {
                         item.Kind = KindOfChange.Add;
                         var msg = $"Convert multiple copied file to add: '{item.ServerPath}' (from '{item.FromServerPath}')";
-                        Warnings.Add(new WarningMessage(_cs.Id.ToString(), msg));
+                        Warnings.Add(new WarningMessage(_cs.Id, msg));
                     }
                 }
             }

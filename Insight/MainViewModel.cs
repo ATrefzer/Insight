@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Input;
 
+using Insight.Alias;
 using Insight.Analyzers;
 using Insight.Dialogs;
 using Insight.Shared;
@@ -16,6 +17,7 @@ using Insight.WpfCore;
 using Prism.Commands;
 
 using Visualization.Controls;
+using Visualization.Controls.Common;
 using Visualization.Controls.Data;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Tools;
@@ -28,7 +30,7 @@ namespace Insight
         TreeMap
     }
 
-    class ResultData
+    internal sealed class ResultData
     {
         public HierarchicalDataContext DataContext { get; set; }
         public HierarchicalDataCommands Commands { get; set; }
@@ -133,7 +135,7 @@ namespace Insight
         /// Create an color scheme manager on the fly.
         /// This ensure the file can be changed while the app is running.
         /// </summary>
-        IColorSchemeManager CreateColorSchemeManager()
+        private IColorSchemeManager CreateColorSchemeManager()
         {
             var colorSchemeManager = new ColorSchemeManager(GetColorFilePath());
             return colorSchemeManager;
@@ -143,7 +145,7 @@ namespace Insight
         /// Create an alias mapping on the fly.
         /// This ensure the file can be changed while the app is running.
         /// </summary>
-        IAliasMapping CreateAliasMapping()
+        private IAliasMapping CreateAliasMapping()
         {
             if (!File.Exists(GetAliasMappingPath()))
             {
@@ -157,40 +159,40 @@ namespace Insight
 
         public string Title { get; set; } = "Insight";
 
-        public ICommand LoadProjectCommand { get; set; }
+        public ICommand LoadProjectCommand { get; }
 
-        public ICommand NewProjectCommand { get; set; }
+        public ICommand NewProjectCommand { get; }
 
-        public ICommand AboutCommand { get; set; }
+        public ICommand AboutCommand { get; }
 
-        public ICommand ChangeCouplingCommand { get; set; }
+        public ICommand ChangeCouplingCommand { get; }
 
-        public ICommand ToggleDisplayModeCommand { get; set; }
+        public ICommand ToggleDisplayModeCommand { get; }
 
 
-        public ICommand CodeAgeCommand { get; set; }
+        public ICommand CodeAgeCommand { get; }
 
-        public ICommand CommentsCommand { get; set; }
+        public ICommand CommentsCommand { get; }
 
-        public ICommand EditColorsCommand { get; set; }
+        public ICommand EditColorsCommand { get; }
 
-        public ICommand FragmentationCommand { get; set; }
+        public ICommand FragmentationCommand { get; }
 
-        public ICommand HotspotsCommand { get; set; }
+        public ICommand HotspotsCommand { get; }
 
         public bool IsProjectValid => _project != null && _project.IsValid();
 
         public bool IsProjectLoaded => _project != null && !_project.IsDefault;
 
-        public ICommand KnowledgeCommand { get; set; }
+        public ICommand KnowledgeCommand { get; }
 
-        public ICommand KnowledgeLossCommand { get; set; }
+        public ICommand KnowledgeLossCommand { get; }
 
-        public ICommand LoadDataCommand { get; set; }
+        public ICommand LoadDataCommand { get; }
 
-        public ICommand PredictHotspotsCommand { get; set; }
+        public ICommand PredictHotspotsCommand { get; }
 
-        public ICommand SaveDataCommand { get; set; }
+        public ICommand SaveDataCommand { get; }
 
         public int SelectedIndex
         {
@@ -214,9 +216,9 @@ namespace Insight
             }
         }
 
-        public ICommand SetupCommand { get; set; }
+        public ICommand SetupCommand { get; }
 
-        public ICommand SummaryCommand { get; set; }
+        public ICommand SummaryCommand { get; }
 
         public ObservableCollection<TabContentViewModel> Tabs
         {
@@ -228,7 +230,7 @@ namespace Insight
             }
         }
 
-        public ICommand UpdateCommand { get; set; }
+        public ICommand UpdateCommand { get; }
 
         private void EditColorsClick()
         {
@@ -242,7 +244,7 @@ namespace Insight
         {
             if (args.Any())
             {
-                var edges = args.Select(coupling => CreateEdgeData(coupling));
+                var edges = args.Select(CreateEdgeData);
 
                 _tabManager.ShowChangeCoupling(edges.ToList());
             }
@@ -400,7 +402,7 @@ namespace Insight
             ShowHierarchicalData("Hotspots", context, GetDefaultCommands(), true);
         }
 
-        void ShowHierarchicalData(string title, HierarchicalDataContext context, HierarchicalDataCommands commands, bool toForeground)
+        private void ShowHierarchicalData(string title, HierarchicalDataContext context, HierarchicalDataCommands commands, bool toForeground)
         {
             var clone = context.Clone(); // Relict: Don't want to share state when showing both, tree map and circles
 
@@ -505,20 +507,20 @@ namespace Insight
 
             var descr = Tabs.ElementAt(SelectedIndex);
 
-            // Saving hierarchical data
-            if (descr.Data is HierarchicalDataContext context)
+            if (!(descr.Data is HierarchicalDataContext context))
             {
-                var fileName = _dialogs.GetSaveFile("bin", "Save data", _project.Cache);
-                if (fileName != null)
-                {
-                    Save(fileName, context.Data);
+                return;
+            }
 
-                    var colorScheme = context.BrushFactory as ColorScheme;
-                    if (colorScheme != null)
-                    {
-                        var json = new JsonFile<ColorScheme>();
-                        json.Write(MakeColorsFilePath(fileName), colorScheme);
-                    }
+            var fileName = _dialogs.GetSaveFile("bin", "Save data", _project.Cache);
+            if (fileName != null)
+            {
+                Save(fileName, context.Data);
+
+                if (context.BrushFactory is ColorScheme colorScheme)
+                {
+                    var json = new JsonFile<ColorScheme>();
+                    json.Write(MakeColorsFilePath(fileName), colorScheme);
                 }
             }
         }
@@ -555,7 +557,7 @@ namespace Insight
         }
 
 
-        void UpdateDisplayMode()
+        private void UpdateDisplayMode()
         {
             var selectedIndex = SelectedIndex;
 
@@ -672,7 +674,7 @@ namespace Insight
         /// Alias mappings (for example anonymity or teams)
         /// Don't delete, only extend if necessary.
         /// </summary>
-        void UpdateDeveloperAliasMappings(IEnumerable<string> developers)
+        private void UpdateDeveloperAliasMappings(IEnumerable<string> developers)
         {
             // Ensure every developer is part of the mapping file.
             var aliasMappings = new AliasMapping(GetAliasMappingPath());

@@ -7,17 +7,17 @@ using NUnit.Framework;
 
 namespace Tests
 {
-    internal class DtoString
+    internal sealed class DtoString
     {
         public string A { get; set; }
     }
 
-    internal class DtoDouble
+    internal sealed class DtoDouble
     {
         public double A { get; set; }
     }
 
-    internal class DtoMany
+    internal sealed class DtoMany
     {
         public double A { get; set; }
         public string B { get; set; }
@@ -79,11 +79,10 @@ namespace Tests
         [Test]
         public void ManyProperties_ManyItems_IncludeHeader()
         {
-            var expected =
-                    "A,B,C\r\n" +
-                    "3.142,B1,\"C,1\"\r\n" +
-                    "3.142,B2,\"C\t2\"\r\n" +
-                    "3.142,B3,\"C 3\"\r\n";
+            const string expected = "A,B,C\r\n" +
+                                    "3.142,B1,\"C,1\"\r\n" +
+                                    "3.142,B2,\"C\t2\"\r\n" +
+                                    "3.142,B3,\"C 3\"\r\n";
 
             var items = new List<DtoMany>
                         {

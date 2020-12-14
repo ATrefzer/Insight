@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Visualization.Controls.Common;
+
 namespace Visualization.Controls.Interfaces
 {
     public interface IHierarchicalData

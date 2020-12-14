@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Visualization.Controls;
+using Visualization.Controls.Common;
 using Visualization.Controls.Data;
 
 namespace Tests
@@ -13,17 +14,13 @@ namespace Tests
             var scheme = new ColorScheme(new[] { "c1", "c2", "c3" });
 
             HierarchicalData child;
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "c1";
+            child = new HierarchicalData("ra", 10) { ColorKey = "c1" };
             root.AddChild(child);
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "c2";
+            child = new HierarchicalData("ra", 10) { ColorKey = "c2" };
             root.AddChild(child);
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "c3";
+            child = new HierarchicalData("ra", 10) { ColorKey = "c3" };
             root.AddChild(child);
-            child = new HierarchicalData("ra", 10);
-            child.ColorKey = "unknown";
+            child = new HierarchicalData("ra", 10) { ColorKey = "unknown" };
             root.AddChild(child);
 
             root.SumAreaMetrics();

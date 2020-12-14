@@ -177,6 +177,9 @@ namespace Insight.GitProvider.Debugging
                             case KindOfChange.TypeChanged:
                                 writer.WriteLine("T\t" + file.ServerPath);
                                 break;
+                            default:
+                                writer.WriteLine("?\t" + file.ServerPath);
+                                break;
                         }
                     }
                 }

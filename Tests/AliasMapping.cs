@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
-    class AliasMappingTest
+    internal sealed class AliasMappingTest
     {
         /// <summary>
         /// Transforms the local files to contribution to use aliases for the developers

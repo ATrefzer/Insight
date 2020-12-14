@@ -6,7 +6,7 @@ namespace Insight.Dialogs
     /// <summary>
     /// Interaction logic for ImageView.xaml
     /// </summary>
-    public partial class ImageView
+    public sealed partial class ImageView
     {
         public ImageView()
         {

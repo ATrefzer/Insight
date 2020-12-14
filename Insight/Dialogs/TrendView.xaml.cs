@@ -3,7 +3,7 @@
     /// <summary>
     /// Interaction logic for DetailGraph.xaml
     /// </summary>
-    public partial class TrendView
+    public sealed partial class TrendView
     {
         public TrendView()
         {

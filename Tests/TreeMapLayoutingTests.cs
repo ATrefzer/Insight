@@ -79,8 +79,8 @@ namespace Tests
             // if the layouting still produces the same result.
 
 
-            double width = 300;
-            double height = 100;
+            const double width = 300;
+            const double height = 100;
             var path = Path.Combine(_resourceDirectory, "large_hierarchical_example_treemap2.bin");
 
             if (GenerateReferenceData)
@@ -118,8 +118,8 @@ namespace Tests
         [SetUp]
         public void Setup()
         {
-            var assembly = Assembly.GetAssembly(this.GetType());
-            var directory = new FileInfo(assembly.Location).Directory.FullName;
+            var assembly = Assembly.GetAssembly(GetType());
+            var directory = new FileInfo(assembly.Location).Directory?.FullName ?? ".";
             _resourceDirectory = Path.Combine(directory, @"..\Tests\Resources");
         }
     }

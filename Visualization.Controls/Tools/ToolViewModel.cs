@@ -32,78 +32,31 @@ namespace Visualization.Controls.Tools
         /// <summary>
         /// Min area for user feedback.
         /// </summary>
-        public double MinArea
-        {
-            get
-            {
-                return Math.Round(_areas[_minAreaIndex], Digits);
-            }
-        }
+        public double MinArea => Math.Round(_areas[_minAreaIndex], Digits);
 
         /// <summary>
         /// Max area for user feedback.
         /// </summary>
-        public double MaxArea
-        {
-            get
-            {
-                return Math.Round(_areas[_maxAreaIndex], Digits);
-            }
-        }
+        public double MaxArea => Math.Round(_areas[_maxAreaIndex], Digits);
 
         /// <summary>
         /// Min weight for user feedback.
         /// </summary>
-        public double MinWeight
-        {
-            get
-            {
-                return Math.Round(_weights[_minWeightIndex], Digits);
-            }
-        }
+        public double MinWeight => Math.Round(_weights[_minWeightIndex], Digits);
 
-       
 
         /// <summary>
         /// Max weighta for user feedback.
         /// </summary>
-        public double MaxWeight
-        {
-            get
-            {
-                return Math.Round(_weights[_maxWeightIndex], Digits);
-            }
-        }
+        public double MaxWeight => Math.Round(_weights[_maxWeightIndex], Digits);
 
-        public int AreaIndexLower
-        {
-            get
-            {
-                return 0;
-            }
-        }
-        public int AreaIndexUpper
-        {
-            get
-            {
-                return _areas.Count - 1;
-            }
-        }
+        public int AreaIndexLower => 0;
 
-        public int WeightIndexLower
-        {
-            get
-            {
-                return 0;
-            }
-        }
-        public int WeightIndexUpper
-        {
-            get
-            {
-                return _weights.Count - 1;
-            }
-        }
+        public int AreaIndexUpper => _areas.Count - 1;
+
+        public int WeightIndexLower => 0;
+
+        public int WeightIndexUpper => _weights.Count - 1;
 
         public ToolViewModel(List<double> areas, List<double> weights)
         {

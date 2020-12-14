@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Media;
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Common
 {
     public static class BrushCache
     {
@@ -17,7 +17,7 @@ namespace Visualization.Controls
 
         public static SolidColorBrush GetBrush(Color color)
         {
-            if (!Cache.TryGetValue(color, out SolidColorBrush brush))
+            if (!Cache.TryGetValue(color, out var brush))
             {
                 brush = CreateBrushFromColor(color);
                 Cache.Add(color, brush);

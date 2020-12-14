@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Media;
 
+using Visualization.Controls.Common;
+
 namespace Visualization.Controls.Interfaces
 {
     // TODO #alias cleanup Palette or Scheme?
