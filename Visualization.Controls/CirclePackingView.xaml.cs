@@ -32,7 +32,7 @@ namespace Visualization.Controls
 
         protected override IRenderer CreateRenderer()
         {
-            return new CirclePackingRenderer(_colorScheme);
+            return new CirclePackingRenderer(_brushFactory);
         }
 
         protected override DrawingCanvas GetCanvas()

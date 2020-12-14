@@ -113,6 +113,11 @@ namespace Visualization.Controls
             return true;
         }
 
+        public bool IsKnown(string alias)
+        {
+            return _nameToArgb.ContainsKey(alias);
+        }
+
         private static SolidColorBrush CreateBrushFromColor(Color color)
         {
             SolidColorBrush brush = new SolidColorBrush(color);

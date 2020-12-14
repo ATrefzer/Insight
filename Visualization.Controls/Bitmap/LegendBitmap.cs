@@ -9,12 +9,12 @@ namespace Visualization.Controls.Bitmap
     public class LegendBitmap
     {
         private readonly List<string> _names;
-        private readonly IColorScheme _colorScheme;
+        private readonly IBrushFactory _brushFactory;
 
-        public LegendBitmap(List<string> names, IColorScheme colorScheme)
+        public LegendBitmap(List<string> names, IBrushFactory brushFactory)
         {
             _names = names;
-            _colorScheme = colorScheme;
+            _brushFactory = brushFactory;
         }
 
 
@@ -41,11 +41,11 @@ namespace Visualization.Controls.Bitmap
                 var offsetColorName = 25;
                 var offsetDeveloperName = 200;
 
-                var brush = ToDrawingBrush(_colorScheme.GetBrush(name));
+                var brush = ToDrawingBrush(_brushFactory.GetBrush(name));
 
                 graphics.FillRectangle(brush, x, y, 20, 20);
 
-                graphics.DrawString("(" + _colorScheme.GetColorName(name) + ")",
+                graphics.DrawString("(" + _brushFactory.GetColorName(name) + ")",
                     new Font(FontFamily.GenericSansSerif, 12), Brushes.Black, x + offsetColorName, y);
                 graphics.DrawString(name, new Font(FontFamily.GenericSansSerif, 12), Brushes.Black,
                     x + offsetDeveloperName, y);
@@ -63,7 +63,7 @@ namespace Visualization.Controls.Bitmap
             {
                 foreach (var name in _names) // dump only used developers!
                 {
-                    file.WriteLine(name + "\t" + _colorScheme.GetColorName(name));
+                    file.WriteLine(name + "\t" + _brushFactory.GetColorName(name));
                 }
             }
         }

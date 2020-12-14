@@ -17,7 +17,7 @@ namespace Insight
         /// <summary>
         /// Updates color assignments done by the user.
         /// </summary>
-        void UpdateAndSave(IColorScheme colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors);
+        void UpdateAndSave(IColorPalette colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors);
 
         IColorScheme LoadColorScheme();
         

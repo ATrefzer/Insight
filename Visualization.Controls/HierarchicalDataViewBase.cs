@@ -20,7 +20,7 @@ namespace Visualization.Controls
                                                                                                      "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase), new PropertyMetadata(null));
         private HitTest _hitTest = new HitTest();
         protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
-        protected IColorScheme _colorScheme;
+        protected IBrushFactory _brushFactory;
 
         /// <summary>
         /// Filtered data
@@ -183,7 +183,7 @@ namespace Visualization.Controls
         protected void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             _root = null;
-            _colorScheme = null;
+            _brushFactory = null;
 
             if (!(DataContext is HierarchicalDataContext context) || context.Data == null)
             {
@@ -191,7 +191,7 @@ namespace Visualization.Controls
                 return;
             }
             
-            _colorScheme = context.ColorScheme;
+            _brushFactory = context.BrushFactory;
             _root = context.Data;
 
             InitializeTools(context.AreaSemantic, context.WeightSemantic);

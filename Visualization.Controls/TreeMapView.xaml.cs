@@ -32,7 +32,7 @@ namespace Visualization.Controls
 
         protected override IRenderer CreateRenderer()
         {
-            return new SquarifiedTreeMapRenderer(_colorScheme);
+            return new SquarifiedTreeMapRenderer(_brushFactory);
         }
 
         protected override DrawingCanvas GetCanvas()

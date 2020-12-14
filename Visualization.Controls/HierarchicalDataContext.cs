@@ -7,16 +7,16 @@ namespace Visualization.Controls
     /// </summary>
     public sealed class HierarchicalDataContext
     {
-        public HierarchicalDataContext(IHierarchicalData data, IColorScheme colorScheme)
+        public HierarchicalDataContext(IHierarchicalData data, IBrushFactory brushFactory)
         {
             Data = data;
-            ColorScheme = colorScheme;
+            BrushFactory = brushFactory;
         }
 
         public HierarchicalDataContext Clone()
         {
             // Layout info is lost!
-            var clone = new HierarchicalDataContext(Data.Clone(), ColorScheme);
+            var clone = new HierarchicalDataContext(Data.Clone(), BrushFactory);
             clone.WeightSemantic = WeightSemantic;
             clone.AreaSemantic = AreaSemantic;
             return clone;
@@ -25,10 +25,10 @@ namespace Visualization.Controls
         public HierarchicalDataContext(IHierarchicalData data)
         {
             Data = data;
-            ColorScheme = new ColorScheme();
+            BrushFactory = new ColorScheme();
         }
 
-        public IColorScheme ColorScheme { get; }
+        public IBrushFactory BrushFactory { get; }
 
         public IHierarchicalData Data { get; }
 

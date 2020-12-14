@@ -71,7 +71,7 @@ namespace Insight
         public void ShowColorEditorViewViewer(IColorSchemeManager colorSchemeManager, IAliasMapping aliasMapping)
         {
             var view = new ColorEditorView();
-            var viewModel = new ColorEditorViewModel(colorSchemeManager);
+            var viewModel = new ColorEditorViewModel(colorSchemeManager, aliasMapping);
             view.Owner = _mainWindow;
             view.DataContext = viewModel;
             view.WindowStartupLocation = WindowStartupLocation.CenterOwner;

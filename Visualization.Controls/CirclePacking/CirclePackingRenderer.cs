@@ -11,14 +11,14 @@ namespace Visualization.Controls.CirclePacking
 {
     internal sealed class CirclePackingRenderer : IRenderer
     {
-        private readonly IColorScheme _colorScheme;
+        private readonly IBrushFactory _brushFactory;
         private IHierarchicalData _data;
         private GeneralTransform _inverse;
         private Pen _pen;
 
-        public CirclePackingRenderer(IColorScheme colorScheme)
+        public CirclePackingRenderer(IBrushFactory brushFactory)
         {
-            _colorScheme = colorScheme;
+            _brushFactory = brushFactory;
         }
 
         public IHighlighting Highlighting { get; set; }
@@ -99,7 +99,7 @@ namespace Visualization.Controls.CirclePacking
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {
-                return _colorScheme.GetBrush(data.ColorKey);
+                return _brushFactory.GetBrush(data.ColorKey);
             }
             else
             {

@@ -13,11 +13,11 @@ namespace Visualization.Controls.TreeMap
 
         // ReSharper disable once NotAccessedField.Local
         private int _level = -1;
-        private IColorScheme _colorScheme;
+        private IBrushFactory _brushFactory;
 
-        public SquarifiedTreeMapRenderer(IColorScheme colorScheme)
+        public SquarifiedTreeMapRenderer(IBrushFactory brushFactory)
         {
-            _colorScheme = colorScheme;
+            _brushFactory = brushFactory;
         }
 
 
@@ -122,7 +122,7 @@ namespace Visualization.Controls.TreeMap
             SolidColorBrush brush;
             if (data.ColorKey != null)
             {
-                brush = _colorScheme.GetBrush(data.ColorKey);
+                brush = _brushFactory.GetBrush(data.ColorKey);
             }
             else
             {

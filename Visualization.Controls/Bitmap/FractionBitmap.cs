@@ -6,7 +6,6 @@ using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.Bitmap
 {
-    // TODO Separate calculation from visualization.
     public sealed class FractionBitmap
     {
         public static System.Drawing.Brush ToDrawingBrush(System.Windows.Media.SolidColorBrush mediaBrush)
@@ -15,7 +14,7 @@ namespace Visualization.Controls.Bitmap
         }
 
         public void Create(string filename, Dictionary<string, uint> workByDevelopers,
-                           IColorScheme colorMapper, bool legend)
+                           IBrushFactory brushFactory, bool legend)
         {
             double allWork = workByDevelopers.Values.Sum(w => w);
 
@@ -41,7 +40,7 @@ namespace Visualization.Controls.Bitmap
             var index = 0;
             foreach (var developersWork in sorted)
             {
-                var brush = ToDrawingBrush(colorMapper.GetBrush(developersWork.Key));
+                var brush = ToDrawingBrush(brushFactory.GetBrush(developersWork.Key));
 
                 if (legend)
                 {

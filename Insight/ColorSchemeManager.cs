@@ -28,7 +28,7 @@ namespace Insight
             _pathToColorFile = pathToColorFile;
         }
 
-        public void UpdateAndSave(IColorScheme colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors)
+        public void UpdateAndSave(IColorPalette colorScheme, IEnumerable<ColorMapping> updates, IEnumerable<Color> newColors)
         {
             var colorSchemeObj = (ColorScheme)colorScheme;
 

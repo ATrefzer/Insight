@@ -105,8 +105,8 @@ namespace Insight
 
         public IEnumerable<string> GetReverse(string alias)
         {
-            var names = _aliasMapping.Where(m => m.Value == alias).Select(m => m.Key);
-            return names.ToList();
+            var names = _aliasMapping.Where(m => m.Value == alias).Select(m => m.Key).ToList();
+            return names;
         }
     }
 }

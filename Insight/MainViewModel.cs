@@ -311,7 +311,7 @@ namespace Insight
         {
             // Analyze hotspots from summary and code metrics
             var context = await _backgroundExecution.ExecuteAsync(_analyzer.AnalyzeCodeAge);
-            var colorScheme = context.ColorScheme;
+            var colorScheme = context.BrushFactory;
 
             ShowHierarchicalData("Code Age", context, null, true);
         }
@@ -339,7 +339,7 @@ namespace Insight
                 return;
             }
 
-            var colorScheme = context.ColorScheme;
+            var colorScheme = context.BrushFactory;
 
             ShowHierarchicalData("Fragmentation", context, GetDefaultCommands(), true);
 
@@ -513,7 +513,7 @@ namespace Insight
                 {
                     Save(fileName, context.Data);
 
-                    var colorScheme = context.ColorScheme as ColorScheme;
+                    var colorScheme = context.BrushFactory as ColorScheme;
                     if (colorScheme != null)
                     {
                         var json = new JsonFile<ColorScheme>();
