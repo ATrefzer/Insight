@@ -1,10 +1,12 @@
-﻿namespace Insight.Dto
+﻿using Insight.ViewModels;
+
+namespace Insight.Dto
 {
     /// <summary>
     /// Copied base class attributes to control order in data grid / csv
     /// DO NOT FORMAT
     /// </summary>
-    public sealed class DataGridFriendlyArtifact
+    public sealed class DataGridFriendlyArtifact : ICanMatch
     {
         //public string Id { get; set; }
         public string LocalPath { get; set; }
@@ -19,5 +21,10 @@
         public double FractalValue { get; set; }
         public string MainDev { get; set; }
         public double MainDevPercent { get; set; }
+
+        public bool IsMatch(string lowerCaseSearchText)
+        {
+            return LocalPath.ToLowerInvariant().Contains(lowerCaseSearchText);
+        }
     }
 }

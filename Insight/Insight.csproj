@@ -114,6 +114,7 @@
     <Compile Include="Dialogs\ColorPaletteExtensions.cs" />
     <Compile Include="Alias\NullAliasMapping.cs" />
     <Compile Include="IProject.cs" />
+    <Compile Include="ViewModels\ICanMatch.cs" />
     <Compile Include="ViewModels\ISearchableViewModel.cs" />
     <Compile Include="Dto\DataGridFriendlyArtifactBasic.cs" />
     <Compile Include="Dto\DataGridFriendlyComment.cs" />

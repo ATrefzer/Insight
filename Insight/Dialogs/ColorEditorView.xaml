@@ -73,7 +73,8 @@
                      TextChanged="OnSearchTextChanged"
                      x:Name="_searchText"
                      HorizontalAlignment="Stretch"
-                     Style="{StaticResource TextBoxStyle}"/>
+                     Style="{StaticResource TextBoxStyle}"
+                     Background="LightYellow"/>
                 <ListBox Grid.Row="1"
                      SelectionMode="Extended"
                      ItemsSource="{Binding AllMappings}"

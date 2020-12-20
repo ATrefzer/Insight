@@ -1,4 +1,7 @@
 ﻿using System.ComponentModel;
+using System.Windows.Controls;
+using System.Windows.Data;
+using Insight.ViewModels;
 
 namespace Insight
 {
@@ -18,6 +21,30 @@ namespace Insight
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
             e.Cancel = !CanClose;
+        }
+
+        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_tabControl.SelectedContent is TableViewModel vm)
+            {
+                if (!(sender is TextBox textBox))
+                {
+                    return;
+                }
+                
+                var view = (CollectionView)CollectionViewSource.GetDefaultView(vm.Data);
+                view.Filter = obj =>
+                {
+                    if (obj is ICanMatch canFilter)
+                    {
+                        return canFilter.IsMatch(textBox.Text);
+                    }
+
+                    // Cannot be filtered
+                    return true;
+                };
+
+            }
         }
     }
 }

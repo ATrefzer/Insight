@@ -206,9 +206,12 @@
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type ViewModels:TableViewModel}">
-                    <controls:DataGridView DataContext="{Binding Data}"
-                                           UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
-                             Path=DataContext.Commands}"/>
+                    <DockPanel>
+                        <TextBox DockPanel.Dock="Top" Height="23" TextChanged="OnSearchTextChanged" Background="LightYellow"/>
+                        <controls:DataGridView DataContext="{Binding Data}"
+                                               UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
+                             Path=DataContext.Commands}" DockPanel.Dock="Bottom" />
+                    </DockPanel>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type ViewModels:ChordViewModel}">
