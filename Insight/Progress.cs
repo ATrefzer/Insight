@@ -8,8 +8,8 @@ namespace Insight
 {
     public sealed class Progress : IDisposable, IProgress
     {
-        readonly MainWindow _mainWindow;
-        readonly ProgressView _progressView;
+        private readonly MainWindow _mainWindow;
+        private readonly ProgressView _progressView;
 
         public Progress(MainWindow mainWindow, ProgressView progressView)
         {

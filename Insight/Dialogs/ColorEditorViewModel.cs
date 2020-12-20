@@ -10,21 +10,12 @@ using Insight.WpfCore;
 
 using Prism.Commands;
 
-using Visualization.Controls;
+using Visualization.Controls.Common;
 using Visualization.Controls.Interfaces;
 
 namespace Insight.Dialogs
 {
-    static class ColorPaletteExtensions
-    {
-        public static IColorScheme ForAlias(this IColorScheme palette, IAliasMapping aliasMapping)
-        {
-            return new AliasColorScheme(palette, aliasMapping);
-        }
-    }
-
-
-    sealed class ColorEditorViewModel : ViewModelBase, ISearchableViewModel
+    internal sealed class ColorEditorViewModel : ViewModelBase, ISearchableViewModel
     {
         private readonly IColorSchemeManager _colorSchemeManager;
         private readonly IColorScheme _sourcePalette;
@@ -111,7 +102,7 @@ namespace Insight.Dialogs
 
         public Color AssignmentColor
         {
-            get { return _assignmentColor; }
+            get => _assignmentColor;
             set
             {
                 _assignmentColor = value;
@@ -136,7 +127,7 @@ namespace Insight.Dialogs
             }
         }
 
-        void UpdateAssignableColors()
+        private void UpdateAssignableColors()
         {
             var allColors = _aliasPalette.GetAllColors().Union(_newCustomColors);
             if (ShowOnlyFreeColors == true)

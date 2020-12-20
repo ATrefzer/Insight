@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
+using Visualization.Controls.Common;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Tools;

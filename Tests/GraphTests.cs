@@ -40,7 +40,7 @@ namespace Tests
             }
 
             // All nodes in breadth first
-            Assert.AreEqual("n0n1n2n3n4n5n10n6n9n7n8n", builder.ToString());
+            Assert.AreEqual("n0n1n2n3n4n5n10n6n9n7n8", builder.ToString());
         }
 
         [Test]
@@ -102,11 +102,11 @@ namespace Tests
             /*
             n9 <---
             |      |
+            |      |    n7
+            n8     |    |  
+            |      n6 --- 
             |      |
-            n8     |      
-            |      n6 --> n7
-            |      |
-       n3-> n4-->  n5       
+       n3-> n4 --> n5       
        |    |
        n1   n2
           |   
@@ -129,7 +129,7 @@ namespace Tests
 
             
             Assert.AreEqual("n1", graph.FindCommonAncestor("n1", "n3"));
-            Assert.AreEqual("n6", graph.FindCommonAncestor("n9", "n7"));
+            Assert.AreEqual("n4", graph.FindCommonAncestor("n9", "n7"));
             Assert.AreEqual("n1", graph.FindCommonAncestor("n1", "n1"));
             //Assert.AreEqual("n8", graph.FindCommonAncestor("n9", "n8"));
         }

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Common
 {
     public static class DefaultDrawingPrimitives
     {

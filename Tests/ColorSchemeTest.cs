@@ -3,11 +3,10 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Windows.Media;
 
-using Visualization.Controls;
+using Visualization.Controls.Common;
 
-using ColorConverter = Visualization.Controls.ColorConverter;
+using ColorConverter = Visualization.Controls.Common.ColorConverter;
 
 namespace Tests
 {
@@ -17,10 +16,10 @@ namespace Tests
         [Test]
         public void ArgbConversion()
         {
-            int argb1 = 0x12345678;
+            const int argb1 = 0x12345678;
             var color = ColorConverter.FromArgb(argb1);
 
-            int argb2 = ColorConverter.ToArgb(color);
+            var argb2 = ColorConverter.ToArgb(color);
             Assert.AreEqual(argb1, argb2);
         }
 
@@ -33,7 +32,6 @@ namespace Tests
             // Add names until no more colors are available
             while (scheme.AssignFreeColor(Guid.NewGuid().ToString()))
             {
-                ;
             }
 
             Assert.IsFalse(scheme.AssignFreeColor("me"));
@@ -43,7 +41,7 @@ namespace Tests
             Assert.IsTrue(scheme.Names.Contains("me"));
 
             // me has the default color
-            var name = scheme.GetBrush("me").Color;
+            var name = scheme.GetBrush("me").Color.ToString();
             var defaultColor = DefaultDrawingPrimitives.DefaultColor.ToString();
             Assert.AreEqual(defaultColor, name);
 
@@ -56,7 +54,7 @@ namespace Tests
             scheme.AssignFreeColor("me");
             scheme.AssignFreeColor("you");
 
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(ColorScheme));
+            var serializer = new DataContractJsonSerializer(typeof(ColorScheme));
 
             // Serialize
             var stream = new MemoryStream();

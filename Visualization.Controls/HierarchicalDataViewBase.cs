@@ -7,6 +7,7 @@ using System.Windows.Input;
 
 using Prism.Commands;
 
+using Visualization.Controls.Common;
 using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;

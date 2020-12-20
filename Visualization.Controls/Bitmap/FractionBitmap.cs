@@ -19,8 +19,8 @@ namespace Visualization.Controls.Bitmap
             double allWork = workByDevelopers.Values.Sum(w => w);
 
             // For the fractal
-            var width = 200;
-            var height = 200;
+            const int width = 200;
+            const int height = 200;
 
             var remainingWidth = width;
             var remainingHeight = height;

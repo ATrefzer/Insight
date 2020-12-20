@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Common
 {
     [Serializable]
     public abstract class LayoutInfo

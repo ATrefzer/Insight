@@ -19,7 +19,7 @@ namespace Insight.Dialogs
             return Developers.SelectedValue as string;
         }
 
-        internal void SetDevelopers(List<string> mainDevelopers)
+        internal void SetDevelopers(IEnumerable<string> mainDevelopers)
         {
             Developers.ItemsSource = mainDevelopers.OrderBy(x => x);
             Developers.SelectedIndex = 0;

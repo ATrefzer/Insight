@@ -36,7 +36,6 @@ namespace Insight.Analyzers
                 }
 
                 // Only accepted files
-                // TODO ## Cleanup filtering
                 var itemIds = cs.Items.Where(item => filter.IsAccepted(item.LocalPath)).Select(item => item.Id).ToList();
 
                 // Do you have uncommitted changes.

@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Insight"
         xmlns:oxy="http://oxyplot.org/wpf"
+        xmlns:Dialogs="clr-namespace:Insight.Dialogs"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=Dialogs:TrendViewModel, IsDesignTimeCreatable=False}"
         Title="{x:Static local:Strings.TrendViewTitle}"
         Height="400"
         Width="400">

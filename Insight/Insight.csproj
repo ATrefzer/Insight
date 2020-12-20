@@ -100,7 +100,7 @@
     <Compile Include="AboutView.xaml.cs">
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="AliasMapping.cs" />
+    <Compile Include="Alias\AliasMapping.cs" />
     <Compile Include="Analyzer.cs" />
     <Compile Include="BackgroundExecution.cs" />
     <Compile Include="Builder\CodeAgeBuilder.cs" />
@@ -111,6 +111,9 @@
       <DependentUpon>ColorEditorView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\ColorEditorViewModel.cs" />
+    <Compile Include="Dialogs\ColorPaletteExtensions.cs" />
+    <Compile Include="Alias\NullAliasMapping.cs" />
+    <Compile Include="IProject.cs" />
     <Compile Include="ViewModels\ISearchableViewModel.cs" />
     <Compile Include="Dto\DataGridFriendlyArtifactBasic.cs" />
     <Compile Include="Dto\DataGridFriendlyComment.cs" />
@@ -354,5 +357,6 @@
   <ItemGroup>
     <Resource Include="Resources\display_16.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

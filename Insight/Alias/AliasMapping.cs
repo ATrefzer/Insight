@@ -3,30 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+
 using Insight.Shared;
 
-namespace Insight
+namespace Insight.Alias
 {
-    class NullAliasMapping : IAliasMapping
+    public sealed class AliasMapping : IAliasMapping
     {
-        public string GetAlias(string name)
-        {
-            return name;
-        }
-
-        public IEnumerable<string> GetReverse(string alias)
-        {
-            return new List<string>{alias};
-        }
-    }
-
-    public class AliasMapping : IAliasMapping
-    {
-        readonly Dictionary<string, string> _aliasMapping = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _aliasMapping = new Dictionary<string, string>();
 
         private readonly string _fileName;
 
-        const string Separator = ">>";
+        private const string Separator = ">>";
 
         public AliasMapping(string fileName)
         {
@@ -70,7 +58,7 @@ namespace Insight
                 }
 
                 var parts = line.Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Count() != 2)
+                if (parts.Length != 2)
                 {
                     continue;
                 }

@@ -13,7 +13,7 @@ namespace Visualization.Controls.Utility
 
     internal static class Geometry
     {
-        public static double Epsilon = 0.0000001;
+        public const double Epsilon = 0.0000001;
 
         // Return the cross product AB x BC.
         // The cross product is a vector perpendicular to AB
@@ -436,7 +436,7 @@ namespace Visualization.Controls.Utility
 
         // Return true if the indicated circle encloses all of the points.
         private static bool CircleEnclosesPoints(Point center,
-                                                 double radius2, List<Point> points, int skip1, int skip2, int skip3)
+                                                 double radius2, IReadOnlyList<Point> points, int skip1, int skip2, int skip3)
         {
             for (var i = 0; i < points.Count; i++)
             {
@@ -572,7 +572,7 @@ namespace Visualization.Controls.Utility
         // Return the polygon's area in "square units."
         // The value will be negative if the polygon is
         // oriented clockwise.
-        private static double SignedPolygonArea(List<Point> points)
+        private static double SignedPolygonArea(IList<Point> points)
         {
             // Add the first point to the end.
             var num_points = points.Count;

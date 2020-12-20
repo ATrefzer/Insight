@@ -13,7 +13,7 @@ namespace Insight.Shared.System
             return foundFiles;
         }
 
-        private void Scan(string rootDir, List<string> foundFiles, bool recursive)
+        private void Scan(string rootDir, ICollection<string> foundFiles, bool recursive)
         {
             try
             {

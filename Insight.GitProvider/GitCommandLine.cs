@@ -73,8 +73,8 @@ namespace Insight.GitProvider
         /// </summary>
         public bool HasLocalChanges()
         {
-            var program = "git";
-            var args = "status --short";
+            const string program = "git";
+            const string args = "status --short";
             var result = ExecuteCommandLine(program, args);
             return !string.IsNullOrEmpty(result.StdOut.Trim());
         }
@@ -146,7 +146,7 @@ namespace Insight.GitProvider
         public string Log(string localPath)
         {
             localPath = localPath.Replace("\\", "/");
-            var program = "git";
+            const string program = "git";
 
             // --follow to track renaming, works only for a single file!
             // When --follow is used --full-history has no effect. We don't see merge commits that do contribute to the file.
@@ -170,8 +170,8 @@ namespace Insight.GitProvider
         {
             const string mainBranch = "master";
 
-            var program = "git";
-            var args = "symbolic-ref --short -q HEAD";
+            const string program = "git";
+            const string args = "symbolic-ref --short -q HEAD";
             var result = ExecuteCommandLine(program, args);
             return string.Compare(result.StdOut.Trim('\n'), mainBranch, System.StringComparison.OrdinalIgnoreCase) == 0;
         }

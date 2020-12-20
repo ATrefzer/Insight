@@ -66,9 +66,7 @@ namespace Tests
             Id id1 = new NumberId(1);
             Id id2 = new NumberId(1);
 
-            var hash = new HashSet<Id>();
-            hash.Add(id1);
-            hash.Add(id2);
+            var hash = new HashSet<Id> { id1, id2 };
 
             Assert.AreEqual(1, hash.Count);
 
@@ -84,9 +82,7 @@ namespace Tests
             Id id1 = new StringId("a");
             Id id2 = new StringId("a");
 
-            var hash = new HashSet<Id>();
-            hash.Add(id1);
-            hash.Add(id2);
+            var hash = new HashSet<Id> { id1, id2 };
 
             Assert.AreEqual(1, hash.Count);
 

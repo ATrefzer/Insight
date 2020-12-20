@@ -5,15 +5,15 @@ using System.Collections.Generic;
 
 namespace Insight.Analyzers
 {
-    public class HotspotCalculator
+    public sealed class HotspotCalculator
     {
-        double _maxCommits = double.MinValue;
-        double _minCommits = double.MaxValue;
-        double _minLinesOfCode = double.MaxValue;
-        double _maxLinesOfCode = double.MinValue;
-        Dictionary<string, LinesOfCode> _metrics;
+        readonly double _maxCommits = double.MinValue;
+        readonly double _minCommits = double.MaxValue;
+        readonly double _minLinesOfCode = double.MaxValue;
+        readonly double _maxLinesOfCode = double.MinValue;
+        readonly Dictionary<string, LinesOfCode> _metrics;
 
-        public HotspotCalculator(List<Artifact> artifacts, Dictionary<string, LinesOfCode> metrics)
+        public HotspotCalculator(IEnumerable<Artifact> artifacts, Dictionary<string, LinesOfCode> metrics)
         {
             _metrics = metrics;
             foreach (var artifact in artifacts)
@@ -54,10 +54,9 @@ namespace Insight.Analyzers
         public double GetHotspotValue(Artifact item)
         {
             // Calculate hotspot index
-            double hotspot = 0.0;
             var normalizedWeight = (GetCommits(item) - _minCommits) / (_maxCommits - _minCommits);
             var normalizedArea = (GetLinesOfCode(item) - _minLinesOfCode) / (_maxLinesOfCode - _minLinesOfCode);
-            hotspot = normalizedWeight * normalizedArea;
+            var hotspot = normalizedWeight * normalizedArea;
             return hotspot;
         }
     }

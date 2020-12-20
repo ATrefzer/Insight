@@ -138,7 +138,7 @@ namespace Insight.GitProvider
 
             var initialNodes = graph.AllNodes.Where(node => node.Parents.Any() is false).ToList();
 
-            Debug.Assert(initialNodes.Count() == 1);
+            Debug.Assert(initialNodes.Count == 1);
             var initialNode = initialNodes.First();
 
             var alreadyProcessed = new HashSet<string>();
@@ -343,7 +343,7 @@ namespace Insight.GitProvider
         }
 
         private static void ApplyChangesToScope(Scope scope, TreeEntryChanges change,
-            Dictionary<string, string> deleted)
+            IDictionary<string, string> deleted)
         {
             // Single parent
 
@@ -503,16 +503,6 @@ namespace Insight.GitProvider
                     return KindOfChange.Rename;
                 case ChangeKind.Copied:
                     return KindOfChange.Copy;
-                case ChangeKind.Ignored:
-                    break;
-                case ChangeKind.Untracked:
-                    break;
-                case ChangeKind.TypeChanged:
-                    break;
-                case ChangeKind.Unreadable:
-                    break;
-                case ChangeKind.Conflicted:
-                    break;
             }
 
             return KindOfChange.None;

@@ -288,7 +288,7 @@ namespace Insight.GitProvider
         protected void SaveFullLogToDisk()
         {
             var log = _gitCli.Log();
-            File.WriteAllText(Path.Combine(_cachePath, @"git_full_history.txt"), log);
+            File.WriteAllText(Path.Combine(_cachePath, "git_full_history.txt"), log);
         }
     }
 }

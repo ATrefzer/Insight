@@ -70,13 +70,7 @@ namespace Visualization.Controls.Chord
             }
         }
 
-        public string Tooltip
-        {
-            get
-            {
-                return string.Format("Strength: {0:F1}", Strength);
-            }
-        }
+        public string Tooltip => string.Format("Strength: {0:F1}", Strength);
 
         public double Strength
         {

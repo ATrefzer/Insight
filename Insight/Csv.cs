@@ -13,8 +13,7 @@ namespace Insight
         /// </summary>
         public static void Write(string csvFile, List<Coupling> couplings)
         {
-            var writer = new CsvWriter();
-            writer.Header = true;
+            var writer = new CsvWriter { Header = true };
             writer.ToCsv(csvFile, couplings);
         }
 

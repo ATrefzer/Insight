@@ -349,4 +349,9 @@ Do you want to proceed?</value>
   <data name="PredictTooltip" xml:space="preserve">
   <value>Compare two summary files to find out where the hotspot metric increased the most.</value>
   </data>
+
+  <data name="MergeColor" xml:space="preserve">
+    <value>Merge color</value>
+  </data>
+  
 </root>

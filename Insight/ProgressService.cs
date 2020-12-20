@@ -15,10 +15,7 @@ namespace Insight
 
         public Progress CreateProgress()
         {
-            var progressView = new ProgressView();
-            progressView.Owner = _mainWindow;
-            progressView.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            progressView.SizeToContent = SizeToContent.Height;
+            var progressView = new ProgressView { Owner = _mainWindow, WindowStartupLocation = WindowStartupLocation.CenterOwner, SizeToContent = SizeToContent.Height };
 
             _mainWindow.IsEnabled = false;
             progressView.CanClose = false;

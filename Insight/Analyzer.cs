@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using Insight.Alias;
+
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
 using Visualization.Controls.Interfaces;
@@ -82,7 +84,7 @@ namespace Insight
         /// <summary>
         /// Extends the display filter from project to accept only files from the metrics list.
         /// </summary>
-        IFilter CreateExtendedFilter(IFilter displayFilter)
+        private IFilter CreateExtendedFilter(IFilter displayFilter)
         {
             LoadMetrics();
 
@@ -170,8 +172,8 @@ namespace Insight
             var groups = developerToWork.GroupBy(pair => aliasMapping.GetAlias(pair.Key));
             foreach (var group in groups)
             {
-                var sumContribution = (uint) @group.Sum(g => g.Value);
-                var alias = @group.Key;
+                var sumContribution = (uint) group.Sum(g => g.Value);
+                var alias = group.Key;
                 aliasToWork.Add(alias, sumContribution);
             }
 
@@ -214,7 +216,6 @@ namespace Insight
             var builder = new KnowledgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics, fileToMainDeveloper);
 
-            // TODO atr This should be moved to the view model.
             var dataContext = new HierarchicalDataContext(hierarchicalData, brushFactory);
             dataContext.AreaSemantic = Strings.LinesOfCode;
             dataContext.WeightSemantic = Strings.NotAvailable;

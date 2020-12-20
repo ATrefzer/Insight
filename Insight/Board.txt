@@ -1,32 +1,36 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-
-- Color editor
-	- Set free color / assign color
+- Update Readme file
+- Document alias handling
 
 ---------------------------------------
 In TODO
 ---------------------------------------
 
+- Unit Tests (Coverage)
+- Profile
+- Remove all git dependencies to command line! (Annotate ?)
+- Compare no reaname tracking with codemaat
+- Threshold for lines of code (get rid of large files)
+- Separate graph from git code.
+- Collection View Filter for summary view.
+
 - Bug in ntg
 - Bug changing minimum resets zoom level
 
-- Teamclassifier / Aliases for names!
-  Allow several mapping files. Each has an associated color scheme. (Can be used as anonymized)
-  The color editor would edit the colors for the selectd mapping!
 - Anonymize developer
-
-- Profile
 
 - Commits per line instead of absolute 
 
 - Overlay texts
 
 - Tests for TreeMap and CirclePackaging. (Large examples, see if they changed)
+	Check coverage that all cases are involed.
+
+- Integrate TeamCommunicationAnalyzer
 
 - TreeMap: TryAddToStrip, Move vertical / horizontal strip to new classes
-- TreeMap: Refactoring stripProportion
 - TreeMap: Show label (maybe)
 
 - Chord: Sometimes edges disappear when resizing
@@ -38,4 +42,3 @@ In TODO
 ---------------------------------------
 Done
 ---------------------------------------
-- Better GIT parser

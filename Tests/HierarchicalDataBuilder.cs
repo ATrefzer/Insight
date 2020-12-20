@@ -7,7 +7,7 @@ namespace Tests
     /// <summary>
     /// Random hierarchical test data-
     /// </summary>
-    public class HierarchicalDataBuilder
+    public sealed class HierarchicalDataBuilder
     {
         private Random _random = new Random(DateTime.Now.Millisecond);
 
@@ -83,7 +83,7 @@ namespace Tests
         private void FillChildren(HierarchicalData data, int numChildren, int depth)
         {
             depth--;
-            for (int i = 0; i < numChildren; i++)
+            for (var i = 0; i < numChildren; i++)
             {
                 HierarchicalData newChild;
                 if (GetRandomIsLeaf() || depth <= 0)

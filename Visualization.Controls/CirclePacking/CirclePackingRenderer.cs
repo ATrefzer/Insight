@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
+using Visualization.Controls.Common;
 using Visualization.Controls.Drawing;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Tools;
@@ -104,7 +105,7 @@ namespace Visualization.Controls.CirclePacking
             else
             {
                 // For non leaf nodes the weight is 0. We only can merge area metrics.
-                // See HiearchyBuilder.InsertLeaf.
+                // See HierarchyBuilder.InsertLeaf.
 
                 var color = DefaultDrawingPrimitives.WhiteToRedGradient.GradientStops.GetRelativeColor(data.NormalizedWeightMetric);
                 brush = new SolidColorBrush(color);

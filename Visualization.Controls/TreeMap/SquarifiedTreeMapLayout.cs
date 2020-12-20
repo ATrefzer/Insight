@@ -305,7 +305,7 @@ namespace Visualization.Controls.TreeMap
         /// <summary>
         /// Returns the worst (largest) rectangle aspect ratio found within the strip members
         /// </summary>
-        private double WorstRatio(List<IHierarchicalData> stripMembers)
+        private double WorstRatio(IEnumerable<IHierarchicalData> stripMembers)
         {
             // Empty list ist worst possible
             var worst = double.MaxValue;

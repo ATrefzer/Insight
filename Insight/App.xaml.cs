@@ -41,7 +41,7 @@ namespace Insight
             var analyzer = new Analyzer(new MetricProvider(), Project.GetSupportedFileTypesForAnalysis());
 
             // If there is an last project load it immediately
-            Project project = new Project();
+            var project = new Project();
             if (lastKnownProject != null && File.Exists(lastKnownProject))
             {
                 project = new Project();

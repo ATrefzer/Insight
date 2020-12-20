@@ -339,13 +339,20 @@ namespace Insight {
                 return ResourceManager.GetString("LOC", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to More.
         /// </summary>
-        public static string More {
+        public static string More
+        {
+            get { return ResourceManager.GetString("More", resourceCulture); }
+        }
+
+        ///   Looks up a localized string similar to Merge color.
+        /// </summary>
+        public static string MergeColor {
             get {
-                return ResourceManager.GetString("More", resourceCulture);
+                return ResourceManager.GetString("MergeColor", resourceCulture);
             }
         }
         

@@ -12,6 +12,7 @@
               Title="{Binding Title}"
               Height="450"
               Width="800"
+              d:DataContext="{d:DesignInstance Type=local:MainViewModel, IsDesignTimeCreatable=False}"
               Closing="MainWindow_OnClosing">
     <DockPanel>
 

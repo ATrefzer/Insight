@@ -4,6 +4,8 @@ using System.Drawing;
 using System.IO;
 using Visualization.Controls.Interfaces;
 
+using ColorConverter = Visualization.Controls.Common.ColorConverter;
+
 namespace Visualization.Controls.Bitmap
 {
     public class LegendBitmap
@@ -38,8 +40,8 @@ namespace Visualization.Controls.Bitmap
                 var x = 0;
                 var y = 30 * line;
 
-                var offsetColorName = 25;
-                var offsetDeveloperName = 200;
+                const int offsetColorName = 25;
+                const int offsetDeveloperName = 200;
 
                 var brush = ToDrawingBrush(_brushFactory.GetBrush(name));
 

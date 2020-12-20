@@ -31,7 +31,7 @@ namespace Insight
             {
                 try
                 {
-                    result = await Task.Run(() => func()).ConfigureAwait(true);
+                    result = await Task.Run(func).ConfigureAwait(true);
                 }
                 catch (Exception ex)
                 {
@@ -102,7 +102,7 @@ namespace Insight
             {
                 var message = exception.Message;
 
-                Exception innerException = exception.InnerException;
+                var innerException = exception.InnerException;
                 while (innerException != null)
                 {
                     message += "\n" + innerException.Message;

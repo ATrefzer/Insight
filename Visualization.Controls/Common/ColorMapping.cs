@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Common
 {
     public class ColorMapping : INotifyPropertyChanged
     {

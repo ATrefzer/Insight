@@ -106,7 +106,7 @@ namespace Tests
             var cs = EndChangeSet();
 
             StartChangeSet();
-            var ci1 = Track_Rename("the_file", "to_somwhere_else");
+            var ci1 = Track_Rename("the_file", "to_somewhere_else");
             cs = EndChangeSet();
 
             Assert.AreEqual(1, cs.Count);
@@ -285,7 +285,7 @@ namespace Tests
         [Test]
         public void Svn_AddDelete_IsReplacedByMove_Distinguishes()
         {
-            // Recognises this case also if it occurs multiple times in the change set
+            // Recognizes this case also if it occurs multiple times in the change set
             StartChangeSet();
             var ci3 = Track_Delete("from_location2");
             var ci2 = Track_Add("from_location2", "now_location2");

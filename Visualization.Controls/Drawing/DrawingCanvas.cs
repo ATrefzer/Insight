@@ -6,7 +6,7 @@ using Visualization.Controls.Interfaces;
 
 namespace Visualization.Controls.Drawing
 {
-    public class DrawingCanvas : Canvas
+    public sealed class DrawingCanvas : Canvas
     {
         public DrawingCanvas()
         {

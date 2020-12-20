@@ -15,10 +15,7 @@ namespace Visualization.Controls.Chord
 
         public double Radius
         {
-            get
-            {
-                return _radius;
-            }
+            get => _radius;
 
             set
             {

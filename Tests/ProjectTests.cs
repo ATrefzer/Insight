@@ -12,8 +12,7 @@ namespace Tests
         [Test]
         public void NormalizeFileExtensions()
         {
-            var proj = new Project();
-            proj.ExtensionsToInclude = "Xml, .cs; CS   ; JAVA ";
+            var proj = new Project { ExtensionsToInclude = "Xml, .cs; CS   ; JAVA " };
 
             var normalized = Project.NormalizeFileExtensions(proj.ExtensionsToInclude).ToList();
 

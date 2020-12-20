@@ -6,7 +6,7 @@ namespace Insight.Shared.Model
     /// <summary>
     /// An artifact is a file committed to the source control system.
     /// </summary>
-    public class Artifact
+    public sealed class Artifact
     {
         public int Commits { get; set; }
 

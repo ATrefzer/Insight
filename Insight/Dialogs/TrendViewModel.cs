@@ -67,7 +67,7 @@ namespace Insight.Dialogs
             pm.LegendBorder = OxyColors.Black;
         }
 
-        private PlotModel CreateCodeLinesModel(List<TrendData> trendData)
+        private PlotModel CreateCodeLinesModel(IEnumerable<TrendData> trendData)
         {
             var pm = new PlotModel();
             pm.Title = "Lines of Code";

@@ -95,7 +95,7 @@ namespace Visualization.Controls
             e.Handled = true;
         }
 
-        bool ValidateInput(string text)
+        private bool ValidateInput(string text)
         {
             return byte.TryParse(text, out var value);
         }

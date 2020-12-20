@@ -17,8 +17,8 @@ namespace Insight.GitProvider
     public sealed class Parser
     {
         private readonly PathMapper _mapper;
-        private string endHeaderMarker = "END_HEADER";
-        private readonly string recordMarker = "START_HEADER";
+        private const string EndHeaderMarker = "END_HEADER";
+        private const string RecordMarker = "START_HEADER";
         private string _lastLine;
 
         public Parser(PathMapper mapper)
@@ -86,7 +86,7 @@ namespace Insight.GitProvider
 
         private bool GoToNextRecord(StreamReader reader)
         {
-            if (_lastLine == recordMarker)
+            if (_lastLine == RecordMarker)
             {
                 // We are already positioned on the next changeset.
                 return true;
@@ -95,7 +95,7 @@ namespace Insight.GitProvider
             string line;
             while ((line = ReadLine(reader)) != null)
             {
-                if (line.Equals(recordMarker))
+                if (line.Equals(RecordMarker))
                 {
                     return true;
                 }
@@ -171,7 +171,7 @@ namespace Insight.GitProvider
         {
             // Now parse the files!
             var changeItem = ReadLine(reader);
-            while (changeItem != null && changeItem != recordMarker)
+            while (changeItem != null && changeItem != RecordMarker)
             {
                 if (!string.IsNullOrEmpty(changeItem))
                 {
@@ -187,7 +187,7 @@ namespace Insight.GitProvider
             string commentLine;
 
             var commentBuilder = new StringBuilder();
-            while ((commentLine = ReadLine(reader)) != endHeaderMarker)
+            while ((commentLine = ReadLine(reader)) != EndHeaderMarker)
             {
                 if (!string.IsNullOrEmpty(commentLine))
                 {
@@ -195,7 +195,7 @@ namespace Insight.GitProvider
                 }
             }
 
-            Debug.Assert(commentLine == endHeaderMarker);
+            Debug.Assert(commentLine == EndHeaderMarker);
             return commentBuilder.ToString().Trim('\r', '\n');
         }
 
@@ -203,7 +203,7 @@ namespace Insight.GitProvider
         {
             // The only place where we read
             var raw = reader.ReadLine()?.Trim();
-           
+
             // Rely on reading from the process output is correct.
             _lastLine = raw;
             return _lastLine;
@@ -211,7 +211,7 @@ namespace Insight.GitProvider
 
         public static KindOfChange ToKindOfChange(string kind)
         {
-           if (kind.StartsWith("R"))
+            if (kind.StartsWith("R"))
             {
                 // Note overlapping with "RM"
                 // Followed by the similarity
@@ -231,7 +231,7 @@ namespace Insight.GitProvider
             {
                 return KindOfChange.Delete;
             }
-            else if (kind == "M" )
+            else if (kind == "M")
             {
                 return KindOfChange.Edit;
             }
@@ -243,11 +243,10 @@ namespace Insight.GitProvider
             else
             {
                 Debug.Assert(false);
+
                 // ReSharper disable once HeuristicUnreachableCode
                 return KindOfChange.None;
             }
         }
-
-    
     }
 }

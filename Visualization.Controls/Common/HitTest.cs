@@ -1,9 +1,10 @@
 ﻿using System.Windows;
+
 using Visualization.Controls.Interfaces;
 
-namespace Visualization.Controls
+namespace Visualization.Controls.Common
 {
-    class HitTest
+    internal sealed class HitTest
     {
         /// <summary>
         /// Layout must have been called

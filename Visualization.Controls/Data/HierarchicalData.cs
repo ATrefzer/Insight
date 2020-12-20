@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+
+using Visualization.Controls.Common;
 using Visualization.Controls.Interfaces;
 using Visualization.Controls.Utility;
 
@@ -18,7 +20,7 @@ namespace Visualization.Controls.Data
     ///  - Typically the weight is 0 here, so we render hierarchy
     ///    with the default color. The weight is only set for leaf nodes.
     /// Metrics:
-    /// If an area is not set excpicitely it is NaN. This is in many algorithms used for folders.
+    /// If an area is not set explicitly it is NaN. This is in many algorithms used for folders.
     /// If we remove leaf nodes and an inner node becomes a leaf now, its area is still NaN.
     /// Now we can call RemoveLeafNodesWithoutArea to remove these nodes (recursively).
     /// The AreaMeticSum however is initialized with 0.
@@ -346,8 +348,9 @@ namespace Visualization.Controls.Data
                 max = Math.Max(max, AreaMetric);
             }
 
-            foreach (HierarchicalData child in Children)
+            foreach (var hierarchicalData in Children)
             {
+                var child = (HierarchicalData) hierarchicalData;
                 child.GetMinMaxArea(ref min, ref max);
             }
         }
@@ -360,8 +363,9 @@ namespace Visualization.Controls.Data
                 max = Math.Max(max, WeightMetric);
             }
 
-            foreach (HierarchicalData child in Children)
+            foreach (var hierarchicalData in Children)
             {
+                var child = (HierarchicalData) hierarchicalData;
                 child.GetMinMaxWeight(ref min, ref max);
             }
         }
@@ -381,8 +385,9 @@ namespace Visualization.Controls.Data
 
         private void RemoveLeafNodes(HierarchicalData root, Func<IHierarchicalData, bool> removePredicate)
         {
-            foreach (HierarchicalData child in root.Children)
+            foreach (var hierarchicalData in root.Children)
             {
+                var child = (HierarchicalData) hierarchicalData;
                 RemoveLeafNodes(child, removePredicate);
             }
 

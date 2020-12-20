@@ -7,7 +7,7 @@ namespace Insight.GitProvider
 {
     public sealed class Differences
     {
-        public List<TreeEntryChanges> DiffToParent1 {get; private set;}
+        public List<TreeEntryChanges> DiffToParent1 {get; }
         public List<TreeEntryChanges> DiffToParent2  { get; }
 
         public List<TreeEntryChanges> DiffExclusiveToParent1 {get;}
