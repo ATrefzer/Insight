@@ -97,6 +97,24 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change Couplings.
+        /// </summary>
+        public static string ChangeCoupling {
+            get {
+                return ResourceManager.GetString("ChangeCoupling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change Couplings (Visualize).
+        /// </summary>
+        public static string ChangeCouplingVisualize {
+            get {
+                return ResourceManager.GetString("ChangeCouplingVisualize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Code Age.
         /// </summary>
         public static string CodeAge {
@@ -323,6 +341,15 @@ namespace Insight {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to More.
+        /// </summary>
+        public static string More {
+            get {
+                return ResourceManager.GetString("More", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New.
         /// </summary>
         public static string NewProject {
@@ -402,6 +429,24 @@ namespace Insight {
         public static string Predictions {
             get {
                 return ResourceManager.GetString("Predictions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compare two summary files to find out where the hotspot metric increased the most..
+        /// </summary>
+        public static string PredictTooltip {
+            get {
+                return ResourceManager.GetString("PredictTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Presentation.
+        /// </summary>
+        public static string Presentation {
+            get {
+                return ResourceManager.GetString("Presentation", resourceCulture);
             }
         }
         

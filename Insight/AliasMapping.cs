@@ -45,7 +45,7 @@ namespace Insight
             // Add default alias for new developers
             foreach (var name in toAdd)
             {
-                _aliasMapping.Add(name, "Default Team");
+                _aliasMapping.Add(name, name);
             }
 
             Save();

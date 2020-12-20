@@ -157,7 +157,7 @@ namespace Insight.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".cs;.xaml")]
+        [global::System.Configuration.DefaultSettingValueAttribute("cs ; cpp ; c ; h ; java ; py ; xaml ; xml")]
         public string SupportedFileTypesForAnalysis {
             get {
                 return ((string)(this["SupportedFileTypesForAnalysis"]));

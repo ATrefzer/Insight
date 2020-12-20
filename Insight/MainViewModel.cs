@@ -81,7 +81,7 @@ namespace Insight
             EditColorsCommand = new DelegateCommand(EditColorsClick);
             ToggleDisplayModeCommand = new DelegateCommand(ToggleDisplayModeClick);
 
-            UpdateProject(lastKnownProject);
+            SetActiveProject(lastKnownProject);
         }
 
         private void ToggleDisplayModeClick()
@@ -104,7 +104,7 @@ namespace Insight
                 var tmp = new Project();
                 tmp.Load(path);
 
-                UpdateProject(tmp);
+                SetActiveProject(tmp);
             }
         }
 
@@ -113,16 +113,15 @@ namespace Insight
             return Path.Combine(_project.GetProjectDirectory(), "alias.txt");
         }
 
-        private void UpdateProject(Project project)
+        private void SetActiveProject(Project project)
         {
             _tabs.Clear();
             _analyzer.Clear();
             
             _project = project;
-
             if (_project != null)
             {
-                _analyzer.Configure(_project.CreateProvider(), _project.Cache, _project.DisplayFilter);
+                ConfigureAnalyzer();
             }
             
             // Update Ribbon
@@ -578,7 +577,7 @@ namespace Insight
             var project = _viewController.ShowNewProject();
             if (project != null)
             {
-                UpdateProject(project);
+                SetActiveProject(project);
 
                 _tabs.Clear();
                 _analyzer.Clear();
@@ -602,10 +601,17 @@ namespace Insight
             {
                 _tabs.Clear();
                 _analyzer.Clear();
+                ConfigureAnalyzer();
             }
 
             // Refresh state of ribbon
             Refresh();
+        }
+
+        private void ConfigureAnalyzer()
+        {
+         
+            _analyzer.Configure(_project.CreateProvider(), _project.Cache, _project.DisplayFilter);
         }
 
         private async void SummaryClick()

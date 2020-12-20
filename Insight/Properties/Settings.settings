@@ -36,7 +36,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="SupportedFileTypesForAnalysis" Type="System.String" Scope="User">
-      <Value Profile="(Default)">.cs;.xaml</Value>
+      <Value Profile="(Default)">cs ; cpp ; c ; h ; java ; py ; xaml ; xml</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -59,7 +59,7 @@ namespace Insight
             {
                 try
                 {
-                    await Task.Run(() => action()).ConfigureAwait(true);
+                    await Task.Run(action).ConfigureAwait(true);
                 }
                 catch (Exception ex)
                 {

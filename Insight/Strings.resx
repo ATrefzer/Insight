@@ -329,6 +329,24 @@ Do you want to proceed?</value>
   <data name="SwitchToAlias" xml:space="preserve">
     <value>Alias</value>
   </data>
-  
 
+  <data name="More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Presentation" xml:space="preserve">
+    <value>Presentation</value>
+  </data>
+
+  <data name="ChangeCoupling" xml:space="preserve">
+  <value>Change Couplings</value>
+  </data>
+
+  <data name="ChangeCouplingVisualize" xml:space="preserve">
+  <value>Change Couplings (Visualize)</value>
+  </data>
+
+
+  <data name="PredictTooltip" xml:space="preserve">
+  <value>Compare two summary files to find out where the hotspot metric increased the most.</value>
+  </data>
 </root>

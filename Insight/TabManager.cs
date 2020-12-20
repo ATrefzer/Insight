@@ -35,7 +35,7 @@ namespace Insight
             var descr = new TableViewModel();
             descr.Commands = commands;
             descr.Data = data;
-            descr.Title = "Change Couplings";
+            descr.Title = Strings.ChangeCoupling;
             ShowTab(descr, true);
         }
 
@@ -46,7 +46,7 @@ namespace Insight
         {
             var descr = new ChordViewModel();
             descr.Data = data;
-            descr.Title = "Change Couplings (Chord)";
+            descr.Title = Strings.ChangeCouplingVisualize;
             ShowTab(descr, true);
         }
 

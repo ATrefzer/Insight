@@ -13,6 +13,7 @@ namespace Insight.Metrics
     public sealed class MetricProvider : IMetricProvider
     {
         private const string Cloc = "cloc-1.88.exe";
+        private const string Url = "https://github.com/AlDanial/cloc/releases/download/1.88/cloc-1.88.exe";
         private const string ClocSubDir = "ExternalTools";
 
         public LinesOfCode CalculateLinesOfCode(FileInfo file)
@@ -91,12 +92,10 @@ namespace Insight.Metrics
             var pathToCloc = Path.Combine(externalToolsDirectory, Cloc);
             if (!File.Exists(pathToCloc))
             {
-                var url = "https://github.com/AlDanial/cloc/releases";
-
                 var builder = new StringBuilder();
                 builder.AppendLine($"Executable not found: '{pathToCloc}'.");
-                builder.AppendLine($"Please go to '{url}' and download the file '{Cloc}'.");
-                builder.AppendLine($"Copy this file to '{externalToolsDirectory}'.");
+                builder.AppendLine($"Please download '{Cloc}' from here: '{Url}'");
+                builder.AppendLine($"Then copy this file to '{externalToolsDirectory}'.");
                 throw new Exception(builder.ToString());
             }
         }
