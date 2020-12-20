@@ -94,7 +94,8 @@ If you use TortoiseSVN take care that the "Command line client tools" are instal
 * Start Binaries\Insight.exe
 * Click "New" and select the root folder of the project you want to analyze (Source Control Base). 
   Also, specify an existing "Project parent directory" and a "Project name" for your analysis. This creates a new directory Parent_Directory/Project_Name. In this directory all generated artifacts used for the analysis are stored. It is also the output directory for CSV exports. Click "Ok" to complete the new analysis project.
-  ![](Screenshots\Project.png)
+  ![Project](Screenshots\Project.png)
+
 * Click Update to obtain the history from the version control and calculate some metrics for the files in the project directory. All collected information is stored in the project directory and is used later.
 Before you click Update your working copy should be up to date.
 * Now the functions in the Analysis group are available.

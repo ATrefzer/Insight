@@ -5,7 +5,7 @@
     /// </summary>
     public sealed class DataGridFriendlyArtifactBasic
     {
-        public string Revision { get; set; }
+        //public string Id { get; set; }
         public string LocalPath { get; set; }
         public int Commits { get; set; }
         public int Committers { get; set; }

@@ -435,7 +435,6 @@ namespace Insight
                 var mainDev = contribution.GetMainDeveloper();
 
                 result.LocalPath = artifact.LocalPath;
-                result.Revision = artifact.Revision;
                 result.Commits = artifact.Commits;
                 result.Committers = artifact.Committers.Count;
                 result.LOC = linesOfCode;
@@ -453,7 +452,6 @@ namespace Insight
             {
                 var result = new DataGridFriendlyArtifactBasic();
                 result.LocalPath = artifact.LocalPath;
-                result.Revision = artifact.Revision;
                 result.Commits = artifact.Commits;
                 result.Committers = artifact.Committers.Count;
                 result.LOC = linesOfCode;
