@@ -61,7 +61,7 @@ This kind of analysis can also make dependencies visible that no static code che
 
 Change coupling analysis can raise interesting questions because it takes a different look at the source code.
 
-![Change Coupling](Screenshots\Change_Coupling_Text.PNG)
+![Change Coupling](Screenshots/Change_Coupling_Text.PNG)
 
 ![Change Coupling](Screenshots/Change_Coupling.PNG)
 
