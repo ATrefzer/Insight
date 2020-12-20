@@ -1,4 +1,4 @@
-# Insight - An commit history analyzer.
+# Insight - A commit history analyzer.
 
 This utility implements some of the ideas presented in Adam Tornhill's great book "Your Code as a Crime Scene".
 
