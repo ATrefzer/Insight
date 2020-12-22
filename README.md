@@ -17,7 +17,7 @@ The hotspot analysis gives you a quick overview of where your codebase requires 
 
 The definition of a hotspot is a file that frequently changes and(!) has large "lines of code" metric.
 
-Now, while each of these metrics is a weak predictor for code smells on its own, the two combined are often a good indicator that a code file starts to degenerate. The definition applies, of course, to harmless files, too, like configuration files, string resources, designer generated files, etc.  But a high change frequency combined with the large size also quite accurately finds files that are candidates for refactoring.
+Now, while each of these metrics is a weak predictor for code smells on its own, the two combined are often a good indicator that a code file starts to erode. The definition applies, of course, to harmless files, too, like configuration files, string resources, designer generated files, etc.  But a high change frequency combined with the large size also quite accurately finds files that are candidates for refactoring.
 
 What is the reasoning behind this?
 
@@ -79,7 +79,7 @@ This visualization allows you to see how knowledge distributes over the project.
 
 Code age analysis shows you where your codebase is stable and does not change anymore.
 
-Fragmentation is a metric that goes up when many developers change the same file. The idea behind this analysis is that when too many people contribute to a file, you end up with a file nobody feels responsible for. This file will degenerate. At least that is my experience.
+Fragmentation is a metric that goes up when many developers change the same file. The idea behind this analysis is that when too many people contribute to a file, you end up with a file nobody feels responsible for. At least that is my experience.
 
 # How to build
 
