@@ -1,8 +1,7 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-- Update Readme file
-- Document alias handling
+- Bug changing minimum resets zoom level
 
 ---------------------------------------
 In TODO
@@ -14,10 +13,8 @@ In TODO
 - Compare no reaname tracking with codemaat
 - Threshold for lines of code (get rid of large files)
 - Separate graph from git code.
-- Collection View Filter for summary view.
 
-- Bug in ntg
-- Bug changing minimum resets zoom level
+
 
 - Anonymize developer
 

@@ -61,6 +61,15 @@ namespace Visualization.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Highlight pattern.
+        /// </summary>
+        public static string HighlightPattern {
+            get {
+                return ResourceManager.GetString("HighlightPattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum:.
         /// </summary>
         public static string Maximum {
@@ -129,15 +138,6 @@ namespace Visualization.Controls {
         public static string Reset {
             get {
                 return ResourceManager.GetString("Reset", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Search pattern.
-        /// </summary>
-        public static string SearchPattern {
-            get {
-                return ResourceManager.GetString("SearchPattern", resourceCulture);
             }
         }
         

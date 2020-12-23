@@ -4,12 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Visualization.Controls"
-        xmlns:Tools="clr-namespace:Visualization.Controls.Tools"
+        xmlns:tools="clr-namespace:Visualization.Controls.Tools"
         mc:Ignorable="d"
         Title="{x:Static local:Strings.ToolWindowTitle}"
         Height="365"
         Width="300"
-        d:DataContext="{d:DesignInstance Type=Tools:ToolViewModel, IsDesignTimeCreatable=False}"
+        d:DataContext="{d:DesignInstance Type=tools:ToolViewModel, IsDesignTimeCreatable=False}"
         WindowStyle="ToolWindow" ResizeMode="NoResize" SizeToContent="Height">
     <StackPanel Margin="10 0 10 0">
 
@@ -78,14 +78,14 @@
                 IsSnapToTickEnabled="True"/>
 
         <Button Content="{x:Static local:Strings.Reset}"
-                Click="ButtonBase_OnClick"
+                Command="{Binding ResetCommand}"
                 Width="100"
                 HorizontalAlignment="Right"
                 Margin="0 10 0 0"/>
         
         <Separator Margin="0 10 0 10"/>
 
-        <TextBlock Margin="0 10 0 0" Text="{x:Static local:Strings.SearchPattern}"  />
+        <TextBlock Margin="0 10 0 0" Text="{x:Static local:Strings.HighlightPattern}"  />
 
         <TextBox  Margin="0 10 0 10" Height="22"  Text="{Binding SearchPattern, Delay=200,UpdateSourceTrigger=PropertyChanged}"/>
          

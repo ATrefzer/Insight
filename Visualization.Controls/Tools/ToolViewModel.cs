@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using Prism.Commands;
 
 namespace Visualization.Controls.Tools
 {
@@ -21,6 +23,8 @@ namespace Visualization.Controls.Tools
         /// Sorted list of all weights occurring in the data.
         /// </summary>
         private List<double> _weights;
+        
+        public ICommand ResetCommand { get; }
 
         private int _minAreaIndex;
         private int _maxAreaIndex;
@@ -62,11 +66,20 @@ namespace Visualization.Controls.Tools
         {
             _areas = areas;
             _weights = weights;
-            Reset();
+            ResetCommand = new DelegateCommand(ResetClick);
+            ResetRanges();
         }
 
+        private void ResetClick()
+        {
+            ResetRanges();
+            SearchPattern = string.Empty;
+            Reset?.Invoke(this, new EventArgs());
+        }
+
+        public event EventHandler Reset;
         public event EventHandler FilterChanged;
-        public event EventHandler SearchPatternChanged;
+        public event EventHandler HighlightPatternChanged;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -179,7 +192,7 @@ namespace Visualization.Controls.Tools
                    weight <= _weights[_maxWeightIndex];
         }
 
-        public void Reset()
+        public void ResetRanges()
         {
             MinWeightIndex = WeightIndexLower;
             MaxWeightIndex = WeightIndexUpper;
@@ -194,7 +207,7 @@ namespace Visualization.Controls.Tools
 
         private void OnSearchPatternChanged()
         {
-            SearchPatternChanged?.Invoke(this, new EventArgs());
+            HighlightPatternChanged?.Invoke(this, new EventArgs());
         }
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)

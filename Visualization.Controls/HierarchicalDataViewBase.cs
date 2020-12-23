@@ -53,7 +53,7 @@ namespace Visualization.Controls
             set => SetValue(UserCommandsProperty, value);
         }
 
-        protected void ChangeSearchHighlightingCommand(object sender, EventArgs args)
+        protected void OnToolHighlightPatternChanged(object sender, EventArgs args)
         {
             // Reuse zooming mechanism
             ZoomLevelChanged(_zoomLevel);
@@ -73,7 +73,7 @@ namespace Visualization.Controls
         protected abstract IRenderer CreateRenderer();
 
 
-        protected void FilterLevelChanged(object sender, EventArgs args)
+        protected void OnToolFilterChanged(object sender, EventArgs args)
         {
             _filtered = _root.Clone();
           
@@ -140,8 +140,14 @@ namespace Visualization.Controls
             _toolViewModel.AreaSemantic = areaSemantic;
             _toolViewModel.WeightSemantic = weightSemantic;
 
-            _toolViewModel.FilterChanged += FilterLevelChanged;
-            _toolViewModel.SearchPatternChanged += ChangeSearchHighlightingCommand;
+            _toolViewModel.FilterChanged += OnToolFilterChanged;
+            _toolViewModel.HighlightPatternChanged += OnToolHighlightPatternChanged;
+            _toolViewModel.Reset += OnToolReset;
+        }
+
+        private void OnToolReset(object sender, EventArgs e)
+        {
+            ZoomLevelChanged(_root);
         }
 
 

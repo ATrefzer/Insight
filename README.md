@@ -79,7 +79,7 @@ This visualization allows you to see how knowledge distributes over the project.
 
 Code age analysis shows you where your codebase is stable and does not change anymore.
 
-Fragmentation is a metric that goes up when many developers change the same file. The idea behind this analysis is that when too many people contribute to a file, you end up with a file nobody feels responsible for. At least that is my experience.
+Fragmentation is a metric that increases when many developers contribute to the same file. This analysis can give you some insight into where more communication is needed or how the work of different teams overlaps. In my personal opinion, no one feels responsible for code with too many contributors and there is a much greater tendency to simply work around problems.
 
 # How to build
 
