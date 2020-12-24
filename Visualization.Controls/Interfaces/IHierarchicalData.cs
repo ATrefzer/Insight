@@ -5,12 +5,19 @@ using Visualization.Controls.Common;
 
 namespace Visualization.Controls.Interfaces
 {
-    public interface IHierarchicalData
+    public interface IHierarchicalData : IEnumerable<IHierarchicalData>
     {
+        // TODO move layoutig code outside.
         /// <summary>
         /// Attached layout information. This property is not cloned
         /// </summary>
         LayoutInfo Layout { get; set; }
+        
+        /// <summary>
+        /// Unique Id of this node within the hierarchy. (Cloned)
+        /// </summary>
+        int Id { get; set; }
+
 
         string ColorKey { get; set; }
         double AreaMetricSum { get; }

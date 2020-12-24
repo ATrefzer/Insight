@@ -12,12 +12,12 @@ Supported file types (for counting lines of code) are cs, cpp, c, h, java, py, x
 You can toggle all hierarchical visualizations between treemaps and circle packaging.
 
 ### Show hotspots
-This analysis is the most exciting feature for which I originally wrote the tool. 
+This analysis is the feature for which I originally wrote the tool. 
 The hotspot analysis gives you a quick overview of where your codebase requires your attention.
 
 The definition of a hotspot is a file that frequently changes and(!) has large "lines of code" metric.
 
-Now, while each of these metrics is a weak predictor for code smells on its own, the two combined are often a good indicator that a code file starts to erode. The definition applies, of course, to harmless files, too, like configuration files, string resources, designer generated files, etc.  But a high change frequency combined with the large size also quite accurately finds files that are candidates for refactoring.
+Now, while each of these metrics is a weak predictor for code smells on its own, the two combined are often a good indicator that a code file starts to erode. The definition applies, of course, to harmless files, too. For example, configuration files, string resources, designer generated files, etc. But a high change frequency combined with a large size also pretty much finds files that are candidates for refactoring.
 
 What is the reasoning behind this?
 
@@ -34,7 +34,7 @@ There is also another principle called the Open Close Principle (OCP). It states
 The utility helps you to find these hotspots quickly.
 In the visualizations, the area of a rectangle or innermost circle corresponds to a file's size (lines of code). The color corresponds to the change frequency. So to find hotspots, you search for large and dark areas. Use the mouse to hover over the shapes to get a tooltip with additional information.
 
-The cool thing is that this kind of analysis works independently of the language you use.
+This kind of analysis works independently of the language you use.
 
 
 ![Hotspots_TreeMap](Screenshots/Hotspots_TreeMap.PNG)

@@ -351,7 +351,7 @@ namespace Insight
         {
             var commands = new HierarchicalDataCommands();
             commands.Register("Trend", OnShowTrend);
-            commands.Register("Work", data => OnShowWork(data));
+            commands.Register("Work", OnShowWork);
 
             return commands;
         }

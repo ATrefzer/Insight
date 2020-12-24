@@ -5,8 +5,8 @@
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
               xmlns:controls="clr-namespace:Visualization.Controls;assembly=Visualization.Controls"
               xmlns:local="clr-namespace:Insight"
-              xmlns:ViewModels="clr-namespace:Insight.ViewModels"
-              xmlns:Dialogs="clr-namespace:Insight.Dialogs"
+              xmlns:viewModels="clr-namespace:Insight.ViewModels"
+              xmlns:dialogs="clr-namespace:Insight.Dialogs"
               mc:Ignorable="d"
               Icon="Resources/Lightswitch.ico"
               Title="{Binding Title}"
@@ -191,21 +191,21 @@
             <!-- (!)DataTemplate is instantiated only once! Even if many
             view models of same type are given in the Tabs property(!)-->
             <TabControl.Resources>
-                <DataTemplate DataType="{x:Type ViewModels:TreeMapViewModel}">
+                <DataTemplate DataType="{x:Type viewModels:TreeMapViewModel}">
                     <controls:TreeMapView DataContext="{Binding Data}"
                                           UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
                              Path=DataContext.Commands}"/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type ViewModels:CirclePackingViewModel}">
-                    <!-- DataContext of parent (ContentPresenter) is ViewDescription. This is where CirclePackagingView DataContext binds to
+                <DataTemplate DataType="{x:Type viewModels:CirclePackingViewModel}">
+                    <!-- DataContext of parent (ContentPresenter) is CirclePackagingViewModel. This is where CirclePackagingView DataContext binds to
                     As soon as we set the DataContext of the CirclePackagingView control UserCommands will use CirclePackagingView.DataContext. -->
                     <controls:CirclePackingView DataContext="{Binding Data}"
                                                 UserCommands="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter},
                              Path=DataContext.Commands}"/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type ViewModels:TableViewModel}">
+                <DataTemplate DataType="{x:Type viewModels:TableViewModel}">
                     <DockPanel>
                         <TextBox DockPanel.Dock="Top" Height="23" TextChanged="OnSearchTextChanged" Background="LightYellow"/>
                         <controls:DataGridView DataContext="{Binding Data}"
@@ -214,11 +214,11 @@
                     </DockPanel>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type ViewModels:ChordViewModel}">
+                <DataTemplate DataType="{x:Type viewModels:ChordViewModel}">
                     <controls:ChordView DataContext="{Binding Data}"/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type Dialogs:ImageViewModel}">
+                <DataTemplate DataType="{x:Type dialogs:ImageViewModel}">
                     <Image Source="{Binding Data}"
                            HorizontalAlignment="Left"
                            VerticalAlignment="Top"

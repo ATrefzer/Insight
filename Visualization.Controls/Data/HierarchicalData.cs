@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace Visualization.Controls.Data
     /// weight!
     /// </summary>
     [Serializable]
-    public sealed class HierarchicalData : IHierarchicalData
+    public sealed class HierarchicalData : IHierarchicalData, IEnumerable<IHierarchicalData>
     {
         private const string PathSeparator = "/";
 
@@ -79,6 +80,9 @@ namespace Visualization.Controls.Data
                 }
             }
         }
+        
+        // TODO
+        public int Id { get; set; }
 
         public double AreaMetric { get; }
 
@@ -119,7 +123,7 @@ namespace Visualization.Controls.Data
         }
 
         /// <summary>
-        /// No layouting information!
+        /// No layout information!
         /// </summary>
         public IHierarchicalData Clone()
         {
@@ -321,6 +325,9 @@ namespace Visualization.Controls.Data
             newData.Tag = cloneThis.Tag;
             newData.AreaMetricSum = cloneThis.AreaMetricSum;
             newData.NormalizedWeightMetric = cloneThis.NormalizedWeightMetric;
+            
+            // TODO remove
+            newData.Id = cloneThis.Id;
 
             foreach (var child in cloneThis._children)
             {
@@ -377,8 +384,9 @@ namespace Visualization.Controls.Data
                 NormalizedWeightMetric = (WeightMetric - min) / range;
             }
 
-            foreach (HierarchicalData child in Children)
+            foreach (var hierarchicalData in Children)
             {
+                var child = (HierarchicalData) hierarchicalData;
                 child.NormalizeWeightMetrics(min, range);
             }
         }
@@ -403,6 +411,28 @@ namespace Visualization.Controls.Data
 
             // During the recursive process new empty nodes may arise. So bottom to top.
             data._children.RemoveAll(x => x.IsLeafNode && (double.IsNaN(x.AreaMetric) || Math.Abs(x.AreaMetric) <= 0));
+        }
+
+        public IEnumerator<IHierarchicalData> GetEnumerator()
+        {
+            var queue = new Queue<IHierarchicalData>();
+            queue.Enqueue(this);
+
+            while (queue.Any())
+            {
+                var node = queue.Dequeue();
+                foreach (var child in node.Children)
+                {
+                    queue.Enqueue(child);
+                }
+
+                yield return node;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

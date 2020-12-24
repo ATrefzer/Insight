@@ -1,12 +1,10 @@
-﻿using System;
+﻿using Prism.Commands;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-
-using Prism.Commands;
-
 using Visualization.Controls.Common;
 using Visualization.Controls.Data;
 using Visualization.Controls.Drawing;
@@ -15,48 +13,83 @@ using Visualization.Controls.Tools;
 
 namespace Visualization.Controls
 {
+    /// <summary>
+    /// Note about the coloring:
+    /// Filtering is always done on a clone of the original tree. Filtering leads to recalculation of the weights (colors).
+    /// This happens when we change the filters in the tool window.
+    /// Changing the zoom level only sets a different entry point to display. It does not recalculate the weights.
+    /// Therefore, the zoom level does not affect the coloring even if the data with the most significant weights are not visible.
+    /// </summary>
     public abstract class HierarchicalDataViewBase : UserControl
     {
         public static readonly DependencyProperty UserCommandsProperty = DependencyProperty.Register(
-                                                                                                     "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase), new PropertyMetadata(null));
-        private HitTest _hitTest = new HitTest();
-        protected readonly MenuItem _toolMenuItem = new MenuItem { Header = "Tools", Tag = null };
-        protected IBrushFactory _brushFactory;
+            "UserCommands", typeof(HierarchicalDataCommands), typeof(HierarchicalDataViewBase),
+            new PropertyMetadata(null));
 
-        /// <summary>
-        /// Filtered data
-        /// </summary>
-        protected IHierarchicalData _filtered;
+        private readonly HitTest _hitTest = new HitTest();
+
+        protected readonly MenuItem _toolMenuItem = new MenuItem {Header = "Tools", Tag = null};
+        protected IBrushFactory _brushFactory;
 
         protected IRenderer _renderer;
 
         /// <summary>
-        /// Original data, untouched
+        ///     Original data, untouched
         /// </summary>
-        protected IHierarchicalData _root;
+        protected IHierarchicalData _originalData;
+
 
         protected ToolViewModel _toolViewModel;
 
         /// <summary>
-        /// Entry into _filtered data. This is the current level shown.
+        ///     Sub tree to display. This is the current zoom level shown.
+        ///     The weights (colors) are not adjusted when we change the zoom level.
+        ///     This may be a clone of the original data (when filtered) or
+        ///     a reference to the original data (no filter)
         /// </summary>
         protected IHierarchicalData _zoomLevel;
 
         protected ToolView ToolView;
 
+
         /// <summary>
-        /// Commands that apply to leaf nodes of a hierarchical data.
+        ///     Commands that apply to leaf nodes of a hierarchical data.
         /// </summary>
         public HierarchicalDataCommands UserCommands
         {
-            get => (HierarchicalDataCommands)GetValue(UserCommandsProperty);
+            get => (HierarchicalDataCommands) GetValue(UserCommandsProperty);
             set => SetValue(UserCommandsProperty, value);
+        }
+
+        protected void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            _originalData = null;
+            _brushFactory = null;
+
+            if (!(DataContext is HierarchicalDataContext context) || context.Data == null)
+            {
+                // This is called once with the wrong context.
+                return;
+            }
+
+            _brushFactory = context.BrushFactory;
+            _originalData = context.Data;
+
+            InitializeTools(context.AreaSemantic, context.WeightSemantic);
+
+            // TODO Cleanup Extract Ids and add layout infos.
+            // Should not be part of the hierarchical data.
+            var id = 1;
+            _originalData.TraverseBottomUp(node => node.Id = id++);
+
+            // Initially no filtering so skip removing nodes.
+            ZoomLevelChanged(_originalData);
         }
 
         protected void OnToolHighlightPatternChanged(object sender, EventArgs args)
         {
-            // Reuse zooming mechanism
-            ZoomLevelChanged(_zoomLevel);
+            // Render again with new highlighting
+            DoRender(_zoomLevel);
         }
 
         protected void ChangeZoomLevelCommand(IHierarchicalData item)
@@ -66,43 +99,69 @@ namespace Visualization.Controls
                 return;
             }
 
+            // Note: source tree is already filtered.
             ZoomLevelChanged(item);
         }
 
         protected abstract void ClosePopup();
+
         protected abstract IRenderer CreateRenderer();
 
-
-        protected void OnToolFilterChanged(object sender, EventArgs args)
+        private IHierarchicalData DoFilter(IHierarchicalData data)
         {
-            _filtered = _root.Clone();
-          
+            // TODO move outside
             if (_toolViewModel.NoFilterJustHighlight)
             {
                 // Highlighting the filter instead of removing the nodes.
-                ZoomLevelChanged(_filtered);
-                return;
+                return data;
             }
-    
-            _filtered.RemoveLeafNodes(leaf =>
+
+            data.RemoveLeafNodes(leaf =>
                 !_toolViewModel.IsAreaValid(leaf.AreaMetric) ||
                 !_toolViewModel.IsWeightValid(leaf.WeightMetric));
 
             try
             {
-                _filtered.RemoveLeafNodesWithoutArea();
+                data.RemoveLeafNodesWithoutArea();
             }
             catch (Exception)
             {
-                _filtered = HierarchicalData.NoData();
+                data = HierarchicalData.NoData();
             }
 
-            // TODO We could keep the previous normalized weight metric such that the colors don't change
-
             // After we removed weights we have to normalize again.
-            _filtered.SumAreaMetrics(); // Only TreeMapView
-            _filtered.NormalizeWeightMetrics();
-            ZoomLevelChanged(_filtered);
+            data.SumAreaMetrics(); // Only TreeMapView
+            data.NormalizeWeightMetrics();
+
+            return data;
+        }
+
+        protected void OnToolFilterChanged(object sender, EventArgs args)
+        {
+            var oldZoomLevelId = _zoomLevel?.Id;
+            var sourceData = DoFilter(_originalData.Clone());
+           
+            var zoomTo = FindById(sourceData, oldZoomLevelId);
+
+            ZoomLevelChanged(zoomTo);
+        }
+
+        private IHierarchicalData FindById(IHierarchicalData tree, int? id)
+        {
+            var zoomTo = tree;
+            if (!id.HasValue)
+            {
+                return zoomTo;
+            }
+
+            var idValue = id.Value;
+            var newZoom = tree.FirstOrDefault(node => node.Id == idValue);
+            if (newZoom != null)
+            {
+                zoomTo = newZoom;
+            }
+
+            return zoomTo;
         }
 
 
@@ -113,7 +172,7 @@ namespace Visualization.Controls
         {
             // When the control is no longer visible close the tool window.
             ToolView?.Close();
-            _filtered = null;
+            _zoomLevel = null;
         }
 
 
@@ -123,8 +182,8 @@ namespace Visualization.Controls
             var weight = new HashSet<double>();
 
             // Distinct areas and weights. Each slider tick goes to the next value.
-            // This allows smooth naviation even if there are large outliers.
-            _root.TraverseTopDown(data =>
+            // This allows smooth navigation even if there are large outliers.
+            _originalData.TraverseTopDown(data =>
             {
                 if (data.IsLeafNode)
                 {
@@ -147,7 +206,7 @@ namespace Visualization.Controls
 
         private void OnToolReset(object sender, EventArgs e)
         {
-            ZoomLevelChanged(_root);
+            ZoomLevelChanged(_originalData);
         }
 
 
@@ -156,7 +215,7 @@ namespace Visualization.Controls
         protected virtual ContextMenu GetContextMenu(object sender)
         {
             var fe = sender as FrameworkElement;
-            return fe.ContextMenu;
+            return fe?.ContextMenu;
         }
 
         protected void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -165,9 +224,9 @@ namespace Visualization.Controls
 
             var canvas = GetCanvas();
             var pos = _renderer.Transform(Mouse.GetPosition(canvas));
-            var hit = _hitTest.Hit(_zoomLevel,pos);
+            var hit = _hitTest.Hit(_zoomLevel, pos);
             var menu = GetContextMenu(sender);
-            if ((hit != null) & (menu != null))
+            if (hit != null && menu != null)
             {
                 menu.Items.Clear();
 
@@ -187,29 +246,6 @@ namespace Visualization.Controls
             e.Handled = menu?.Items.Count == 0;
         }
 
-        protected void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            _root = null;
-            _brushFactory = null;
-
-            if (!(DataContext is HierarchicalDataContext context) || context.Data == null)
-            {
-                // This is called once with the wrong context.
-                return;
-            }
-            
-            _brushFactory = context.BrushFactory;
-            _root = context.Data;
-
-            InitializeTools(context.AreaSemantic, context.WeightSemantic);
-
-            // Initially no filtering so skip removing nodes.
-            _filtered = _root;
-            ZoomLevelChanged(_filtered);
-        }
-
-        
-      
 
         protected void ShowToolsCommand()
         {
@@ -229,7 +265,7 @@ namespace Visualization.Controls
 
         protected void Window_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_root == null)
+            if (_originalData == null)
             {
                 return;
             }
@@ -239,7 +275,7 @@ namespace Visualization.Controls
             // Circle packing renderer uses transformations. So we have to translate the mouse position
             // into the coordinates of the circles.
             var pos = _renderer.Transform(e.GetPosition(GetCanvas()));
-            var hit = _hitTest.Hit(_zoomLevel,pos);
+            var hit = _hitTest.Hit(_zoomLevel, pos);
             if (hit != null)
             {
                 InitPopup(hit);
@@ -253,6 +289,11 @@ namespace Visualization.Controls
                 return;
             }
 
+            DoRender(data);
+        }
+
+        private void DoRender(IHierarchicalData data)
+        {
             _zoomLevel = data;
             _renderer = CreateRenderer();
             _renderer.LoadData(_zoomLevel);
@@ -263,7 +304,7 @@ namespace Visualization.Controls
         private void AddZoomLevel(ContextMenu menu, IHierarchicalData data)
         {
             var header = data.GetPathToRoot();
-            var menuItem = new MenuItem { Header = header };
+            var menuItem = new MenuItem {Header = header};
             menuItem.Command = new DelegateCommand(() => ChangeZoomLevelCommand(data));
             menu.Items.Add(menuItem);
         }

@@ -1,13 +1,15 @@
 ﻿---------------------------------------
 In Progress
 ---------------------------------------
-- Bug changing minimum resets zoom level
+Assigning Ids to HierarchicalData and exracting LayoutInfo
+Filter to maximum shows wrong color.
+Binding errors
 
 ---------------------------------------
 In TODO
 ---------------------------------------
 
-- Unit Tests (Coverage)
+- Unit Tests, Reference tests (Coverage)
 - Profile
 - Remove all git dependencies to command line! (Annotate ?)
 - Compare no reaname tracking with codemaat
