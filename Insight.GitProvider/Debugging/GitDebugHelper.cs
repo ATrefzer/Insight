@@ -120,7 +120,7 @@ namespace Insight.GitProvider.Debugging
             graphWriter.SaveGraphSimplified(file, dbgGraph, highlightedNodes);
         }
 
-        private string FormatItem(ChangeItem item)
+        private static string FormatItem(ChangeItem item)
         {
             var builder = new StringBuilder();
             builder.Append(item.Kind);

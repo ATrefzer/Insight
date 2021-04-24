@@ -42,7 +42,7 @@ namespace Insight
 
             // If there is an last project load it immediately
             var project = new Project();
-            if (lastKnownProject != null && File.Exists(lastKnownProject))
+            if (!string.IsNullOrEmpty(lastKnownProject) && File.Exists(lastKnownProject))
             {
                 project = new Project();
                 project.Load(lastKnownProject);

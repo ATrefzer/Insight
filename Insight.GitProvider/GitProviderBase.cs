@@ -141,13 +141,7 @@ namespace Insight.GitProvider
 
         protected string GetMasterHead()
         {
-            var masterRefPath = Path.Combine(_projectBase, ".git\\refs\\heads\\master");
-            if (!File.Exists(masterRefPath))
-            {
-                throw new Exception("Can't locate master's head.");
-            }
-            var lines = File.ReadAllLines(masterRefPath);
-            return lines.Single().Substring(0, 40);
+            return _gitCli.GetMasterHead(_projectBase);
         }
 
 
@@ -212,7 +206,8 @@ namespace Insight.GitProvider
 
             if (!_gitCli.IsMasterGetCheckedOut())
             {
-                throw new ArgumentException("The currently checked out branch is not the master branch.");
+                // Branch may be developer or main etc.
+                //throw new ArgumentException("The currently checked out branch is not the master branch.");
             }
 
             if (_gitCli.HasIndexOrWorkspaceChanges())

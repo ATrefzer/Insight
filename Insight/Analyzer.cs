@@ -8,6 +8,7 @@ using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -31,7 +32,7 @@ namespace Insight
 
         private ChangeSetHistory _history;
         private Dictionary<string, LinesOfCode> _metrics;
-        private IFilter _extendedDisplayFilter;
+        private IFilter _displayFilter;
         private ISourceControlProvider _sourceProvider;
         private string _outputPath;
 
@@ -51,21 +52,19 @@ namespace Insight
             Clear();
             _sourceProvider = provider;
             _outputPath = outputPath;
-            _extendedDisplayFilter = displayFilter;
-
-            LoadCachedData();
-
-            // Needs metrics
-            _extendedDisplayFilter = CreateExtendedFilter(displayFilter);
+            _displayFilter = displayFilter;
         }
 
         public List<WarningMessage> Warnings { get; private set; }
 
         public List<Coupling> AnalyzeChangeCoupling()
         {
+            LoadHistory();
+            LoadMetrics();
+
             // Pair wise couplings
             var couplingAnalyzer = new ChangeCouplingAnalyzer();
-            var couplings = couplingAnalyzer.CalculateChangeCouplings(_history, _extendedDisplayFilter);
+            var couplings = couplingAnalyzer.CalculateChangeCouplings(_history, GetDisplayFilter());
             var sortedCouplings = couplings.OrderByDescending(coupling => coupling.Degree).ToList();
             Csv.Write(Path.Combine(_outputPath, "change_couplings.csv"), sortedCouplings);
 
@@ -81,25 +80,35 @@ namespace Insight
             return sortedCouplings;
         }
 
+
         /// <summary>
         /// Extends the display filter from project to accept only files from the metrics list.
+        /// Assumes metrics are cached.
         /// </summary>
-        private IFilter CreateExtendedFilter(IFilter displayFilter)
+        private IFilter GetDisplayFilter()
         {
-            LoadMetrics();
+            Debug.Assert(_metrics != null);
+
+            if (_metrics == null)
+            {
+                return _displayFilter;
+            }
 
             // This is way faster than File.Exists. I already know these files exist because I calculated a metric
             var localFiles = new HashSet<string>(_metrics.Keys);
 
             var onlyMetricFiles = new FileFilter(localFiles);
-            return new Filter(displayFilter, onlyMetricFiles);
+            return new Filter(_displayFilter, onlyMetricFiles);
         }
 
 
         public HierarchicalDataContext AnalyzeCodeAge()
         {
+            LoadHistory();
+            LoadMetrics();
+
             // Get summary of all files
-            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, new NullAliasMapping());
+            var summary = _history.GetArtifactSummary(GetDisplayFilter(), new NullAliasMapping());
 
             var builder = new CodeAgeBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
@@ -114,10 +123,13 @@ namespace Insight
         /// </summary>
         public HierarchicalDataContext AnalyzeFragmentation(IAliasMapping aliasMapping)
         {
+            LoadHistory();
+            LoadMetrics();
             LoadContributions(false);
+
             var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
 
-            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
+            var summary = _history.GetArtifactSummary(GetDisplayFilter(), aliasMapping);
             var fileToFractalValue = localFileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value.CalculateFractalValue());
 
             var builder = new FragmentationBuilder();
@@ -131,8 +143,11 @@ namespace Insight
 
         public HierarchicalDataContext AnalyzeHotspots()
         {
+            LoadHistory();
+            LoadMetrics();
+
             // Get summary of all files
-            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, new NullAliasMapping());
+            var summary = _history.GetArtifactSummary(GetDisplayFilter(), new NullAliasMapping());
 
             var builder = new HotspotBuilder();
             var hierarchicalData = builder.Build(summary, _metrics);
@@ -200,10 +215,13 @@ namespace Insight
 
         public HierarchicalDataContext AnalyzeKnowledge(IBrushFactory brushFactory, IAliasMapping aliasMapping)
         {
+            LoadHistory();
+            LoadMetrics();
             LoadContributions(false);
+
             var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
 
-            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
+            var summary = _history.GetArtifactSummary(GetDisplayFilter(), aliasMapping);
             var fileToMainDeveloper = localFileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Assign a color to each developer
@@ -228,12 +246,15 @@ namespace Insight
         /// </summary>
         public HierarchicalDataContext AnalyzeKnowledgeLoss(string developer, IBrushFactory brushFactory, IAliasMapping aliasMapping)
         {
+            LoadHistory();
+            LoadMetrics();
             LoadContributions(false);
+
             var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
 
             developer = aliasMapping.GetAlias(developer);
 
-            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
+            var summary = _history.GetArtifactSummary(GetDisplayFilter(), aliasMapping);
             var fileToMainDeveloper = localFileToContribution.ToDictionary(pair => pair.Key, pair => pair.Value.GetMainDeveloper());
 
             // Build the knowledge data
@@ -305,9 +326,11 @@ namespace Insight
 
         public List<object> ExportSummary(IAliasMapping aliasMapping)
         {
+            LoadHistory();
+            LoadMetrics();
             LoadContributions(true); // silent
 
-            var summary = _history.GetArtifactSummary(_extendedDisplayFilter, aliasMapping);
+            var summary = _history.GetArtifactSummary(GetDisplayFilter(), aliasMapping);
             var hotspotCalculator = new HotspotCalculator(summary, _metrics);
 
             var orderedByLocalPath = summary.OrderBy(x => x.LocalPath).ToList();
@@ -342,11 +365,7 @@ namespace Insight
 
             Warnings = _sourceProvider.Warnings;
 
-            LoadCachedData();
-        }
-
-        private void LoadCachedData()
-        {
+            // Load the two metrics we need for all analysis
             LoadHistory();
             LoadMetrics();
         }

@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 using System.Text;
 using Insight.Shared.Exceptions;
 using Insight.Shared.System;
@@ -22,14 +24,16 @@ namespace Insight.GitProvider
         /// </summary>
         private const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
 
-
+        const string MainBranch = "master";
         private readonly string _workingDirectory;
+        private readonly string _branch;
         private readonly ProcessRunner _runner;
 
         public GitCommandLine(string workingDirectory)
         {
             _workingDirectory = workingDirectory;
             _runner = new ProcessRunner { DefaultEncoding = Encoding.UTF8 };
+            _branch = GetCheckedOutBranch();
         }
 
         public string Annotate(string localPath)
@@ -151,6 +155,8 @@ namespace Insight.GitProvider
             // --follow to track renaming, works only for a single file!
             // When --follow is used --full-history has no effect. We don't see merge commits that do contribute to the file.
 
+            // I had a single case where --follow caused the output to be empty!
+
             var args = $"log --follow --pretty=format:{LogFormat} --date=iso-strict-local --name-status -- \"{localPath}\"";
 
             var result = ExecuteCommandLine(program, args);
@@ -161,19 +167,17 @@ namespace Insight.GitProvider
         public string GetCheckedOutBranch()
         {
             var program = "git";
-            var args = "git symbolic-ref --short -q HEAD";
+            var args = "symbolic-ref --short -q HEAD";
             var result = ExecuteCommandLine(program, args);
-            return result.StdOut;
+            return result.StdOut.Trim();
         }
 
         public bool IsMasterGetCheckedOut()
         {
-            const string mainBranch = "master";
-
             const string program = "git";
             const string args = "symbolic-ref --short -q HEAD";
             var result = ExecuteCommandLine(program, args);
-            return string.Compare(result.StdOut.Trim('\n'), mainBranch, System.StringComparison.OrdinalIgnoreCase) == 0;
+            return string.Compare(result.StdOut.Trim('\n'), _branch, System.StringComparison.OrdinalIgnoreCase) == 0;
         }
 
         private ProcessResult ExecuteCommandLine(string program, string args)
@@ -186,6 +190,18 @@ namespace Insight.GitProvider
             }
 
             return result;
+        }
+
+        public string GetMasterHead(string repoDirectory)
+        {
+            var branch = GetCheckedOutBranch();
+            var masterRefPath = Path.Combine(repoDirectory, $".git\\refs\\heads\\{branch}");
+            if (!File.Exists(masterRefPath))
+            {
+                throw new Exception("Can't locate master's head.");
+            }
+            var lines = File.ReadAllLines(masterRefPath);
+            return lines.Single().Substring(0, 40);
         }
     }
 }

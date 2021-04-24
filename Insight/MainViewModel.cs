@@ -115,13 +115,19 @@ namespace Insight
             return Path.Combine(_project.GetProjectDirectory(), "alias.txt");
         }
 
-        private void SetActiveProject(Project project)
+        private void InvalidateActiveAnalysis()
         {
             _tabs.Clear();
+            _activeData.Clear();
             _analyzer.Clear();
-            
+        }
+
+        private void SetActiveProject(Project project)
+        {
+            InvalidateActiveAnalysis();
+
             _project = project;
-            if (_project != null)
+            if (_project != null && !_project.IsDefault)
             {
                 ConfigureAnalyzer();
             }
@@ -580,15 +586,13 @@ namespace Insight
             if (project != null)
             {
                 SetActiveProject(project);
-
-                _tabs.Clear();
-                _analyzer.Clear();
-                _activeData.Clear();
             }
 
             // Refresh state of ribbon
             Refresh();
         }
+
+     
 
         private void SetupClick()
         {
@@ -601,8 +605,7 @@ namespace Insight
             var changed = _viewController.ShowProjectSettings(_project);
             if (changed)
             {
-                _tabs.Clear();
-                _analyzer.Clear();
+                InvalidateActiveAnalysis();
                 ConfigureAnalyzer();
             }
 
@@ -612,7 +615,6 @@ namespace Insight
 
         private void ConfigureAnalyzer()
         {
-         
             _analyzer.Configure(_project.CreateProvider(), _project.Cache, _project.DisplayFilter);
         }
 
@@ -639,7 +641,7 @@ namespace Insight
             // Contributions may be too much if using svn.
             var includeContributions = _dialogs.AskYesNoQuestion(Strings.SyncIncludeContributions, Strings.Confirm);
 
-            _tabs.Clear();
+            InvalidateActiveAnalysis();
 
             try
             {

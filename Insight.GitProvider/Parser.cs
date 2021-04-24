@@ -116,7 +116,10 @@ namespace Insight.GitProvider
                 var proceed = GoToNextRecord(reader);
                 if (!proceed)
                 {
-                    throw new FormatException("The file does not contain any change sets.");
+                    return new ChangeSetHistory(new List<ChangeSet>());
+					
+					// I found one case where git log --follow caused an empty output.
+                    //throw new FormatException("The file does not contain any change sets.");
                 }
 
                 while (proceed)
