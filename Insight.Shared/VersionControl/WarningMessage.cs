@@ -1,6 +1,8 @@
-﻿namespace Insight.Shared.VersionControl
+﻿using Insight.Shared.Ui;
+
+namespace Insight.Shared.VersionControl
 {
-    public sealed class WarningMessage
+    public sealed class WarningMessage : ICanMatch
     {
         public WarningMessage(string commit, string msg)
         {
@@ -8,7 +10,12 @@
             Warning = msg;
         }
 
-        public string Commit { get; private set; }
-        public string Warning { get; private set; }
+        public string Commit { get; }
+        public string Warning { get; }
+
+        public bool IsMatch(string lowerCaseSearchText)
+        {
+            return Warning.ToLowerInvariant().Contains(lowerCaseSearchText);
+        }
     }
 }

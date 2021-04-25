@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Insight.Shared.Ui;
 using Insight.ViewModels;
 
 namespace Insight

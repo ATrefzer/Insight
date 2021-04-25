@@ -1,4 +1,4 @@
-﻿using Insight.ViewModels;
+﻿using Insight.Shared.Ui;
 
 namespace Insight.Dto
 {

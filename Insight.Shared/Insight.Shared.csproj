@@ -69,6 +69,7 @@
     <Compile Include="Extensions\TimeExtensions.cs" />
     <Compile Include="Model\WorkItem.cs" />
     <Compile Include="Thresholds.cs" />
+    <Compile Include="Ui\ICanMatch.cs" />
     <Compile Include="VersionControl\MovementTracker.cs" />
     <Compile Include="VersionControl\WarningMessage.cs" />
     <Compile Include="WorkItemExtractor.cs" />
