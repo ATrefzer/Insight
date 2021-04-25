@@ -30,7 +30,6 @@ namespace Insight.GitProvider
     /// </summary>
     public sealed class GitProvider : GitProviderBase, ISourceControlProvider
     {
-        private Repository _repo;
         private Statistics _stats;
 
         public override void Initialize(string projectBase, string cachePath, string workItemRegex)
@@ -49,12 +48,8 @@ namespace Insight.GitProvider
             DeleteAllCaches();
 
             VerifyGitPreConditions();
-
-            using (_repo = new Repository(_projectBase))
-            {
-                UpdateHistory(progress);
-            }
-
+            UpdateHistory(progress);
+            
             if (includeWorkData)
             {
                 // Optional
@@ -156,8 +151,8 @@ namespace Insight.GitProvider
 
                 if (!alreadyProcessed.Add(node.CommitHash))
                 {
-                    // When we arrive a merge node the first time both parents may be complete (or not).
-                    // If so we would end up following the same path twice.
+                    // When we arrive a merge node the first time both parents may be complete.
+                    // In this case we would end up following the same path twice.
                     continue;
                 }
 
@@ -191,6 +186,14 @@ namespace Insight.GitProvider
 
             var history = new ChangeSetHistory(changeSets.OrderByDescending(cs => cs.Date).ToList());
             return history;
+        }
+
+        private void BreakOnHash(GraphNode node, string hash)
+        {
+            if (node.CommitHash.StartsWith(hash, StringComparison.InvariantCultureIgnoreCase))
+            {
+                Debugger.Break();
+            }
         }
 
 
@@ -231,9 +234,15 @@ namespace Insight.GitProvider
                 var mergeInto = node.Parents[0];
                 var mergeFrom = node.Parents[1];
 
-                scope = mergeInto.Scope;
+                var mergeFromScope = mergeFrom.Scope;
 
-                UpdateScopeTwoParents(deltas, mergeInto, mergeFrom, deletedServerPathToId);
+                // We have to clone the merge scope. The same node may be processed later again as a parent node. Therefore we
+                // have to keep its scope untouched.
+                var mergeIntoScope = mergeInto.Scope.Clone();
+
+                scope = mergeIntoScope;
+
+                UpdateScopeTwoParents(deltas, mergeIntoScope, mergeFromScope, deletedServerPathToId, node.CommitHash);
             }
             else
             {
@@ -258,28 +267,25 @@ namespace Insight.GitProvider
         /// When files are removed I collect them in the "deleted" dictionary.
         /// These are needed later to assign the id to the deleted file.
         /// </summary>
-        private void UpdateScopeTwoParents(Differences deltas, GraphNode mergeInto, GraphNode mergeFrom,
-            Dictionary<string, string> deleted)
+        private void UpdateScopeTwoParents(Differences deltas, Scope mergeIntoScope, Scope mergeFromScope,  Dictionary<string, string> deleted, string commitHash)
         {
             foreach (var change in deltas.DiffExclusiveToParent1)
             {
                 // These are the changes done on the feature branch. We merge them into the scope.
-                UpdateScopeFromMergeSource(mergeInto, mergeFrom, change, deleted);
+                UpdateScopeFromMergeSource(mergeIntoScope, mergeFromScope, change, deleted, commitHash);
             }
 
             foreach (var change in deltas.ChangesInCommit)
             {
                 // These are the changes done on the merge commit itself (fixing conflicts etc)
-                ApplyChangesToScope(mergeInto.Scope, change, deleted);
+                ApplyChangesToScope(mergeIntoScope, change, deleted);
             }
         }
 
-        private void UpdateScopeFromMergeSource(GraphNode mergeInto, GraphNode mergeFrom, TreeEntryChanges change,
-            IDictionary<string, string> deleted)
+        private void UpdateScopeFromMergeSource(Scope mergeIntoScope, Scope mergeFromScope, TreeEntryChanges change,
+            IDictionary<string, string> deleted, string commitHash)
         {
             // Merge changes from feature branch. Apply all Ids we can find without ambiguity.
-            var mergeFromScope = mergeFrom.Scope;
-            var mergeIntoScope = mergeInto.Scope;
 
             if (change.Status == ChangeKind.Added)
             {
@@ -298,7 +304,7 @@ namespace Insight.GitProvider
                 if (idFrom != null && idFrom == idInto &&
                     mergeIntoScope.GetServerPath(Guid.Parse(idInto)) == change.Path)
                 {
-                    // Nothing to update
+                    // Nothing to update. File existed in both parents with same id and same name.
                     return;
                 }
 
@@ -306,7 +312,7 @@ namespace Insight.GitProvider
                 mergeIntoScope.Remove(change.Path);
                 mergeIntoScope.Add(change.Path);
                 _stats.ResetRenameTrackingOnFile++;
-                Warnings.Add(new WarningMessage(mergeInto.CommitHash, $"Reset tracking due to added file {change.Path}"));
+                Warnings.Add(new WarningMessage(commitHash, $"Reset file rename tracking for {change.Path}."));
             }
             else if (change.Status == ChangeKind.Modified)
             {
@@ -342,8 +348,7 @@ namespace Insight.GitProvider
             }
         }
 
-        private static void ApplyChangesToScope(Scope scope, TreeEntryChanges change,
-            IDictionary<string, string> deleted)
+        private static void ApplyChangesToScope(Scope scope, TreeEntryChanges change, IDictionary<string, string> deleted)
         {
             // Single parent
 
