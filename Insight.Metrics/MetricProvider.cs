@@ -24,14 +24,22 @@ namespace Insight.Metrics
             return metric.CalculateLinesOfCode(file);
         }
 
-
-        public Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo rootDir,
-                                                                    IEnumerable<string> normalizedFileExtensions)
+        public Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo rootDir, IEnumerable<string> normalizedFileExtensions)
         {
             var pathToCloc = GetPathToCloc();
 
             var metric = new LinesOfCodeMetric(pathToCloc);
-            return metric.CalculateLinesOfCode(rootDir, normalizedFileExtensions);
+            return metric.CalculateLinesOfCode(rootDir, normalizedFileExtensions, string.Empty);
+        }
+
+
+        public Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo rootDir,
+                                                                    IEnumerable<string> normalizedFileExtensions, string foldersToExclude)
+        {
+            var pathToCloc = GetPathToCloc();
+
+            var metric = new LinesOfCodeMetric(pathToCloc);
+            return metric.CalculateLinesOfCode(rootDir, normalizedFileExtensions, foldersToExclude);
         }
 
 
@@ -55,7 +63,7 @@ namespace Insight.Metrics
         }
 
         public void UpdateLinesOfCodeCache(string startDirectory, string cacheDirectory,
-                                           IEnumerable<string> normalizedFileExtensions)
+            IEnumerable<string> normalizedFileExtensions, string foldersToExclude)
         {
             var metricsFile = Path.Combine(cacheDirectory, "metrics.json");
 
@@ -67,7 +75,7 @@ namespace Insight.Metrics
             var metric = new LinesOfCodeMetric(GetPathToCloc());
 
             // Take every file that can we can calculate a metric for.         
-            var metrics = metric.CalculateLinesOfCode(new DirectoryInfo(startDirectory), normalizedFileExtensions);
+            var metrics = metric.CalculateLinesOfCode(new DirectoryInfo(startDirectory), normalizedFileExtensions, foldersToExclude);
 
 
             var json = JsonConvert.SerializeObject(metrics, Formatting.Indented);

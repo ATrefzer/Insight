@@ -35,6 +35,7 @@ namespace Insight.Metrics
         /// <summary>
         /// Rebuilds the metric cache file.
         /// </summary>
-        void UpdateLinesOfCodeCache(string startDirectory, string cacheDirectory, IEnumerable<string> normalizedFileExtensions);
+        void UpdateLinesOfCodeCache(string startDirectory, string cacheDirectory,
+            IEnumerable<string> normalizedFileExtensions, string foldersToExclude);
     }
 }

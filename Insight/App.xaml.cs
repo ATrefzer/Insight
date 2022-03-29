@@ -38,8 +38,6 @@ namespace Insight
 
             var lastKnownProject = Settings.Default.LastKnownProject;
 
-            var analyzer = new Analyzer(new MetricProvider(), Project.GetSupportedFileTypesForAnalysis());
-
             // If there is an last project load it immediately
             var project = new Project();
             if (!string.IsNullOrEmpty(lastKnownProject) && File.Exists(lastKnownProject))
@@ -47,6 +45,9 @@ namespace Insight
                 project = new Project();
                 project.Load(lastKnownProject);
             }
+
+            var analyzer = new Analyzer(new MetricProvider(), Project.GetSupportedFileTypesForAnalysis(), project.PathsToExclude);
+
 
             var mainWindow = new MainWindow();
             var viewController = new ViewController(mainWindow);

@@ -35,12 +35,14 @@ namespace Insight
         private IFilter _displayFilter;
         private ISourceControlProvider _sourceProvider;
         private string _outputPath;
+        private readonly string _foldersToExclude;
 
 
-        public Analyzer(IMetricProvider metricProvider, string[] supportedFileTypesForAnalysis)
+        public Analyzer(IMetricProvider metricProvider, string[] supportedFileTypesForAnalysis, string foldersToExclude)
         {
             _metricsProvider = metricProvider;
             _supportedFileTypesForAnalysis = supportedFileTypesForAnalysis;
+            _foldersToExclude = foldersToExclude;
         }
 
         /// <summary>
@@ -361,7 +363,7 @@ namespace Insight
             progress.Message("Updating code metrics.");
 
             // Update code metrics
-            _metricsProvider.UpdateLinesOfCodeCache(_sourceProvider.BaseDirectory, _outputPath, _supportedFileTypesForAnalysis);
+            _metricsProvider.UpdateLinesOfCodeCache(_sourceProvider.BaseDirectory, _outputPath, _supportedFileTypesForAnalysis, _foldersToExclude);
 
             Warnings = _sourceProvider.Warnings;
 

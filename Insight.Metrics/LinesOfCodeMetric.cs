@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Insight.Metrics
 {
@@ -37,24 +38,32 @@ namespace Insight.Metrics
             _extensionToLanguage.Add(".h", "C/C++ Header");
             _extensionToLanguage.Add(".c", "C");
             _extensionToLanguage.Add(".py", "Python");
+
+            _extensionToLanguage.Add(".ts", "TypeScript");
+            _extensionToLanguage.Add(".html", "HTML");
         }
 
         private ProcessRunner CreateRunner()
         {
-            return new ProcessRunner();
+            return new ProcessRunner { DefaultEncoding = Encoding.UTF8 };
         }
 
-
-        private string CallClocForDirectory(DirectoryInfo startDirectory, IEnumerable<string> languagesToParse)
+        private string CallClocForDirectory(DirectoryInfo startDirectory, IEnumerable<string> languagesToParse,
+            string foldersToExclude)
         {
             var languages = string.Join(",", languagesToParse);
 
             // --skip-uniqueness If cloc finds duplicate files it skips the duplicates. We have to disable this behavior.
             var args =
-                $"\"{startDirectory.FullName}\" --by-file --csv --quiet --skip-uniqueness --include-lang=\"{languages}\"";
+                $"--by-file --csv --quiet --skip-uniqueness --include-lang=\"{languages}\" --exclude-dir=\"{foldersToExclude}\"   \"{startDirectory.FullName}\"";
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             var runner = CreateRunner();
+
             var result = runner.RunProcess(_pathToCloc, args, startDirectory.FullName);
+            var message = $"Time took for cloc dir: {stopwatch.Elapsed}";
+            Console.WriteLine(message);
             return result.StdOut;
         }
 
@@ -71,11 +80,11 @@ namespace Insight.Metrics
         ///     Normalized file extensions: Lower case, including the dot.
         /// </summary>
         public Dictionary<string, LinesOfCode> CalculateLinesOfCode(DirectoryInfo startDirectory,
-            IEnumerable<string> normalizedFileExtensions)
+            IEnumerable<string> normalizedFileExtensions, string foldersToExclude)
         {
             // Map file extension to language name understood by cloc
             var languagesToParse = MapFileExtensionToLanguage(normalizedFileExtensions.ToList());
-            var stdOut = CallClocForDirectory(startDirectory, languagesToParse);
+            var stdOut = CallClocForDirectory(startDirectory, languagesToParse, foldersToExclude);
 
             return ParseClocOutput(stdOut);
         }

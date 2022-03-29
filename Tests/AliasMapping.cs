@@ -36,7 +36,7 @@ namespace Tests
 
 
             // Act
-            var analyzer = new Analyzer(null, null);
+            var analyzer = new Analyzer(null, null, null);
             var result = analyzer.AliasTransformContribution(localFileToContribution, mapping);
 
             // Assert
