@@ -12,8 +12,8 @@ namespace Insight.Metrics
     /// </summary>
     public sealed class MetricProvider : IMetricProvider
     {
-        private const string Cloc = "cloc-1.88.exe";
-        private const string Url = "https://github.com/AlDanial/cloc/releases/download/1.88/cloc-1.88.exe";
+        private const string Cloc = "cloc-1.92.exe";
+        private const string Url = "https://github.com/AlDanial/cloc/releases/download/v1.92/cloc-1.92.exe";
         private const string ClocSubDir = "ExternalTools";
 
         public LinesOfCode CalculateLinesOfCode(FileInfo file)
