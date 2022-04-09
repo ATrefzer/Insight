@@ -5,6 +5,7 @@ using Insight.WpfCore;
 
 using OxyPlot;
 using OxyPlot.Axes;
+using OxyPlot.Legends;
 using OxyPlot.Series;
 
 namespace Insight.Dialogs
@@ -59,12 +60,13 @@ namespace Insight.Dialogs
 
         private static void CreateLegend(PlotModel pm)
         {
-            pm.LegendTitle = "Legend";
-            pm.LegendOrientation = LegendOrientation.Horizontal;
-            pm.LegendPlacement = LegendPlacement.Outside;
-            pm.LegendPosition = LegendPosition.TopRight;
-            pm.LegendBackground = OxyColor.FromAColor(200, OxyColors.White);
-            pm.LegendBorder = OxyColors.Black;
+            // TODO atr
+            //pm.LegendTitle = "Legend";
+            //pm.LegendOrientation = LegendOrientation.Horizontal;
+            //pm.LegendPlacement = LegendPlacement.Outside;
+            //pm.LegendPosition = LegendPosition.TopRight;
+            //pm.LegendBackground = OxyColor.FromAColor(200, OxyColors.White);
+            //pm.LegendBorder = OxyColors.Black;
         }
 
         private PlotModel CreateCodeLinesModel(IEnumerable<TrendData> trendData)
@@ -78,7 +80,7 @@ namespace Insight.Dialogs
                                       StrokeThickness = 2,
                                       MarkerSize = 3,
                                       CanTrackerInterpolatePoints = false,
-                                      Smooth = false,
+                                      // TODO atr Smooth = false,
                                       Title = Strings.LinesOfCode
                               };
 
@@ -88,7 +90,7 @@ namespace Insight.Dialogs
                                          StrokeThickness = 2,
                                          MarkerSize = 3,
                                          CanTrackerInterpolatePoints = false,
-                                         Smooth = false,
+                                         // TODO atr Smooth = false,
                                          Title = Strings.Comments
                                  };
 
@@ -119,7 +121,7 @@ namespace Insight.Dialogs
                                   StrokeThickness = 2,
                                   MarkerSize = 3,
                                   CanTrackerInterpolatePoints = false,
-                                  Smooth = false,
+                                  // TODO atr Smooth = false,
                                   Title = "Average"
                           };
 
@@ -129,7 +131,7 @@ namespace Insight.Dialogs
                                  StrokeThickness = 2,
                                  MarkerSize = 3,
                                  CanTrackerInterpolatePoints = false,
-                                 Smooth = false,
+                                 // TODO atr Smooth = false,
                                  Title = "Standard Deviation"
                          };
 

@@ -101,7 +101,7 @@ namespace Insight.GitProvider
             }
 
             // Remove all non relevant nodes
-            var toRemove = _hashToGraphNode.Keys.Except(relevant).ToHashSet();
+            var toRemove = new HashSet<string>(_hashToGraphNode.Keys.Except(relevant));
             foreach (var node in toRemove)
             {
                 _hashToGraphNode.Remove(node);

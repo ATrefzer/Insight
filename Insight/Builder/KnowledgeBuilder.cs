@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Insight.Metrics;
 using Insight.Shared.Model;
-
+using Visualization.Controls.Common;
 using Visualization.Controls.Interfaces;
 
 namespace Insight.Builder
@@ -54,8 +54,8 @@ namespace Insight.Builder
 
             if (_onlyThisDeveloper != null && mainDev != _onlyThisDeveloper)
             {
-                // Null for all artifacts not provided by the developer of interest.
-                return null;
+                // Default color for all artifacts not provided by the developer of interest.
+                return "";
             }
 
             return mainDev;
@@ -86,7 +86,7 @@ namespace Insight.Builder
             }
 
             // Default color
-            return new MainDeveloper("unknown", 0.0);
+            return new MainDeveloper("", 0.0);
         }
     }
 }

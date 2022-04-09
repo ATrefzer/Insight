@@ -26,9 +26,13 @@ namespace Visualization.Controls
         public HierarchicalDataContext(IHierarchicalData data)
         {
             Data = data;
-            BrushFactory = new ColorScheme();
+            BrushFactory = null;
         }
 
+        /// <summary>
+        /// Only needed if we use a color key.
+        /// Otherwise a gradient is used.
+        /// </summary>
         public IBrushFactory BrushFactory { get; }
 
         public IHierarchicalData Data { get; }

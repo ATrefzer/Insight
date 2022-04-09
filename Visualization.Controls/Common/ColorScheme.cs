@@ -55,7 +55,7 @@ namespace Visualization.Controls.Common
         {
             if (!_nameToArgb.TryGetValue(name, out var argb))
             {
-                return DefaultDrawingPrimitives.DefaultBrush;
+                return Brushes.Black;
             }
 
             return BrushCache.GetBrush(ColorConverter.FromArgb(argb));

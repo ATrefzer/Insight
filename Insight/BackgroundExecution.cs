@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +42,14 @@ namespace Insight
 
             if (exception != null)
             {
-                _dialogs.ShowError(exception.Message);
+                var message = exception.Message;
+                if (exception is KeyNotFoundException)
+                {
+                    // For example mismatch between the existence of a local file and the existence in source control.
+                    message += "\nSure the local repository is up to date?";
+                }
+
+                _dialogs.ShowError(message);
             }
 
             return result;

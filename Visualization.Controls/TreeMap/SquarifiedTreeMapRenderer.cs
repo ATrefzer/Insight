@@ -22,59 +22,6 @@ namespace Visualization.Controls.TreeMap
         }
 
 
-        //private void DrawRectangle(Rect itemRect, object tag)
-        //{
-        //    // TODO Slow
-        //    return; 
-        //    var rect = new Rectangle();
-        //    rect.Width = itemRect.Width;
-        //    rect.Height = itemRect.Height;
-        //    rect.Stroke = Brushes.Black;
-        //    rect.StrokeThickness = 1;
-        //    rect.Fill = Brushes.Red;
-        //    Canvas.SetLeft(rect, itemRect.X);
-        //    Canvas.SetTop(rect, itemRect.Y);
-        //    rect.Tag = tag;
-        //    _canvas.Children.Add(rect);
-        //}
-
-
-        /*
-        internal void RenderToWritableBitmap(double actualWidth, double actualHeight, WriteableBitmap writeableBmp)
-        {
-            if (_data == null)
-            {
-                return;
-            }
-
-            _level = 0;
-            RenderToWritableBitmap(writeableBmp, _data);
-        }
-
-       
-
-        
-        private void RenderToWritableBitmap(WriteableBitmap writeableBmp, HierarchicalData data)
-        {
-            _level++;
-            if (data.Children.Count == 0)
-            {
-                writeableBmp.FillRectangle((int)data.Layout.Rect.TopLeft.X, (int)data.Layout.Rect.TopLeft.Y,
-                    (int)data.Layout.Rect.BottomRight.X, (int)data.Layout.Rect.BottomRight.Y, Colors.Green);
-
-                writeableBmp.DrawRectangle((int)data.Layout.Rect.TopLeft.X, (int)data.Layout.Rect.TopLeft.Y,
-                    (int)data.Layout.Rect.BottomRight.X, (int)data.Layout.Rect.BottomRight.Y, Colors.Black);
-            }
-            foreach (var child in data.Children)
-            {             
-                RenderToWritableBitmap(writeableBmp, child);
-            }
-
-            _level--;
-        }
-        */
-
-
         public IHighlighting Highlighting { get; set; }
 
         /// <summary>
@@ -128,7 +75,7 @@ namespace Visualization.Controls.TreeMap
             else
             {
                 // For non leaf nodes the weight is 0. We only can merge area metrics.
-                // See HiearchyBuilder.InsertLeaf.
+                // See HierarchyBuilder.InsertLeaf.
 
                 var color = DefaultDrawingPrimitives.WhiteToRedGradient.GradientStops.GetRelativeColor(data.NormalizedWeightMetric);
                 brush = new SolidColorBrush(color);

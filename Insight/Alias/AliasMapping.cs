@@ -8,6 +8,12 @@ using Insight.Shared;
 
 namespace Insight.Alias
 {
+    /// <summary>
+    /// Maps a developer name to an alias.
+    /// An alias file is created during the first sync.
+    /// If a mapping is not existent the name is mapped to itself.
+    /// You can use this if user names changed or developers left the team.
+    /// </summary>
     public sealed class AliasMapping : IAliasMapping
     {
         private readonly Dictionary<string, string> _aliasMapping = new Dictionary<string, string>();

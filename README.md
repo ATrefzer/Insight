@@ -6,7 +6,7 @@ Currently, it supports Subversion and Git.
 
 Note that processing a Git history such that file movements are considered is quite slow.
 
-Supported file types (for counting lines of code) are cs, cpp, c, h, java, py, xaml and xml
+Supported file types (for counting lines of code) are cs, cpp, c, h, java, py, xaml, xml, ts, html and css
 
 ## Features
 You can toggle all hierarchical visualizations between treemaps and circle packaging.
@@ -83,8 +83,8 @@ Fragmentation is a metric that increases when many developers contribute to the 
 
 # How to build
 
-* To count lines of code an external tool is used. Download cloc-1.88.exe from https://github.com/AlDanial/cloc/releases/ and copy it to the directory Binaries\ExternalTools.
-* Build Insight.sln (Visual Studio 2019). All output is generated in the Binaries directory.
+* To count lines of code an external tool is used. Download cloc-1.92.exe from https://github.com/AlDanial/cloc/releases/ and copy it to the directory Binaries\ExternalTools.
+* Build Insight.sln (Visual Studio 2022). All output is generated in the Binaries directory.
 
 # How to use
 

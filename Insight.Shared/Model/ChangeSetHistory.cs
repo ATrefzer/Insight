@@ -174,10 +174,12 @@ namespace Insight.Shared.Model
         /// </summary>
         private void CleanupHistory(ChangeSetHistory history)
         {
-            var deletedIdsHash = history.ChangeSets
+            var deleted = history.ChangeSets
                                         .SelectMany(set => set.Items)
                                         .Where(item => item.IsDelete())
-                                        .Select(item => item.Id).ToHashSet();
+                                        .Select(item => item.Id);
+
+            var deletedIdsHash = new HashSet<string>(deleted);
 
             foreach (var set in history.ChangeSets)
             {

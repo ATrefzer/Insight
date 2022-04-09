@@ -18,7 +18,9 @@ namespace Visualization.Controls.Interfaces
         /// </summary>
         int Id { get; set; }
 
-
+        /// <summary>
+        /// null = don't use, empty use default color, otherwise the assigned color.
+        /// </summary>
         string ColorKey { get; set; }
         double AreaMetricSum { get; }
         IReadOnlyCollection<IHierarchicalData> Children { get; }

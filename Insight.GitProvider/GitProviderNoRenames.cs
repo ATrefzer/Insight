@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Insight.Shared;
@@ -62,7 +63,7 @@ namespace Insight.GitProvider
 
             var allTrackedFiles = GetAllTrackedFiles(headHash);
             var trackedFileToId = allTrackedFiles.ToDictionary(serverPath => serverPath, serverPath => Guid.NewGuid().ToString());
-            var aliveIds = trackedFileToId.Values.ToHashSet();
+            var aliveIds = new HashSet<string>(trackedFileToId.Values);
 
             // History is ordered descending by data. Track files while modified.
             foreach (var changeSet in history.ChangeSets)

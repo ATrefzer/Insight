@@ -67,7 +67,7 @@ namespace Insight.GitProvider
             // Remove deleted files and empty changes sets
             var headNode = graph.GetNode(GetMasterHead());
             var allTrackedFiles = GetAllTrackedFiles();
-            var aliveIds = allTrackedFiles.Select(file => headNode.Scope.GetId(file)).ToHashSet();
+            var aliveIds = new HashSet<string>(allTrackedFiles.Select(file => headNode.Scope.GetId(file)));
 
             VerifyScope(headNode);
 

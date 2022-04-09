@@ -44,9 +44,9 @@ namespace Insight.GitProvider.Debugging
             var expectedServerPaths = GetAllTrackedFiles(node.CommitHash);
             var actualServerPaths = node.Scope.GetAllFiles();
 
-            var intersect = expectedServerPaths.Intersect(actualServerPaths).ToHashSet();
-            var inGit = expectedServerPaths.Except(intersect).ToHashSet();
-            var inScope = actualServerPaths.Except(intersect).ToHashSet();
+            var intersect = new HashSet<string>(expectedServerPaths.Intersect(actualServerPaths));
+            var inGit = new HashSet<string>(expectedServerPaths.Except(intersect));
+            var inScope = new HashSet<string>(actualServerPaths.Except(intersect));
 
             //var differences = expectedServerPaths;
             //differences.SymmetricExceptWith(actualServerPaths);

@@ -52,7 +52,7 @@ namespace Insight.GitProvider
 
         public HashSet<string> GetAllFiles()
         {
-            return _serverPathToId.Keys.ToHashSet();
+            return new HashSet<string>(_serverPathToId.Keys);
         }
         
 

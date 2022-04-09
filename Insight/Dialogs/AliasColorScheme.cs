@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
 
 using Insight.Shared;
-
 using Visualization.Controls.Common;
 using Visualization.Controls.Interfaces;
+
 
 namespace Insight.Dialogs
 {
     /// <summary>
-    /// A wrapper around a color palette to a view for alias names.
+    /// A wrapper around a color palette. It resolves the alias first before requesting the color.
     /// </summary>
     internal sealed class AliasColorScheme : IColorScheme
     {
@@ -70,6 +71,9 @@ namespace Insight.Dialogs
             return _aliasToColorMapping.Values.OrderBy(x => x.Name).ToList();
         }
 
+        /// <summary>
+        /// Update the user made changes from the Color Editor.
+        /// </summary>
         public void Update(IEnumerable<ColorMapping> aliasUpdates)
         {
             var updates = new List<ColorMapping>();
@@ -117,6 +121,18 @@ namespace Insight.Dialogs
         {
             InitAliasColorMappings();
 
+            if (string.IsNullOrEmpty(name))
+            {
+                // Default color for example the unused space in knowledge loss
+                return DefaultDrawingPrimitives.DefaultBrush;
+            }
+
+            if (_aliasToColorMapping.ContainsKey(name) is false)
+            {
+                // A developer name is not known! This should not happen.
+                Debug.WriteLine($"No color mapping found for developer {name}");
+                return Brushes.Black;
+            }
             var mapping = _aliasToColorMapping[name];
             return BrushCache.GetBrush(mapping.Color);
         }

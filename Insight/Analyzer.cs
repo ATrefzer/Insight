@@ -450,8 +450,23 @@ namespace Insight
                 var result = new DataGridFriendlyArtifact();
 
                 var localFileToContribution = AliasTransformContribution(_contributions, aliasMapping);
-                var contribution = localFileToContribution[artifact.LocalPath.ToLowerInvariant()];
-                var mainDev = contribution.GetMainDeveloper();
+
+                var key = artifact.LocalPath.ToLowerInvariant();
+                if (localFileToContribution.ContainsKey(key))
+                {
+                    var contribution = localFileToContribution[key];
+                    var mainDev = contribution.GetMainDeveloper();
+
+                    // Work related information
+                    result.FractalValue = contribution.CalculateFractalValue();
+                    result.MainDev = mainDev.Developer;
+                    result.MainDevPercent = mainDev.Percent;
+                }
+                else
+                {
+                    result.MainDev = "???";
+                    //Warnings.Add(new WarningMessage("", $"Cannot find contribution for file {key}"));
+                }
 
                 result.LocalPath = artifact.LocalPath;
                 result.Commits = artifact.Commits;
@@ -461,10 +476,7 @@ namespace Insight
                 result.CodeAge_Days = (DateTime.Now - artifact.Date).Days;
                 result.Hotspot = hotspotCalculator.GetHotspotValue(artifact);
 
-                // Work related information
-                result.FractalValue = contribution.CalculateFractalValue();
-                result.MainDev = mainDev.Developer;
-                result.MainDevPercent = mainDev.Percent;
+               
                 return result;
             }
             else
