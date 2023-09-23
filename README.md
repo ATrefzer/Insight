@@ -83,7 +83,10 @@ Fragmentation is a metric that increases when many developers contribute to the 
 
 # How to build
 
-* To count lines of code an external tool is used. Download cloc-1.92.exe from https://github.com/AlDanial/cloc/releases/ and copy it to the directory Binaries\ExternalTools.
+* To count lines of code an external tool is used: cloc-1.98.exe from https://github.com/AlDanial/cloc/releases/
+
+  You no longer need to download this tool. It is now part of the project.
+
 * Build Insight.sln (Visual Studio 2022). All output is generated in the Binaries directory.
 
 # How to use

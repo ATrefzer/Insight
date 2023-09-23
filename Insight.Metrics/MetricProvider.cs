@@ -12,8 +12,8 @@ namespace Insight.Metrics
     /// </summary>
     public sealed class MetricProvider : IMetricProvider
     {
-        private const string Cloc = "cloc-1.92.exe";
-        private const string Url = "https://github.com/AlDanial/cloc/releases/download/v1.92/cloc-1.92.exe";
+        private const string Cloc = "cloc-1.98.exe";
+        private const string Url = "https://github.com/AlDanial/cloc/releases/download/v1.98/cloc-1.98.exe";
         private const string ClocSubDir = "ExternalTools";
 
         public LinesOfCode CalculateLinesOfCode(FileInfo file)
@@ -80,7 +80,12 @@ namespace Insight.Metrics
             var assembly = Assembly.GetAssembly(typeof(MetricProvider));
             var assemblyDirectory = new FileInfo(assembly.Location).Directory;
             var thisAssemblyDirectory = assemblyDirectory?.FullName ?? "";
-            var externalToolsDirectory = Path.Combine(thisAssemblyDirectory, ClocSubDir);
+            var externalToolsDirectory = thisAssemblyDirectory;
+
+            if (!string.IsNullOrEmpty(ClocSubDir))
+            {
+                externalToolsDirectory = Path.Combine(thisAssemblyDirectory, ClocSubDir);
+            }
 
             VerifyClocInstalled(externalToolsDirectory);
 
