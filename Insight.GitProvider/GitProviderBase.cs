@@ -105,7 +105,7 @@ namespace Insight.GitProvider
         {
             var serverPaths = _gitCli.GetAllTrackedFiles(hash);
             var all = serverPaths.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            return new HashSet<string>(all);
+            return new HashSet<string>(all.Select(Decoder.DecodeEscapedBytes));
         }
 
         /// <summary>
