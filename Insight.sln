@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight", "Insight\Insight.csproj", "{739C3B39-9720-4900-8893-1BB785845E3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Insight", "Insight\Insight.csproj", "{739C3B39-9720-4900-8893-1BB785845E3B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DEB12948-53F4-4E5F-87C8-BDC454606047} = {DEB12948-53F4-4E5F-87C8-BDC454606047}
 		{7DEBD566-7C41-4131-9C4C-2F3678D57B4C} = {7DEBD566-7C41-4131-9C4C-2F3678D57B4C}
@@ -12,29 +12,29 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight", "Insight\Insight.
 		{A93136C0-D7BF-40B4-BECB-90F17CB37484} = {A93136C0-D7BF-40B4-BECB-90F17CB37484}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Visualization.Controls", "Visualization.Controls\Visualization.Controls.csproj", "{A7481C6A-83D3-426B-9A6A-EAD11327C0EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Visualization.Controls", "Visualization.Controls\Visualization.Controls.csproj", "{A7481C6A-83D3-426B-9A6A-EAD11327C0EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.Shared", "Insight.Shared\Insight.Shared.csproj", "{8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Insight.Shared", "Insight.Shared\Insight.Shared.csproj", "{8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.SvnProvider", "Insight.SvnProvider\Insight.SvnProvider.csproj", "{DEB12948-53F4-4E5F-87C8-BDC454606047}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Insight.SvnProvider", "Insight.SvnProvider\Insight.SvnProvider.csproj", "{DEB12948-53F4-4E5F-87C8-BDC454606047}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9} = {8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.Analyzers", "Insight.Analyzers\Insight.Analyzers.csproj", "{A93136C0-D7BF-40B4-BECB-90F17CB37484}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Insight.Analyzers", "Insight.Analyzers\Insight.Analyzers.csproj", "{A93136C0-D7BF-40B4-BECB-90F17CB37484}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7DEBD566-7C41-4131-9C4C-2F3678D57B4C} = {7DEBD566-7C41-4131-9C4C-2F3678D57B4C}
 		{8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9} = {8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.Metrics", "Insight.Metrics\Insight.Metrics.csproj", "{7DEBD566-7C41-4131-9C4C-2F3678D57B4C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Insight.Metrics", "Insight.Metrics\Insight.Metrics.csproj", "{7DEBD566-7C41-4131-9C4C-2F3678D57B4C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9} = {8680FEB7-5D8C-4D2B-9F8F-E1EC026C73F9}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{8851FE38-AD8D-428D-B328-1F76860F2B51}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{8851FE38-AD8D-428D-B328-1F76860F2B51}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insight.GitProvider", "Insight.GitProvider\Insight.GitProvider.csproj", "{D98FEFF9-2478-4B2A-9E25-51B0D9647874}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Insight.GitProvider", "Insight.GitProvider\Insight.GitProvider.csproj", "{D98FEFF9-2478-4B2A-9E25-51B0D9647874}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

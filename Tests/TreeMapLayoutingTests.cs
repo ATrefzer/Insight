@@ -29,7 +29,7 @@ namespace Tests
 
             var layout = new SquarifiedTreeMapLayout();
             layout.Layout(root, width, height);
-            var file = new BinaryFile<HierarchicalData>();
+            var file = new FilePersistence<HierarchicalData>();
             file.Write(path, root);
         }
 
@@ -56,7 +56,7 @@ namespace Tests
         private static void AssertLayouting(string path, double width, double height)
         {
             var layout = new SquarifiedTreeMapLayout();
-            var binFile = new BinaryFile<HierarchicalData>();
+            var binFile = new FilePersistence<HierarchicalData>();
             var data = binFile.Read(path);
 
             // Includes layout info

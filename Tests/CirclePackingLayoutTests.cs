@@ -27,14 +27,14 @@ namespace Tests
             var layout = new CirclePackingLayout();
 
             // Disable assertions
-            var backup = new TraceListener[Debug.Listeners.Count];
-            Debug.Listeners.CopyTo(backup, 0);
-            Debug.Listeners.Clear();
+            var backup = new TraceListener[Trace.Listeners.Count];
+            Trace.Listeners.CopyTo(backup, 0);
+            Trace.Listeners.Clear();
 
             layout.Layout(data, 100, 100);
 
             // Restore assertions
-            Debug.Listeners.AddRange(backup);
+            Trace.Listeners.AddRange(backup);
 
             Assert.AreEqual("(x-0)^2+(y-0)^2=0^2", data.Layout.ToString());
         }
@@ -47,7 +47,7 @@ namespace Tests
             var root = generator.GenerateRandomHierarchy();
             var layout = new CirclePackingLayout();
             layout.Layout(root, width, height);
-            var file = new BinaryFile<HierarchicalData>();
+            var file = new FilePersistence<HierarchicalData>();
             file.Write(path, root);
         }
 
@@ -76,7 +76,7 @@ namespace Tests
         private static void AssertLayouting(string path, double width, double height)
         {
             var layout = new CirclePackingLayout();
-            var binFile = new BinaryFile<HierarchicalData>();
+            var binFile = new FilePersistence<HierarchicalData>();
             var data = binFile.Read(path);
 
             // Includes layout info

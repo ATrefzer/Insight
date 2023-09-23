@@ -29,7 +29,10 @@ namespace Tests
             const string encoded = "Ã¤Ã¶Ã¼";
             const string expected = "äöü";
 
-            var decoded = Decoder.DecodeUtf8(encoded);
+            // In .net 7 ensure 1252 is available.
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var decoded = Decoder.Decode1252(encoded);
             Assert.AreEqual(expected, decoded);
         }
 

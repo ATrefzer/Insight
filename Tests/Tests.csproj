@@ -1,19 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <OutputPath>..\Binaries\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System.Windows" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Insight.Analyzers\Insight.Analyzers.csproj" />
     <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj" />
@@ -22,28 +17,12 @@
     <ProjectReference Include="..\Insight.SvnProvider\Insight.SvnProvider.csproj" />
     <ProjectReference Include="..\Insight\Insight.csproj" />
     <ProjectReference Include="..\Visualization.Controls\Visualization.Controls.csproj" />
-  </ItemGroup>
+  </ItemGroup>    
   <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\NSubstitute.Analyzers.CSharp.1.0.14\analyzers\dotnet\cs\NSubstitute.Analyzers.CSharp.dll" />
-    <Analyzer Include="..\packages\NSubstitute.Analyzers.CSharp.1.0.14\analyzers\dotnet\cs\NSubstitute.Analyzers.Shared.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="LibGit2Sharp" Version="0.26.2" />
+    <PackageReference Include="LibGit2Sharp" Version="0.27.2" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="NSubstitute" Version="4.2.2" />
-    <PackageReference Include="NSubstitute.Analyzers.CSharp" Version="1.0.14" />
-    <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-    <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.3.310801">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="OxyPlot.Wpf" Version="2.1.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Resources\file_with_umlauts_äöü.cs" />
-    <Compile Remove="Resources\zero_bytes.cs" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+    <PackageReference Include="NSubstitute" Version="5.1.0" />      
+    <PackageReference Include="NUnit" Version="3.13.3" />
   </ItemGroup>
 </Project>

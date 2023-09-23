@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Windows.Input;
 
 using Insight.Alias;
@@ -493,7 +494,7 @@ namespace Insight
 
         private void Save(string fileName, IHierarchicalData data)
         {
-            var file = new BinaryFile<IHierarchicalData>();
+            var file = new FilePersistence<IHierarchicalData>();
             file.Write(fileName, data);
         }
 
@@ -539,7 +540,7 @@ namespace Insight
                 if (fileName != null)
                 {
                     // Read hierarchical data
-                    var file = new BinaryFile<HierarchicalData>();
+                    var file = new FilePersistence<HierarchicalData>();
                     var data = file.Read(fileName);
 
                     // Read coloring

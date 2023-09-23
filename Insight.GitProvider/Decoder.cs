@@ -47,17 +47,17 @@ namespace Insight.GitProvider
         /// supported"
         /// Same applies to autor name.
         /// </summary>
-        public static string DecodeUtf8(string encoded)
+        public static string Decode1252(string encoded)
         {
             if (encoded == null)
             {
                 return null;
             }
 
-            var bytes = Encoding.GetEncoding(1252).GetBytes(encoded);
+            var encoding = Encoding.GetEncoding(1252);
+            var bytes = encoding.GetBytes(encoded);
             var decoded = Encoding.UTF8.GetString(bytes);
 
-            //Debug.Assert(decoded == encoded);
             return decoded;
         }
 

@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
+    [TestFixture]
     internal sealed class AliasMappingTest
     {
         /// <summary>

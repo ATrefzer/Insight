@@ -157,16 +157,16 @@ namespace Tests
                 repo.Commit("Add B");
 
 
-                repo.Checkout("master");
+                repo.Checkout("main");
 
 
-                repo.ModifyFileAppend("A.txt", "Modify in master");
+                repo.ModifyFileAppend("A.txt", "Modify in main");
                 repo.Commit("Modify A");
 
                 repo.Merge("Feature");
 
 
-                repo.ModifyFileAppend("B.txt", "Modify in master");
+                repo.ModifyFileAppend("B.txt", "Modify in main");
                 var c = repo.Commit("Modify B after merge");
             
                 
@@ -199,13 +199,13 @@ namespace Tests
                 repo.Commit("Renamed A.txt -> A_renamed.txt");
 
 
-                repo.Checkout("master");
+                repo.Checkout("main");
 
 
                 repo.Merge("Feature");
 
 
-                repo.ModifyFileAppend("A_renamed.txt", "Modify in master");
+                repo.ModifyFileAppend("A_renamed.txt", "Modify in main");
                 var c = repo.Commit("Modify A_renamed after merge");
             
                 
@@ -237,14 +237,14 @@ namespace Tests
                 repo.Commit("Modified A in Feature");
 
 
-                repo.Checkout("master");
+                repo.Checkout("main");
                 repo.Rename("A.txt", "A_renamed.txt");
                 repo.Commit("Renamed A.txt -> A_renamed.txt");
                 
                 repo.Merge("Feature");
 
 
-                repo.ModifyFileAppend("A_renamed.txt", "Modify in master");
+                repo.ModifyFileAppend("A_renamed.txt", "Modify in main");
                 var c = repo.Commit("Modify A_renamed after merge");
 
 

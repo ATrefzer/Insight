@@ -17,9 +17,11 @@ using Insight.Alias;
 using Visualization.Controls;
 using Visualization.Controls.Bitmap;
 using Visualization.Controls.Interfaces;
+using System.Runtime.Versioning;
 
 namespace Insight
 {
+
     public sealed class Analyzer
     {
         private readonly IMetricProvider _metricsProvider;
