@@ -1,28 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
-    <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>..\Binaries\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Insight.Analyzers\Insight.Analyzers.csproj" />
-    <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj" />
-    <ProjectReference Include="..\Insight.Metrics\Insight.Metrics.csproj" />
-    <ProjectReference Include="..\Insight.Shared\Insight.Shared.csproj" />
-    <ProjectReference Include="..\Insight.SvnProvider\Insight.SvnProvider.csproj" />
-    <ProjectReference Include="..\Insight\Insight.csproj" />
-    <ProjectReference Include="..\Visualization.Controls\Visualization.Controls.csproj" />
-  </ItemGroup>    
-  <ItemGroup>
-    <PackageReference Include="LibGit2Sharp" Version="0.27.2" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-    <PackageReference Include="NSubstitute" Version="5.1.0" />      
-    <PackageReference Include="NUnit" Version="3.13.3" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0-windows</TargetFramework>
+        <OutputType>Library</OutputType>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <OutputPath>..\Binaries\</OutputPath>
+        <IsPublishable>false</IsPublishable>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+    <PropertyGroup>
+        <StartupObject/>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Insight.Analyzers\Insight.Analyzers.csproj"/>
+        <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj"/>
+        <ProjectReference Include="..\Insight.Metrics\Insight.Metrics.csproj"/>
+        <ProjectReference Include="..\Insight.Shared\Insight.Shared.csproj"/>
+        <ProjectReference Include="..\Insight.SvnProvider\Insight.SvnProvider.csproj"/>
+        <ProjectReference Include="..\Insight\Insight.csproj"/>
+        <ProjectReference Include="..\Visualization.Controls\Visualization.Controls.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="LibGit2Sharp" Version="0.27.2"/>
+        <PackageReference Include="Microsoft.CSharp" Version="4.7.0"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2"/>
+        <PackageReference Include="NSubstitute" Version="5.1.0"/>
+        <PackageReference Include="NUnit" Version="3.13.3"/>
+    </ItemGroup>
 </Project>

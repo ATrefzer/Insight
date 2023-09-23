@@ -76,16 +76,13 @@ namespace Insight.Metrics
 
         private string GetPathToCloc()
         {
-            // Get path of this assembly
-            var assembly = Assembly.GetAssembly(typeof(MetricProvider));
-            var assemblyDirectory = new FileInfo(assembly.Location).Directory;
-            var thisAssemblyDirectory = assemblyDirectory?.FullName ?? "";
-            var externalToolsDirectory = thisAssemblyDirectory;
+            // Get path of this assembly - not for self contained executables.
+            //var assembly = Assembly.GetAssembly(typeof(MetricProvider));
+            //var assemblyDirectory = new FileInfo(assembly.Location).Directory;
+            //var thisAssemblyDirectory = assemblyDirectory?.FullName ?? "";
 
-            if (!string.IsNullOrEmpty(ClocSubDir))
-            {
-                externalToolsDirectory = Path.Combine(thisAssemblyDirectory, ClocSubDir);
-            }
+            var thisAssemblyDirectory = System.AppContext.BaseDirectory;
+            var externalToolsDirectory = Path.Combine(thisAssemblyDirectory, ClocSubDir);
 
             VerifyClocInstalled(externalToolsDirectory);
 

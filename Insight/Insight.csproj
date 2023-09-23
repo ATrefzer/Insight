@@ -6,6 +6,11 @@
         <UseWPF>true</UseWPF>
         <OutputPath>..\Binaries\</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+        <!-- Not with wpf <PublishTrimmed>true</PublishTrimmed> -->
     </PropertyGroup>
 
     <PropertyGroup>
@@ -48,20 +53,22 @@
             <AutoGen>True</AutoGen>
             <DependentUpon>Settings.settings</DependentUpon>
         </Compile>
+        <None Update="Properties\Settings.settings">
+            <Generator>SettingsSingleFileGenerator</Generator>
+            <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+        </None>
     </ItemGroup>
     <ItemGroup>
         <None Update="ExternalTools\cloc-1.98.exe">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <!--Do not embed into the single file-->
+            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
         </None>
         <None Update="ExternalTools\LICENSE">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="ExternalTools\readme.md">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Properties\Settings.settings">
-            <Generator>SettingsSingleFileGenerator</Generator>
-            <LastGenOutput>Settings.Designer.cs</LastGenOutput>
         </None>
     </ItemGroup>
 </Project>
