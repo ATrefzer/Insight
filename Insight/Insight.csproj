@@ -17,35 +17,32 @@
         <ApplicationIcon>Lightswitch.ico</ApplicationIcon>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Insight.Analyzers\Insight.Analyzers.csproj"/>
-        <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj"/>
-        <ProjectReference Include="..\Insight.Metrics\Insight.Metrics.csproj"/>
-        <ProjectReference Include="..\Insight.Shared\Insight.Shared.csproj"/>
-        <ProjectReference Include="..\Insight.SvnProvider\Insight.SvnProvider.csproj"/>
-        <ProjectReference Include="..\Visualization.Controls\Visualization.Controls.csproj"/>
+        <ProjectReference Include="..\Insight.Analyzers\Insight.Analyzers.csproj" />
+        <ProjectReference Include="..\Insight.GitProvider\Insight.GitProvider.csproj" />
+        <ProjectReference Include="..\Insight.Metrics\Insight.Metrics.csproj" />
+        <ProjectReference Include="..\Insight.Shared\Insight.Shared.csproj" />
+        <ProjectReference Include="..\Insight.SvnProvider\Insight.SvnProvider.csproj" />
+        <ProjectReference Include="..\Visualization.Controls\Visualization.Controls.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <Resource Include="Board.txt"/>
-    </ItemGroup>
-    <ItemGroup>
-        <Resource Include="Resources\*.png"/>
-        <Resource Include="Resources\Lightswitch.ico"/>
+        <Resource Include="Resources\*.png" />
+        <Resource Include="Resources\Lightswitch.ico" />
     </ItemGroup>
 
     <ItemGroup>
-        <Resource Include="Lightswitch.ico"/>
+        <Resource Include="Lightswitch.ico" />
     </ItemGroup>
 
     <ItemGroup>
-        <Resource Include="Resources\about.html"/>
+        <Resource Include="Resources\about.html" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5"/>
-        <PackageReference Include="OxyPlot.Wpf" Version="2.1.2"/>
-        <PackageReference Include="Prism.Wpf" Version="8.1.97"/>
-        <PackageReference Include="Microsoft.CSharp" Version="4.7.0"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5" />
+        <PackageReference Include="OxyPlot.Wpf" Version="2.1.2" />
+        <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+        <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
     <ItemGroup>
         <Compile Update="Properties\Settings.Designer.cs">
