@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Versioning;
+using System.Windows;
 using System.Windows.Input;
 
 using Insight.Alias;
@@ -125,16 +125,26 @@ namespace Insight
 
         private void SetActiveProject(Project project)
         {
+
             InvalidateActiveAnalysis();
 
-            _project = project;
-            if (_project != null && !_project.IsDefault)
+            try
             {
-                ConfigureAnalyzer();
+                _project = project;
+                if (_project != null && !_project.IsDefault)
+                {
+                    ConfigureAnalyzer();
+                }
             }
-            
+            catch (Exception ex)
+            {
+                InvalidateActiveAnalysis();
+                MessageBox.Show("Failed setting active project: " + ex.Message);
+            }
+
             // Update Ribbon
             Refresh();
+
         }
 
         /// <summary>
