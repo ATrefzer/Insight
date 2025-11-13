@@ -6,6 +6,7 @@ using Insight.Shared.Model;
 using Insight.Shared.VersionControl;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -56,10 +57,10 @@ namespace Tests
 
             // Assert
             var id = ci2.Id;
-            Assert.AreNotEqual(id, ci1.Id);
+            Assert.That(ci1.Id, Is.Not.EqualTo(id));
             var oldId = ci1.Id;
 
-            Assert.AreEqual(oldId, ci0.Id);
+            Assert.That(ci0.Id, Is.EqualTo(oldId));
         }
 
         [Test]
@@ -78,8 +79,8 @@ namespace Tests
             EndChangeSet();
 
             var id = ci2.Id;
-            Assert.AreEqual(id, ci1.Id);
-            Assert.AreEqual(id, ci0.Id);
+            Assert.That(ci1.Id, Is.EqualTo(id));
+            Assert.That(ci0.Id, Is.EqualTo(id));
         }
 
 
@@ -95,7 +96,7 @@ namespace Tests
             EndChangeSet();
 
             var id = ci1.Id;
-            Assert.AreEqual(id, ci0.Id);
+            Assert.That(ci0.Id, Is.EqualTo(id));
         }
 
         [Test]
@@ -109,9 +110,9 @@ namespace Tests
             var ci1 = Track_Rename("the_file", "to_somewhere_else");
             cs = EndChangeSet();
 
-            Assert.AreEqual(1, cs.Count);
-            Assert.AreEqual(1, _tracker.Warnings.Count);
-            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Add)); // Converted
+            Assert.That(cs.Count, Is.EqualTo(1));
+            Assert.That(_tracker.Warnings.Count, Is.EqualTo(1));
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Add), Is.EqualTo(1)); // Converted
         }
 
         [Test]
@@ -126,7 +127,7 @@ namespace Tests
                      };
 
             StartChangeSet();
-            Assert.Throws<ArgumentException>(() => tracker.TrackId(ci));
+            ClassicAssert.Throws<ArgumentException>(() => tracker.TrackId(ci));
             EndChangeSet();
         }
 
@@ -141,7 +142,7 @@ namespace Tests
                      };
 
             StartChangeSet();
-            Assert.Throws<ArgumentException>(() => tracker.TrackId(ci));
+            ClassicAssert.Throws<ArgumentException>(() => tracker.TrackId(ci));
             EndChangeSet();
         }
 
@@ -172,8 +173,8 @@ namespace Tests
             tracker.ApplyChangeSet(new List<ChangeItem>());
 
             var id = ci.Id;
-            Assert.NotNull(id);
-            Assert.IsTrue(Guid.TryParse(id, out var uuid)); // Is a uuid
+            ClassicAssert.NotNull(id);
+            ClassicAssert.IsTrue(Guid.TryParse(id, out var uuid)); // Is a uuid
         }
 
 
@@ -199,9 +200,9 @@ namespace Tests
             EndChangeSet();
 
             var id = ci3.Id;
-            Assert.AreEqual(id, ci2.Id);
-            Assert.AreNotEqual(id, ci1.Id);
-            Assert.AreEqual(ci1.Id, ci0.Id);
+            Assert.That(ci2.Id, Is.EqualTo(id));
+            Assert.That(ci1.Id, Is.Not.EqualTo(id));
+            Assert.That(ci0.Id, Is.EqualTo(ci1.Id));
         }
 
         [Test]
@@ -224,8 +225,8 @@ namespace Tests
 
             // Assert
             var id = ci2.Id;
-            Assert.AreNotEqual(id, ci1.Id);
-            Assert.AreEqual(ci1.Id, ci0.Id);
+            Assert.That(ci1.Id, Is.Not.EqualTo(id));
+            Assert.That(ci0.Id, Is.EqualTo(ci1.Id));
         }
 
         [Test]
@@ -245,8 +246,8 @@ namespace Tests
 
             // Assert
             var id = ci2.Id;
-            Assert.AreEqual(id, ci1.Id);
-            Assert.AreEqual(id, ci0.Id);
+            Assert.That(ci1.Id, Is.EqualTo(id));
+            Assert.That(ci0.Id, Is.EqualTo(id));
         }
 
 
@@ -263,9 +264,9 @@ namespace Tests
             var ci1 = Track_Add("location_yesterday", "location_now");
             var cs = EndChangeSet();
 
-            Assert.AreEqual(1, cs.Count);
-            Assert.AreEqual(0, _tracker.Warnings.Count);
-            Assert.AreEqual(KindOfChange.Add, cs.Single().Kind);
+            Assert.That(cs.Count, Is.EqualTo(1));
+            Assert.That(_tracker.Warnings.Count, Is.EqualTo(0));
+            Assert.That(cs.Single().Kind, Is.EqualTo(KindOfChange.Add));
         }
 
 
@@ -277,9 +278,9 @@ namespace Tests
             var ci1 = Track_Add("location_yesterday", "location_now");
             var cs = EndChangeSet();
 
-            Assert.AreEqual(1, cs.Count);
-            Assert.AreEqual(1, _tracker.Warnings.Count);
-            Assert.AreEqual(KindOfChange.Rename, cs.Single().Kind);
+            Assert.That(cs.Count, Is.EqualTo(1));
+            Assert.That(_tracker.Warnings.Count, Is.EqualTo(1));
+            Assert.That(cs.Single().Kind, Is.EqualTo(KindOfChange.Rename));
         }
 
         [Test]
@@ -293,9 +294,9 @@ namespace Tests
             var ci0 = Track_Add("from_location1", "now_location1");
             var cs = EndChangeSet();
 
-            Assert.AreEqual(2, cs.Count);
-            Assert.AreEqual(2, _tracker.Warnings.Count);
-            Assert.AreEqual(2, cs.Count(x => x.Kind == KindOfChange.Rename));
+            Assert.That(cs.Count, Is.EqualTo(2));
+            Assert.That(_tracker.Warnings.Count, Is.EqualTo(2));
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Rename), Is.EqualTo(2));
         }
 
         [Test]
@@ -307,10 +308,10 @@ namespace Tests
             var ci0 = Track_Add("from_location", "to_location2");
             var cs = EndChangeSet();
 
-            Assert.AreEqual(3, cs.Count);
-            Assert.AreEqual(2, _tracker.Warnings.Count);
-            Assert.AreEqual(2, cs.Count(x => x.Kind == KindOfChange.Add));
-            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Delete));
+            Assert.That(cs.Count, Is.EqualTo(3));
+            Assert.That(_tracker.Warnings.Count, Is.EqualTo(2));
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Add), Is.EqualTo(2));
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Delete), Is.EqualTo(1));
         }
 
         [Test]
@@ -322,10 +323,10 @@ namespace Tests
             var ci0 = Track_Rename("from_location", "to_location2"); // note the order!
             var cs = EndChangeSet();
 
-            Assert.AreEqual(3, cs.Count);
-            Assert.AreEqual(2, _tracker.Warnings.Count);
-            Assert.AreEqual(2, cs.Count(x => x.Kind == KindOfChange.Add));
-            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Delete));
+            Assert.That(cs.Count, Is.EqualTo(3));
+            Assert.That(_tracker.Warnings.Count, Is.EqualTo(2));
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Add), Is.EqualTo(2));
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Delete), Is.EqualTo(1));
         }
 
         [Test]
@@ -338,10 +339,10 @@ namespace Tests
 
             var cs = EndChangeSet();
 
-            Assert.AreEqual(2, cs.Count);
-            Assert.AreEqual(1, _tracker.Warnings.Count);
-            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Add)); // Converted
-            Assert.AreEqual(1, cs.Count(x => x.Kind == KindOfChange.Edit));
+            Assert.That(cs.Count, Is.EqualTo(2));
+            Assert.That(_tracker.Warnings.Count, Is.EqualTo(1));
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Add), Is.EqualTo(1)); // Converted
+            Assert.That(cs.Count(x => x.Kind == KindOfChange.Edit), Is.EqualTo(1));
         }
 
 

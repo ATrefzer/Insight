@@ -81,9 +81,11 @@ namespace Tests
         public void Merge(string branchName)
         {
             var branchFrom = _repo.Branches[branchName];
-            _repo.Merge(branchFrom, GetSignature(), new MergeOptions{FastForwardStrategy = FastForwardStrategy.NoFastForward});
-        }
+            _repo.Merge(branchFrom, GetSignature(),
+                new MergeOptions { FastForwardStrategy = FastForwardStrategy.NoFastForward });
+            
 
+        }
 
         public void ModifyFileAppend(string fileName, string content)
         {

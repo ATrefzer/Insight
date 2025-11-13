@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Linq;
+using NUnit.Framework.Legacy;
 using Visualization.Controls.Data;
 
 namespace Tests
@@ -19,12 +20,12 @@ namespace Tests
             a_leaf.AddChild(a_leaf);
 
             // Nothing left but the root node!
-            Assert.Throws(typeof(Exception), () => root.RemoveLeafNodesWithoutArea());
+            ClassicAssert.Throws(typeof(Exception), () => root.RemoveLeafNodesWithoutArea());
 
             // Assert
-            Assert.AreEqual("root", root.Name);
-            Assert.AreEqual(0, root.Children.Count);
-            Assert.IsTrue(double.IsNaN(root.AreaMetric));
+            Assert.That(root.Name, Is.EqualTo("root"));
+            Assert.That(root.Children.Count, Is.EqualTo(0));
+            ClassicAssert.IsTrue(double.IsNaN(root.AreaMetric));
         }
 
         [Test]
@@ -45,10 +46,10 @@ namespace Tests
 
             // Assert
             // After c_leaf was deleted, c_level is deleted too.
-            Assert.AreEqual(1, root.CountLeafNodes());
-            Assert.AreEqual("root", root.Name);
-            Assert.AreEqual(1, root.Children.Count);
-            Assert.AreEqual("a_leaf", root.Children.First().Name);
+            Assert.That(root.CountLeafNodes(), Is.EqualTo(1));
+            Assert.That(root.Name, Is.EqualTo("root"));
+            Assert.That(root.Children.Count, Is.EqualTo(1));
+            Assert.That(root.Children.First().Name, Is.EqualTo("a_leaf"));
         }
 
         [Test]
@@ -66,7 +67,7 @@ namespace Tests
             // b has two children
 
             var data = a.Shrink();
-            Assert.AreEqual("b", data.Name);
+            Assert.That(data.Name, Is.EqualTo("b"));
         }
 
         [Test]
@@ -82,7 +83,7 @@ namespace Tests
             // c is leaf node
 
             var data = a.Shrink();
-            Assert.AreEqual("c", data.Name);
+            Assert.That(data.Name, Is.EqualTo("c"));
         }
     }
 }

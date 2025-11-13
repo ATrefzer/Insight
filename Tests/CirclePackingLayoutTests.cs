@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using NUnit.Framework.Legacy;
 using Visualization.Controls.CirclePacking;
 using Visualization.Controls.Data;
 
@@ -36,7 +37,7 @@ namespace Tests
             // Restore assertions
             Trace.Listeners.AddRange(backup);
 
-            Assert.AreEqual("(x-0)^2+(y-0)^2=0^2", data.Layout.ToString());
+            Assert.That(data.Layout.ToString(), Is.EqualTo("(x-0)^2+(y-0)^2=0^2"));
         }
 
 
@@ -82,14 +83,14 @@ namespace Tests
             // Includes layout info
             var reference = data.Dump();
 
-            Assert.IsTrue(File.Exists(path));
+            ClassicAssert.IsTrue(File.Exists(path));
 
             var clone = (HierarchicalData)data.Clone();
             // Clone does not copy the layout.
             layout.Layout(clone, width, height);
             var result = clone.Dump();
 
-            Assert.AreEqual(reference, result);
+            Assert.That(result, Is.EqualTo(reference));
         }
 
         [Ignore("Don't want to store the large binary test data in the repo. Generate new one via GenerateTestHierarchicalReferenceFile"), Test]

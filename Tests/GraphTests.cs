@@ -3,6 +3,7 @@
 using Insight.GitProvider;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -40,7 +41,7 @@ namespace Tests
             }
 
             // All nodes in breadth first
-            Assert.AreEqual("n0n1n2n3n4n5n10n6n9n7n8", builder.ToString());
+            Assert.That(builder.ToString(), Is.EqualTo("n0n1n2n3n4n5n10n6n9n7n8"));
         }
 
         [Test]
@@ -49,7 +50,7 @@ namespace Tests
             var graph = CreateTestData1();
 
 
-            Assert.AreEqual("n4", graph.FindCommonAncestor("n10", "n8"));
+            Assert.That(graph.FindCommonAncestor("n10", "n8"), Is.EqualTo("n4"));
         }
 
         private static Graph CreateTestData1()
@@ -124,14 +125,14 @@ namespace Tests
             graph.UpdateGraph("n2", "n0");
             graph.UpdateGraph("n1", "n0");
 
-            Assert.AreEqual("n1", graph.FindCommonAncestor("n3", "n1"));
+            Assert.That(graph.FindCommonAncestor("n3", "n1"), Is.EqualTo("n1"));
             //graph._preprocessData.EulerPath.ForEach(node => Debug.Write(node.CommitHash + ","));
 
-            
-            Assert.AreEqual("n1", graph.FindCommonAncestor("n1", "n3"));
-            Assert.AreEqual("n4", graph.FindCommonAncestor("n9", "n7"));
-            Assert.AreEqual("n1", graph.FindCommonAncestor("n1", "n1"));
-            //Assert.AreEqual("n8", graph.FindCommonAncestor("n9", "n8"));
+
+            Assert.That(graph.FindCommonAncestor("n1", "n3"), Is.EqualTo("n1"));
+            Assert.That(graph.FindCommonAncestor("n9", "n7"), Is.EqualTo("n4"));
+            Assert.That(graph.FindCommonAncestor("n1", "n1"), Is.EqualTo("n1"));
+            //ClassicAssert.AreEqual("n8", graph.FindCommonAncestor("n9", "n8"));
         }
         
         
@@ -160,17 +161,17 @@ namespace Tests
             graph.UpdateGraph("n2", "n1");
             graph.UpdateGraph("n1", "");
 
-            Assert.AreEqual(0, graph.GetNode("n1").Parents.Count);
-            Assert.AreEqual(2, graph.GetNode("n1").Children.Count);
+            Assert.That(graph.GetNode("n1").Parents.Count, Is.EqualTo(0));
+            Assert.That(graph.GetNode("n1").Children.Count, Is.EqualTo(2));
 
-            Assert.AreEqual(1, graph.GetNode("n2").Parents.Count);
-            Assert.AreEqual(1, graph.GetNode("n2").Children.Count);
+            Assert.That(graph.GetNode("n2").Parents.Count, Is.EqualTo(1));
+            Assert.That(graph.GetNode("n2").Children.Count, Is.EqualTo(1));
 
-            Assert.AreEqual(1, graph.GetNode("n3").Parents.Count);
-            Assert.AreEqual(1, graph.GetNode("n3").Children.Count);
+            Assert.That(graph.GetNode("n3").Parents.Count, Is.EqualTo(1));
+            Assert.That(graph.GetNode("n3").Children.Count, Is.EqualTo(1));
 
-            Assert.AreEqual(2, graph.GetNode("n4").Parents.Count);
-            Assert.AreEqual(0, graph.GetNode("n4").Children.Count);
+            Assert.That(graph.GetNode("n4").Parents.Count, Is.EqualTo(2));
+            Assert.That(graph.GetNode("n4").Children.Count, Is.EqualTo(0));
 
         }
     }

@@ -3,6 +3,7 @@
 using Insight.Shared;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -18,9 +19,9 @@ namespace Tests
             var extractor = new WorkItemExtractor(regex);
             var result = extractor.Extract(text);
 
-            Assert.AreEqual(2, result.Count);
-            Assert.AreEqual("S50XTM-444", result[0].Title);
-            Assert.AreEqual("S50ER-5", result[1].Title);
+            Assert.That(result.Count, Is.EqualTo(2));
+            Assert.That(result[0].Title, Is.EqualTo("S50XTM-444"));
+            Assert.That(result[1].Title, Is.EqualTo("S50ER-5"));
         }
 
         [Test]
@@ -28,7 +29,7 @@ namespace Tests
         {
             var extractor = new WorkItemExtractor("");
             var result = extractor.Extract("XX-44");
-            Assert.IsTrue(!result.Any());
+            ClassicAssert.IsTrue(!result.Any());
         }
     }
 }

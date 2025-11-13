@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using System.IO;
 using System.Reflection;
+using NUnit.Framework.Legacy;
 using Visualization.Controls.Data;
 using Visualization.Controls.TreeMap;
 
@@ -62,14 +63,14 @@ namespace Tests
             // Includes layout info
             var reference = data.Dump();
 
-            Assert.IsTrue(File.Exists(path));
+            Assert.That(File.Exists(path), Is.True);
 
             var clone = (HierarchicalData)data.Clone();
             // Clone does not copy the layout.
             layout.Layout(clone, width, height);
             var result = clone.Dump();
 
-            Assert.AreEqual(reference, result);
+            Assert.That(result, Is.EqualTo(reference));
         }
 
         [Ignore("Don't want to store the large binary test data in the repo. Generate new one via GenerateTestHierarchicalReferenceFile"), Test]

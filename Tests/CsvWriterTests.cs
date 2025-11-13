@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Insight.Shared;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -37,7 +38,7 @@ namespace Tests
 
             _csv.NumberFormat = "F2";
             var result = _csv.ToCsv(new List<DtoDouble> { dto });
-            Assert.AreEqual("3.14\r\n", result);
+            Assert.That(result, Is.EqualTo("3.14\r\n"));
         }
 
 
@@ -73,7 +74,7 @@ namespace Tests
 
             _csv.NumberFormat = "F3";
             var result = _csv.ToCsv(items);
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
@@ -109,7 +110,7 @@ namespace Tests
             _csv.Header = true;
             _csv.NumberFormat = "F3";
             var result = _csv.ToCsv(items);
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [SetUp]
@@ -127,7 +128,7 @@ namespace Tests
                                 new DtoString { A = "StringB" }
                         };
             var result = _csv.ToCsv(items);
-            Assert.AreEqual("StringA\r\nStringB\r\n", result);
+            Assert.That(result, Is.EqualTo("StringA\r\nStringB\r\n"));
         }
 
         [Test]
@@ -137,7 +138,7 @@ namespace Tests
             dto.A = "StringA";
 
             var result = _csv.ToCsv(new List<DtoString> { dto });
-            Assert.AreEqual("StringA\r\n", result);
+            Assert.That(result, Is.EqualTo("StringA\r\n"));
         }
     }
 }

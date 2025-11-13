@@ -4,6 +4,7 @@ using Insight.Shared;
 using Insight.Shared.Model;
 using NSubstitute;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -42,20 +43,20 @@ namespace Tests
 
             // Assert
 
-            Assert.AreEqual(2, result.Count);
+            Assert.That(result.Count, Is.EqualTo(2));
 
             // File 1
             // Work was summed up since both developers are assigned the same alias
             file1Work = result["file1"].DeveloperToContribution;
-            Assert.AreEqual(1, file1Work.Count);
-            Assert.AreEqual(30, file1Work["MappedA"]);
+            Assert.That(file1Work.Count, Is.EqualTo(1));
+            Assert.That(file1Work["MappedA"], Is.EqualTo(30));
 
 
             // File 2
             file2Work = result["file2"].DeveloperToContribution;
-            Assert.AreEqual(2, file2Work.Count);
-            Assert.AreEqual(10, file2Work["MappedA"]);
-            Assert.AreEqual(20, file2Work["MappedC"]);
+            Assert.That(file2Work.Count, Is.EqualTo(2));
+            Assert.That(file2Work["MappedA"], Is.EqualTo(10));
+            Assert.That(file2Work["MappedC"], Is.EqualTo(20));
         }
     }
 }

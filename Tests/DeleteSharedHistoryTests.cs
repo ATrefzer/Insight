@@ -3,6 +3,7 @@ using Insight.Shared.Model;
 using NUnit.Framework;
 
 using System.Collections.Generic;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -38,8 +39,8 @@ namespace Tests
             // Act
             GitProviderFileByFile.DeleteSharedHistory(commits, filesToRemove, graph);
 
-            Assert.AreEqual(0, commit_child.Items.Count);
-            Assert.AreEqual(0, commit_parent.Items.Count);
+            Assert.That(commit_child.Items.Count, Is.EqualTo(0));
+            Assert.That(commit_parent.Items.Count, Is.EqualTo(0));
         }
 
 
@@ -81,8 +82,8 @@ namespace Tests
         //    // Act
         //    graph.DeleteSharedHistory(commits, filesToRemove);
 
-        //    Assert.AreEqual(0, commit_child.Items.Count);
-        //    Assert.AreEqual(0, commit_parent.Items.Count);
+        //    ClassicAssert.AreEqual(0, commit_child.Items.Count);
+        //    ClassicAssert.AreEqual(0, commit_parent.Items.Count);
         //}
     }
 }

@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-
+using NUnit.Framework.Legacy;
 using Visualization.Controls.CirclePacking;
 
 namespace Tests
@@ -14,8 +14,8 @@ namespace Tests
             var fc = new FrontChain();
             fc.Add(layout);
 
-            Assert.AreEqual(fc.Head.Next.Value, layout);
-            Assert.AreEqual(fc.Head.Previous.Value, layout);
+            Assert.That(layout, Is.EqualTo(fc.Head.Next.Value));
+            Assert.That(layout, Is.EqualTo(fc.Head.Previous.Value));
         }
 
 
@@ -28,16 +28,16 @@ namespace Tests
             var node1 = fc.Add(layout1);
             var node2 = fc.Add(layout2);
 
-            Assert.AreEqual(node1.Value.Radius, 1.0);
-            Assert.AreEqual(node2.Value.Radius, 2.0);
+            Assert.That(node1.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(node2.Value.Radius, Is.EqualTo(2.0));
 
-            Assert.AreEqual(fc.Head.Next.Value, layout2);
-            Assert.AreEqual(fc.Head.Previous.Value, layout2);
+            Assert.That(layout2, Is.EqualTo(fc.Head.Next.Value));
+            Assert.That(layout2, Is.EqualTo(fc.Head.Previous.Value));
 
             var layout2Node = fc.Head.Next;
 
-            Assert.AreEqual(layout2Node.Next.Value, layout1);
-            Assert.AreEqual(layout2Node.Previous.Value, layout1);
+            Assert.That(layout1, Is.EqualTo(layout2Node.Next.Value));
+            Assert.That(layout1, Is.EqualTo(layout2Node.Previous.Value));
         }
 
 
@@ -45,15 +45,15 @@ namespace Tests
         public void Count()
         {
             var fc = new FrontChain();
-            Assert.AreEqual(0, fc.Count());
+            Assert.That(fc.Count(), Is.EqualTo(0));
 
             var layout1 = new CircularLayoutInfo { Radius = 1.0 };
             fc.Add(layout1);
-            Assert.AreEqual(1, fc.Count());
+            Assert.That(fc.Count(), Is.EqualTo(1));
 
             var layout2 = new CircularLayoutInfo { Radius = 2.0 };
             fc.Add(layout2);
-            Assert.AreEqual(2, fc.Count());
+            Assert.That(fc.Count(), Is.EqualTo(2));
         }
 
 
@@ -74,14 +74,14 @@ namespace Tests
             fc.Delete(node3, node2);
 
             // Set to end of range
-            Assert.AreEqual(node2, fc.Head);
-            Assert.AreEqual(2.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3, 0, fc.Head.Next.Value.Radius);
-            Assert.AreEqual(2.0, fc.Head.Next.Next.Value.Radius);
+            Assert.That(fc.Head, Is.EqualTo(node2));
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Next.Next.Value.Radius, Is.EqualTo(2.0));
 
-            Assert.AreEqual(2.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3.0, fc.Head.Previous.Value.Radius);
-            Assert.AreEqual(2.0, fc.Head.Previous.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Previous.Previous.Value.Radius, Is.EqualTo(2.0));
         }
 
         [Test]
@@ -98,14 +98,14 @@ namespace Tests
 
             fc.Delete(node1, node3);
 
-            Assert.AreEqual(node1, fc.Head);
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3, 0, fc.Head.Next.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Next.Next.Value.Radius);
+            Assert.That(fc.Head, Is.EqualTo(node1));
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Next.Next.Value.Radius, Is.EqualTo(1.0));
 
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3.0, fc.Head.Previous.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Previous.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Previous.Previous.Value.Radius, Is.EqualTo(1.0));
         }
 
 
@@ -122,25 +122,25 @@ namespace Tests
             var node3 = fc.Add(layout3);
 
             fc.Delete(fc.Head);
-            Assert.AreEqual(node2, fc.Head);
-            Assert.AreEqual(2.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3, 0, fc.Head.Next.Value.Radius);
-            Assert.AreEqual(2.0, fc.Head.Next.Next.Value.Radius);
+            Assert.That(fc.Head, Is.EqualTo(node2));
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Next.Next.Value.Radius, Is.EqualTo(2.0));
 
-            Assert.AreEqual(2.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3.0, fc.Head.Previous.Value.Radius);
-            Assert.AreEqual(2.0, fc.Head.Previous.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Previous.Previous.Value.Radius, Is.EqualTo(2.0));
 
             fc.Delete(fc.Head); // Single node
-            Assert.AreEqual(node3, fc.Head);
-            Assert.AreEqual(3.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3, 0, fc.Head.Next.Value.Radius);
+            Assert.That(fc.Head, Is.EqualTo(node3));
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(3.0));
 
-            Assert.AreEqual(3.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3.0, fc.Head.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(3.0));
 
             fc.Delete(fc.Head);
-            Assert.AreEqual(null, fc.Head);
+            Assert.That(fc.Head, Is.Null);
         }
 
 
@@ -157,14 +157,14 @@ namespace Tests
             var node3 = fc.Add(layout3);
 
             fc.Delete(node2);
-            Assert.AreEqual(node1, fc.Head);
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3, 0, fc.Head.Next.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Next.Next.Value.Radius);
+            Assert.That(fc.Head, Is.EqualTo(node1));
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Next.Next.Value.Radius, Is.EqualTo(1.0));
 
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(3.0, fc.Head.Previous.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Previous.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Previous.Previous.Value.Radius, Is.EqualTo(1.0));
         }
 
         [Test]
@@ -180,25 +180,25 @@ namespace Tests
             var node3 = fc.Add(layout3);
 
             fc.Delete(fc.Head.Previous);
-            Assert.AreEqual(node1, fc.Head);
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(2, 0, fc.Head.Next.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Next.Next.Value.Radius);
+            Assert.That(fc.Head, Is.EqualTo(node1));
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(2));
+            Assert.That(fc.Head.Next.Next.Value.Radius, Is.EqualTo(1.0));
 
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(2.0, fc.Head.Previous.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Previous.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Previous.Previous.Value.Radius, Is.EqualTo(1.0));
 
             fc.Delete(fc.Head.Previous); // Single node
-            Assert.AreEqual(node1, fc.Head);
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(1, 0, fc.Head.Next.Value.Radius);
+            Assert.That(fc.Head, Is.EqualTo(node1));
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(1.0));
 
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(1.0));
 
             fc.Delete(fc.Head.Previous);
-            Assert.AreEqual(null, fc.Head);
+            Assert.That(fc.Head, Is.EqualTo(null));
         }
 
         [Test]
@@ -215,11 +215,11 @@ namespace Tests
             var node3 = fc.Add(layout3);
             var node4 = fc.Add(layout4);
 
-            Assert.AreEqual(node1, fc.Find(node => node.Value.Radius.Equals(1.0)));
-            Assert.AreEqual(node2, fc.Find(node => node.Value.Radius.Equals(2.0)));
-            Assert.AreEqual(node3, fc.Find(node => node.Value.Radius.Equals(3.0)));
-            Assert.AreEqual(node4, fc.Find(node => node.Value.Radius.Equals(4.0)));
-            Assert.IsNull(fc.Find(node => node.Value.Radius.Equals(5.0)));
+            Assert.That(fc.Find(node => node.Value.Radius.Equals(1.0)), Is.EqualTo(node1));
+            Assert.That(fc.Find(node => node.Value.Radius.Equals(2.0)), Is.EqualTo(node2));
+            Assert.That(fc.Find(node => node.Value.Radius.Equals(3.0)), Is.EqualTo(node3));
+            Assert.That(fc.Find(node => node.Value.Radius.Equals(4.0)), Is.EqualTo(node4));
+            Assert.That(fc.Find(node => node.Value.Radius.Equals(5.0)), Is.Null);
         }
 
 
@@ -237,7 +237,7 @@ namespace Tests
             fc.Add(layout3);
             fc.Add(layout4);
 
-            Assert.AreEqual(node1, fc.FindMinValue(node => node.Value.Radius));
+            Assert.That(fc.FindMinValue(node => node.Value.Radius), Is.EqualTo(node1));
         }
 
 
@@ -251,15 +251,15 @@ namespace Tests
             var node1 = fc.Add(layout1);
 
             var node2 = fc.InsertAfter(node1, layout2);
-            Assert.AreEqual(node2.Value.Radius, 2.0);
+            Assert.That(node2.Value.Radius, Is.EqualTo(2.0));
 
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(2, 0, fc.Head.Next.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Next.Next.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Next.Next.Value.Radius, Is.EqualTo(1.0));
 
-            Assert.AreEqual(1.0, fc.Head.Value.Radius);
-            Assert.AreEqual(2.0, fc.Head.Previous.Value.Radius);
-            Assert.AreEqual(1.0, fc.Head.Previous.Previous.Value.Radius);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Previous.Previous.Value.Radius, Is.EqualTo(1.0));
         }
 
         [Test]
@@ -276,10 +276,10 @@ namespace Tests
             var node3 = fc.Add(layout3);
             var node4 = fc.Add(layout4);
 
-            Assert.AreEqual(0, fc.IndexOf(node1));
-            Assert.AreEqual(1, fc.IndexOf(node2));
-            Assert.AreEqual(2, fc.IndexOf(node3));
-            Assert.AreEqual(3, fc.IndexOf(node4));
+            Assert.That(fc.IndexOf(node1), Is.EqualTo(0));
+            Assert.That(fc.IndexOf(node2), Is.EqualTo(1));
+            Assert.That(fc.IndexOf(node3), Is.EqualTo(2));
+            Assert.That(fc.IndexOf(node4), Is.EqualTo(3));
         }
 
         [Test]
@@ -290,7 +290,7 @@ namespace Tests
             var fc = new FrontChain();
             var node1 = fc.Add(layout1);
 
-            Assert.AreEqual(0, fc.IndexOf(node1));
+            Assert.That(fc.IndexOf(node1), Is.EqualTo(0));
         }
 
         [Test]
@@ -305,17 +305,17 @@ namespace Tests
             var node3 = fc.Add(layout3);
 
             var node2 = fc.InsertAfter(node1, layout2);
-            Assert.AreEqual(node2.Value.Radius, 2.0);
+            Assert.That(node2.Value.Radius, Is.EqualTo(2.0));
 
-            Assert.AreEqual(fc.Head.Value.Radius, 1.0);
-            Assert.AreEqual(fc.Head.Next.Value.Radius, 2.0);
-            Assert.AreEqual(fc.Head.Next.Next.Value.Radius, 3.0);
-            Assert.AreEqual(fc.Head.Next.Next.Next.Value.Radius, 1.0);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Next.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Next.Next.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Next.Next.Next.Value.Radius, Is.EqualTo(1.0));
 
-            Assert.AreEqual(fc.Head.Value.Radius, 1.0);
-            Assert.AreEqual(fc.Head.Previous.Value.Radius, 3.0);
-            Assert.AreEqual(fc.Head.Previous.Previous.Value.Radius, 2.0);
-            Assert.AreEqual(fc.Head.Previous.Previous.Previous.Value.Radius, 1.0);
+            Assert.That(fc.Head.Value.Radius, Is.EqualTo(1.0));
+            Assert.That(fc.Head.Previous.Value.Radius, Is.EqualTo(3.0));
+            Assert.That(fc.Head.Previous.Previous.Value.Radius, Is.EqualTo(2.0));
+            Assert.That(fc.Head.Previous.Previous.Previous.Value.Radius, Is.EqualTo(1.0));
         }
 
         [Test]
@@ -332,18 +332,18 @@ namespace Tests
             var node3 = fc.Add(layout3);
             var node4 = fc.Add(layout4);
 
-            Assert.IsFalse(fc.IsAfter(node1, node1));
-            Assert.IsTrue(fc.IsAfter(node1, node2));
-            Assert.IsTrue(fc.IsAfter(node1, node3));
-            Assert.IsFalse(fc.IsAfter(node1, node4));
+            ClassicAssert.IsFalse(fc.IsAfter(node1, node1));
+            ClassicAssert.IsTrue(fc.IsAfter(node1, node2));
+            ClassicAssert.IsTrue(fc.IsAfter(node1, node3));
+            ClassicAssert.IsFalse(fc.IsAfter(node1, node4));
 
-            Assert.IsFalse(fc.IsAfter(node4, node4));
-            Assert.IsTrue(fc.IsAfter(node4, node1));
-            Assert.IsTrue(fc.IsAfter(node4, node2));
-            Assert.IsFalse(fc.IsAfter(node4, node3));
+            ClassicAssert.IsFalse(fc.IsAfter(node4, node4));
+            ClassicAssert.IsTrue(fc.IsAfter(node4, node1));
+            ClassicAssert.IsTrue(fc.IsAfter(node4, node2));
+            ClassicAssert.IsFalse(fc.IsAfter(node4, node3));
 
-            Assert.IsFalse(fc.IsAfter(node4, node3));
-            Assert.IsTrue(fc.IsAfter(node3, node4));
+            ClassicAssert.IsFalse(fc.IsAfter(node4, node3));
+            ClassicAssert.IsTrue(fc.IsAfter(node3, node4));
         }
 
 
@@ -361,7 +361,7 @@ namespace Tests
             fc.Add(layout3);
             fc.Add(layout4);
 
-            Assert.AreEqual(4, fc.ToList().Count);
+            Assert.That(fc.ToList().Count, Is.EqualTo(4));
         }
     }
 }

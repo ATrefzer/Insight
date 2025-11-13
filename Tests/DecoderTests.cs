@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text;
 using Insight.GitProvider;
 using NUnit.Framework;
-
+using NUnit.Framework.Legacy;
 using Decoder = Insight.GitProvider.Decoder;
 
 namespace Tests
@@ -19,7 +19,7 @@ namespace Tests
             const string expected = "file_with_umlauts_äöü.txt";
 
             var decoded = Decoder.DecodeEscapedBytes(escaped);
-            Assert.AreEqual(expected, decoded);
+            Assert.That(decoded, Is.EqualTo(expected));
         }
 
         [Test]
@@ -33,7 +33,7 @@ namespace Tests
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             var decoded = Decoder.Decode1252(encoded);
-            Assert.AreEqual(expected, decoded);
+            Assert.That(decoded, Is.EqualTo(expected));
         }
 
         // Accesses file system
@@ -52,11 +52,11 @@ namespace Tests
             var cli = new GitCommandLine(Path.Combine(directory, ".."));
             var result = cli.Log(Path.Combine(resources, "file_with_umlauts_äöü.cs"));
 
-            Assert.IsTrue(result.Contains(expected));
+            ClassicAssert.IsTrue(result.Contains(expected));
 
             var bytes = new byte[] { 0xc3, 0xa4, 0xc3, 0xb6, 0xc3, 0xbc };
             var str = Encoding.UTF8.GetString(bytes);
-            Assert.AreEqual(expected, str);
+            Assert.That(str, Is.EqualTo(expected));
 
 
         }

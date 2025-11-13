@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
-
+using NUnit.Framework.Legacy;
 using Visualization.Controls.Common;
 
 using ColorConverter = Visualization.Controls.Common.ColorConverter;
@@ -20,7 +20,7 @@ namespace Tests
             var color = ColorConverter.FromArgb(argb1);
 
             var argb2 = ColorConverter.ToArgb(color);
-            Assert.AreEqual(argb1, argb2);
+            Assert.That(argb2, Is.EqualTo(argb1));
         }
 
 
@@ -34,16 +34,16 @@ namespace Tests
             {
             }
 
-            Assert.IsFalse(scheme.AssignFreeColor("me"));
+            ClassicAssert.IsFalse(scheme.AssignFreeColor("me"));
 
             // Even if we do not have a color, the name is added.
             // The coloring can be edited later.
-            Assert.IsTrue(scheme.Names.Contains("me"));
+            ClassicAssert.IsTrue(scheme.Names.Contains("me"));
 
             // me has the default color
             var name = scheme.GetBrush("me").Color.ToString();
             var defaultColor = DefaultDrawingPrimitives.DefaultColor.ToString();
-            Assert.AreEqual(defaultColor, name);
+            Assert.That(name, Is.EqualTo(defaultColor));
 
         }
 
@@ -68,8 +68,8 @@ namespace Tests
             var deserialized = (ColorScheme)serializer.ReadObject(stream);
 
             // Colors are the same
-            Assert.AreEqual(scheme.GetBrush("me").ToString(), deserialized.GetBrush("me").ToString());
-            Assert.AreEqual(scheme.GetBrush("you").ToString(), deserialized.GetBrush("you").ToString());
+            Assert.That(deserialized.GetBrush("me").ToString(), Is.EqualTo(scheme.GetBrush("me").ToString()));
+            Assert.That(deserialized.GetBrush("you").ToString(), Is.EqualTo(scheme.GetBrush("you").ToString()));
         }
     }
 }

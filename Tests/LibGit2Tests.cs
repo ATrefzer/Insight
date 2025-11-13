@@ -3,6 +3,7 @@
 using LibGit2Sharp;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -21,7 +22,7 @@ namespace Tests
             Trace.WriteLine(name);
 
             var notExisting = commit.Tree["src/xxx.cs"];
-            Assert.IsNull(notExisting);
+            Assert.That(notExisting, Is.Null);
         }
     }
 }

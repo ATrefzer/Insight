@@ -3,6 +3,7 @@
 using Insight.Shared.Model;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -16,7 +17,7 @@ namespace Tests
             Id s1 = new StringId("1");
 
             // Mixed
-            Assert.IsFalse(n1.Equals(s1));
+            Assert.That(n1.Equals(s1), Is.False);
         }
 
         [Test]
@@ -27,17 +28,17 @@ namespace Tests
             Id n2 = new NumberId(2);
 
             // Number
-            Assert.IsTrue(n1.Equals(n11));
-            Assert.IsTrue(n11.Equals(n1));
-            Assert.IsFalse(n1.Equals(n2));
-            Assert.IsFalse(n2.Equals(n1));
-            Assert.IsFalse(n2.Equals(null));
+            ClassicAssert.IsTrue(n1.Equals(n11));
+            ClassicAssert.IsTrue(n11.Equals(n1));
+            Assert.That(n1.Equals(n2), Is.False);
+            Assert.That(n2.Equals(n1), Is.False);
+            Assert.That(n2.Equals(null), Is.False);
 
-            Assert.IsTrue(n1 == n11);
-            Assert.IsTrue(n11 == n1);
-            Assert.IsFalse(n1 == n2);
-            Assert.IsFalse(n2 == n1);
-            Assert.IsFalse(n2 == null);
+            ClassicAssert.IsTrue(n1 == n11);
+            ClassicAssert.IsTrue(n11 == n1);
+            Assert.That(n1 == n2, Is.False);
+            Assert.That(n2 == n1, Is.False);
+            Assert.That(n2 == null, Is.False);
         }
 
         [Test]
@@ -48,16 +49,16 @@ namespace Tests
             Id s2 = new StringId("2");
 
             // String
-            Assert.IsTrue(s1.Equals(s11));
-            Assert.IsTrue(s11.Equals(s1));
-            Assert.IsFalse(s1.Equals(s2));
-            Assert.IsFalse(s2.Equals(s1));
-            Assert.IsFalse(s2.Equals(null));
+            ClassicAssert.IsTrue(s1.Equals(s11));
+            ClassicAssert.IsTrue(s11.Equals(s1));
+            Assert.That(s1.Equals(s2), Is.False);
+            Assert.That(s2.Equals(s1), Is.False);
+            Assert.That(s2.Equals(null), Is.False);
 
-            Assert.IsTrue(s1 == s11);
-            Assert.IsTrue(s11 == s1);
-            Assert.IsFalse(s1 == s2);
-            Assert.IsFalse(s2 == s1);
+            ClassicAssert.IsTrue(s1 == s11);
+            ClassicAssert.IsTrue(s11 == s1);
+            Assert.That(s1 == s2, Is.False);
+            Assert.That(s2 == s1, Is.False);
         }
 
         [Test]
@@ -68,12 +69,12 @@ namespace Tests
 
             var hash = new HashSet<Id> { id1, id2 };
 
-            Assert.AreEqual(1, hash.Count);
+            Assert.That(hash.Count, Is.EqualTo(1));
 
             Id id3 = new NumberId(2);
             hash.Add(id3);
 
-            Assert.AreEqual(2, hash.Count);
+            Assert.That(hash.Count, Is.EqualTo(2));
         }
 
         [Test]
@@ -84,12 +85,12 @@ namespace Tests
 
             var hash = new HashSet<Id> { id1, id2 };
 
-            Assert.AreEqual(1, hash.Count);
+            Assert.That(hash.Count, Is.EqualTo(1));
 
             Id id3 = new StringId("b");
             hash.Add(id3);
 
-            Assert.AreEqual(2, hash.Count);
+            Assert.That(hash.Count, Is.EqualTo(2));
         }
 
       
