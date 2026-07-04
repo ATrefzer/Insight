@@ -186,7 +186,11 @@ namespace Insight.GitProvider
                                  progress.Message($"Calculating work {count}/{all}");
                              });
 
-            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
+            // Lower case keys are the lookup contract. Git can track paths that differ
+            // only in casing, so a plain ToDictionary could throw on duplicate keys.
+            return fileToContribution
+                .GroupBy(pair => pair.Key.ToLowerInvariant())
+                .ToDictionary(group => group.Key, group => group.First().Value);
         }
 
         protected ChangeSetHistory ParseLogString(string gitLogString)
