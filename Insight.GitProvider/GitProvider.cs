@@ -32,11 +32,6 @@ namespace Insight.GitProvider
     {
         private Statistics _stats;
 
-        public override void Initialize(string projectBase, string cachePath, string workItemRegex)
-        {
-            base.Initialize(projectBase, cachePath, workItemRegex);
-        }
-
         public static string GetClass()
         {
             var type = typeof(GitProvider);
@@ -183,8 +178,6 @@ namespace Insight.GitProvider
                 }
             }
 
-            VerifyScope(graph.GetNode(repo.Head.Tip.Sha));
-
             // The change sets were created in topological order (a commit is processed only after
             // all of its parents). The history contract is newest first, so reverse the list.
             // Sorting by date is not reliable: git stores timestamps with second precision and
@@ -193,15 +186,6 @@ namespace Insight.GitProvider
             var history = new ChangeSetHistory(changeSets);
             return history;
         }
-
-        private void BreakOnHash(GraphNode node, string hash)
-        {
-            if (node.CommitHash.StartsWith(hash, StringComparison.InvariantCultureIgnoreCase))
-            {
-                Debugger.Break();
-            }
-        }
-
 
         /// <summary>
         ///     Returns the deleted files, no longer in scope (server path -> id)
@@ -519,7 +503,7 @@ namespace Insight.GitProvider
         {
             if (node.Scope == null)
             {
-                throw new Exception("Node has node scope assigned!");
+                throw new Exception("Node has no scope assigned!");
             }
 
             var expectedServerPaths = GetAllTrackedFiles(node.CommitHash);
