@@ -65,7 +65,7 @@ namespace Insight.GitProvider
             var (history, graph) = GetRawHistory(progress);
 
             // Remove deleted files and empty changes sets
-            var headNode = graph.GetNode(GetMasterHead());
+            var headNode = graph.GetNode(GetHeadHash());
 
             // Verify first. If the scope drifted from the tracked files we get warnings here.
             VerifyScope(headNode);

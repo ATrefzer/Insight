@@ -192,16 +192,17 @@ namespace Insight.GitProvider
             return result;
         }
 
-        public string GetMasterHead(string repoDirectory)
+        /// <summary>
+        /// Returns the hash of the commit HEAD points to.
+        /// Note: We must not read .git\refs\heads\... directly. The loose ref file
+        /// disappears as soon as git packs the refs (git gc).
+        /// </summary>
+        public string GetHeadHash()
         {
-            var branch = GetCheckedOutBranch();
-            var masterRefPath = Path.Combine(repoDirectory, $".git\\refs\\heads\\{branch}");
-            if (!File.Exists(masterRefPath))
-            {
-                throw new Exception("Can't locate master's head.");
-            }
-            var lines = File.ReadAllLines(masterRefPath);
-            return lines.Single().Substring(0, 40);
+            const string program = "git";
+            const string args = "rev-parse HEAD";
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut.Trim();
         }
     }
 }

@@ -139,9 +139,9 @@ namespace Insight.GitProvider
             return trackedServerPaths.Select(sp => _mapper.MapToLocalFile(sp)).ToList();
         }
 
-        protected string GetMasterHead()
+        protected string GetHeadHash()
         {
-            return _gitCli.GetMasterHead(_projectBase);
+            return _gitCli.GetHeadHash();
         }
 
 

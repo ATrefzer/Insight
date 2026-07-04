@@ -58,8 +58,8 @@ namespace Insight.GitProvider
             parser.WorkItemRegex = _workItemRegex;
             var (history, graph) = parser.ParseLogString(log);
 
-            // Extract master branch by tracking backwards
-            var headHash = GetMasterHead();
+            // Extract the checked out branch by tracking backwards
+            var headHash = GetHeadHash();
 
             var allTrackedFiles = GetAllTrackedFiles(headHash);
             var trackedFileToId = allTrackedFiles.ToDictionary(serverPath => serverPath, serverPath => Guid.NewGuid().ToString());
