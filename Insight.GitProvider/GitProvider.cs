@@ -112,19 +112,8 @@ namespace Insight.GitProvider
 
         private bool IsMergeWithUnprocessedParents(GraphNode node)
         {
-            if (IsMerge(node))
-            {
-                var mergeInto = node.Parents[0];
-                var mergeFrom = node.Parents[1];
-
-                if (mergeFrom.Scope == null || mergeInto.Scope == null)
-                {
-                    // We can't process this merge commit yet. But we end up here again.
-                    return true;
-                }
-            }
-
-            return false;
+            // We can't process a merge commit before all parents are done. But we end up here again.
+            return IsMerge(node) && node.Parents.Any(parent => parent.Scope == null);
         }
 
         /// <summary>
@@ -245,12 +234,12 @@ namespace Insight.GitProvider
 
                 UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId);
             }
-            else if (IsMerge(node))
+            else
             {
-                var mergeInto = node.Parents[0];
-                var mergeFrom = node.Parents[1];
+                Debug.Assert(IsMerge(node));
 
-                var mergeFromScope = mergeFrom.Scope;
+                var mergeInto = node.Parents[0];
+                var mergeFromScopes = node.Parents.Skip(1).Select(parent => parent.Scope).ToList();
 
                 // We have to clone the merge scope. The same node may be processed later again as a parent node. Therefore we
                 // have to keep its scope untouched.
@@ -258,11 +247,7 @@ namespace Insight.GitProvider
 
                 scope = mergeIntoScope;
 
-                UpdateScopeTwoParents(deltas, mergeIntoScope, mergeFromScope, deletedServerPathToId, node.CommitHash);
-            }
-            else
-            {
-                Debug.Assert(false);
+                UpdateScopeMergeParents(deltas, mergeIntoScope, mergeFromScopes, deletedServerPathToId, node.CommitHash);
             }
 
             return (scope, deletedServerPathToId);
@@ -279,16 +264,16 @@ namespace Insight.GitProvider
         }
 
         /// <summary>
-        /// Update the scope of mergeInto to reflect the changes made in the branch we merge from.
+        /// Update the scope of mergeInto to reflect the changes made in the branch(es) we merge from.
         /// When files are removed I collect them in the "deleted" dictionary.
         /// These are needed later to assign the id to the deleted file.
         /// </summary>
-        private void UpdateScopeTwoParents(Differences deltas, Scope mergeIntoScope, Scope mergeFromScope,  Dictionary<string, string> deleted, string commitHash)
+        private void UpdateScopeMergeParents(Differences deltas, Scope mergeIntoScope, IReadOnlyList<Scope> mergeFromScopes, Dictionary<string, string> deleted, string commitHash)
         {
             foreach (var change in deltas.DiffExclusiveToParent1)
             {
-                // These are the changes done on the feature branch. We merge them into the scope.
-                UpdateScopeFromMergeSource(mergeIntoScope, mergeFromScope, change, deleted, commitHash);
+                // These are the changes done on the feature branch(es). We merge them into the scope.
+                UpdateScopeFromMergeSource(mergeIntoScope, mergeFromScopes, change, deleted, commitHash);
             }
 
             foreach (var change in deltas.ChangesInCommit)
@@ -298,14 +283,22 @@ namespace Insight.GitProvider
             }
         }
 
-        private void UpdateScopeFromMergeSource(Scope mergeIntoScope, Scope mergeFromScope, TreeEntryChanges change,
+        private void UpdateScopeFromMergeSource(Scope mergeIntoScope, IReadOnlyList<Scope> mergeFromScopes, TreeEntryChanges change,
             IDictionary<string, string> deleted, string commitHash)
         {
             // Merge changes from feature branch. Apply all Ids we can find without ambiguity.
 
             if (change.Status == ChangeKind.Added)
             {
-                var idFrom = mergeFromScope.GetIdOrDefault(change.Path);
+                // The file may come from any of the merged branches. If they disagree
+                // about the id the situation is ambiguous and we reset tracking below.
+                var idsFrom = mergeFromScopes
+                    .Select(mergeFromScope => mergeFromScope.GetIdOrDefault(change.Path))
+                    .Where(id => id != null)
+                    .Distinct()
+                    .ToList();
+                var idFrom = idsFrom.Count == 1 ? idsFrom[0] : null;
+
                 var idInto = mergeIntoScope.GetIdOrDefault(change.Path);
                 if (idFrom != null && idInto == null &&
                     mergeIntoScope.GetServerPathOrDefault(Guid.Parse(idFrom)) == null)
@@ -428,7 +421,7 @@ namespace Insight.GitProvider
         }
 
         /// <summary>
-        ///     Calculates the difference in working tree to each parent
+        ///     Calculates the difference of the commit tree to each parent tree.
         /// </summary>
         private Differences CalculateDiffs(Repository repo, Commit commit)
         {
@@ -438,31 +431,17 @@ namespace Insight.GitProvider
 
             if (parents.Length == 0)
             {
-                var diffToParent = new List<TreeEntryChanges>();
-                foreach (var change in repo.Diff.Compare<TreeChanges>(null, commit.Tree, options))
-                {
-                    diffToParent.Add(change);
-                }
-
+                // Root commit: diff against the empty tree.
+                var diffToParent = repo.Diff.Compare<TreeChanges>(null, commit.Tree, options).ToList();
                 return new Differences(diffToParent);
             }
 
-            if (parents.Length == 1)
-            {
-                var diffToParent = repo.Diff.Compare<TreeChanges>(parents[0].Tree, commit.Tree, options).ToList();
-                return new Differences(diffToParent);
-            }
+            // Regular commits have one parent, merge commits two or more (octopus).
+            var diffsToParents = parents
+                .Select(parent => repo.Diff.Compare<TreeChanges>(parent.Tree, commit.Tree, options).ToList())
+                .ToList();
 
-            // Merge commit has two parents
-            Debug.Assert(parents.Length == 2);
-
-            var parentMergeInto = parents[0];
-            var diffToParent1 = repo.Diff.Compare<TreeChanges>(parentMergeInto.Tree, commit.Tree, options).ToList();
-
-            var parentMergeFrom = parents[1];
-            var diffToParent2 = repo.Diff.Compare<TreeChanges>(parentMergeFrom.Tree, commit.Tree, options).ToList();
-
-            return new Differences(diffToParent1, diffToParent2);
+            return new Differences(diffsToParents);
         }
 
         /// <summary>
@@ -547,7 +526,8 @@ namespace Insight.GitProvider
 
         private bool IsMerge(GraphNode graphNode)
         {
-            return graphNode.Parents.Count == 2;
+            // An octopus merge can have more than two parents.
+            return graphNode.Parents.Count >= 2;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 using LibGit2Sharp;
@@ -7,41 +7,55 @@ namespace Insight.GitProvider
 {
     public sealed class Differences
     {
-        public List<TreeEntryChanges> DiffToParent1 {get; }
-        public List<TreeEntryChanges> DiffToParent2  { get; }
-
-        public List<TreeEntryChanges> DiffExclusiveToParent1 {get;}
-        public List<TreeEntryChanges> DiffExclusiveToParent2  { get; }
+        /// <summary>
+        /// Diff of the commit tree to each parent tree. Index 0 is the parent we merge into.
+        /// A root commit has a single entry: the diff against the empty tree.
+        /// </summary>
+        public IReadOnlyList<List<TreeEntryChanges>> DiffsToParents { get; }
 
         /// <summary>
-        /// For a merge node this contains changes done in the commit itself.
+        /// Changes done in the commit itself. For a regular commit this is simply the diff
+        /// to the parent. For a merge commit these are the files that differ from ALL
+        /// parents (conflict resolutions, "evil merges"). We have to compare by path:
+        /// TreeEntryChanges has no value equality, and the old blob ids differ per parent.
         /// </summary>
-        public List<TreeEntryChanges> ChangesInCommit  { get; }
+        public List<TreeEntryChanges> ChangesInCommit { get; }
 
+        /// <summary>
+        /// Changes relative to the first parent that came in from the merged branches.
+        /// Empty for a regular commit.
+        /// </summary>
+        public List<TreeEntryChanges> DiffExclusiveToParent1 { get; }
 
         public Differences(List<TreeEntryChanges> diffToParent)
+            : this(new List<List<TreeEntryChanges>> { diffToParent ?? new List<TreeEntryChanges>() })
         {
-            DiffToParent1 = diffToParent ?? new List<TreeEntryChanges>();
-            DiffToParent2 = null;
-            ChangesInCommit = diffToParent;
-            DiffExclusiveToParent1 = diffToParent;
-            DiffExclusiveToParent2 = null;
         }
 
         public Differences(List<TreeEntryChanges> deltaToParent1, List<TreeEntryChanges> deltaToParent2)
+            : this(new List<List<TreeEntryChanges>>
+                   {
+                           deltaToParent1 ?? new List<TreeEntryChanges>(),
+                           deltaToParent2 ?? new List<TreeEntryChanges>()
+                   })
         {
-            DiffToParent1 = deltaToParent1 ?? new List<TreeEntryChanges>();
-            DiffToParent2 = deltaToParent2 ?? new List<TreeEntryChanges>();
+        }
 
-            // A file that differs from both parents was touched in the merge commit itself
-            // (conflict resolution or "evil merge"). We have to compare by path.
-            // TreeEntryChanges has no value equality, and the old oids differ per parent anyway.
-            var pathsToParent2 = new HashSet<string>(DiffToParent2.Select(change => change.Path));
-            ChangesInCommit = DiffToParent1.Where(change => pathsToParent2.Contains(change.Path)).ToList();
+        public Differences(IReadOnlyList<List<TreeEntryChanges>> diffsToParents)
+        {
+            DiffsToParents = diffsToParents;
 
-            var pathsInBoth = new HashSet<string>(ChangesInCommit.Select(change => change.Path));
-            DiffExclusiveToParent1 = DiffToParent1.Where(change => !pathsInBoth.Contains(change.Path)).ToList();
-            DiffExclusiveToParent2 = DiffToParent2.Where(change => !pathsInBoth.Contains(change.Path)).ToList();
+            var diffToParent1 = diffsToParents[0];
+
+            // Paths that differ from every parent. For a single parent this is the whole diff.
+            var changedInCommit = new HashSet<string>(diffToParent1.Select(change => change.Path));
+            foreach (var diffToParent in diffsToParents.Skip(1))
+            {
+                changedInCommit.IntersectWith(diffToParent.Select(change => change.Path));
+            }
+
+            ChangesInCommit = diffToParent1.Where(change => changedInCommit.Contains(change.Path)).ToList();
+            DiffExclusiveToParent1 = diffToParent1.Where(change => !changedInCommit.Contains(change.Path)).ToList();
         }
     }
 }

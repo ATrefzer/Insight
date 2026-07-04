@@ -329,6 +329,54 @@ internal class GitProviderTests
     }
 
     /// <summary>
+    ///     An octopus merge has more than two parents. File ids from all merged
+    ///     branches have to survive the merge.
+    /// </summary>
+    [Test]
+    public void OctopusMerge_ThreeParents_IdsSurvive()
+    {
+        var repoName = Guid.NewGuid().ToString();
+        using (var repo = RepoBuilder.InitNewRepository(repoName))
+        {
+            repo.AddFile("A.txt");
+            repo.Commit("Add A");
+
+            repo.CreateBranch("Feature1");
+            repo.CreateBranch("Feature2");
+
+            repo.Checkout("Feature1");
+            repo.AddFile("B.txt");
+            repo.Commit("Add B");
+
+            repo.Checkout("main");
+            repo.Checkout("Feature2");
+            repo.AddFile("C.txt");
+            repo.Commit("Add C");
+
+            repo.Checkout("main");
+
+            // Build the merged tree (A + B + C) in the index and commit it with three parents.
+            repo.AddFile("B.txt");
+            repo.AddFile("C.txt");
+            repo.CommitMerge("Octopus merge", "Feature1", "Feature2");
+
+            repo.ModifyFileAppend("B.txt", "Modify after merge");
+            repo.Commit("Modify B");
+
+
+            var history = GetRawHistory(repoName);
+
+            // Add A, Add B, Add C, octopus merge (empty), modify B
+            Assert.That(history.ChangeSets.Count, Is.EqualTo(5));
+
+            //                           C  A  M  D  R  C  Final
+            AssertFile(history, "A.txt", 1, 1, 0, 0, 0, 0, "A.txt");
+            AssertFile(history, "B.txt", 2, 1, 1, 0, 0, 0, "B.txt");
+            AssertFile(history, "C.txt", 1, 1, 0, 0, 0, 0, "C.txt");
+        }
+    }
+
+    /// <summary>
     ///     Seed is the file name the file was first committed under.
     /// </summary>
     private void AssertFile(ChangeSetHistory history, string fileSeed, int changeSets, int add, int modify, int delete,

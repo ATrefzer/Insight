@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 using LibGit2Sharp;
@@ -100,6 +101,25 @@ namespace Tests
         public Commit Commit(string shortMessage = "")
         {
             return _repo.Commit(shortMessage, GetSignature(), GetSignature());
+        }
+
+        /// <summary>
+        /// Creates a merge commit with the current HEAD and the given branches as parents
+        /// (octopus merge). The staged index is used as the merge result.
+        /// </summary>
+        public Commit CommitMerge(string shortMessage, params string[] branchNames)
+        {
+            var parents = new List<Commit> { _repo.Head.Tip };
+            foreach (var branchName in branchNames)
+            {
+                parents.Add(_repo.Branches[branchName].Tip);
+            }
+
+            var tree = _repo.ObjectDatabase.CreateTree(_repo.Index);
+            var commit = _repo.ObjectDatabase.CreateCommit(GetSignature(), GetSignature(), shortMessage, tree, parents, false);
+
+            _repo.Refs.UpdateTarget(_repo.Refs.Head.ResolveToDirectReference(), commit.Id);
+            return commit;
         }
 
         public void Merge(string branchName)
