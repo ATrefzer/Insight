@@ -138,6 +138,45 @@ internal class GitProviderTests
     {
     }
 
+    /// <summary>
+    ///     A conflict resolution differs from both parents, so it is a change done
+    ///     in the merge commit itself and has to show up in the history.
+    /// </summary>
+    [Test]
+    public void TwoBranches_ConflictMerge_ResolutionCountsAsChange()
+    {
+        var repoName = Guid.NewGuid().ToString();
+        using (var repo = RepoBuilder.InitNewRepository(repoName))
+        {
+            repo.AddFile("A.txt");
+            repo.Commit("Add A");
+
+            repo.CreateBranch("Feature");
+            repo.Checkout("Feature");
+
+            repo.ModifyFileAppend("A.txt", "Modified in Feature");
+            repo.Commit("Modify A in Feature");
+
+            repo.Checkout("main");
+
+            repo.ModifyFileAppend("A.txt", "Modified in main");
+            repo.Commit("Modify A in main");
+
+            repo.Merge("Feature"); // Conflict in A.txt
+            repo.WriteFile("A.txt", "Resolved");
+            repo.Commit("Merge Feature into main");
+
+
+            var history = GetRawHistory(repoName);
+
+            Assert.That(history.ChangeSets.Count, Is.EqualTo(4));
+
+            // Add, modify in Feature, modify in main, resolution in the merge commit
+            //                           C  A  M  D  R  C  Final
+            AssertFile(history, "A.txt", 4, 1, 3, 0, 0, 0, "A.txt");
+        }
+    }
+
     [Test]
     public void TwoBranches_NoConflictMerge_ModifyAfterMerge()
     {

@@ -92,6 +92,15 @@ namespace Tests
 
         }
 
+        /// <summary>
+        /// Overwrites the file content. Useful to resolve a merge conflict.
+        /// </summary>
+        public void WriteFile(string fileName, string content)
+        {
+            File.WriteAllText(Path.Combine(_repoRoot, fileName), content);
+            Commands.Stage(_repo, fileName);
+        }
+
         public void ModifyFileAppend(string fileName, string content)
         {
             using (var file = File.AppendText(Path.Combine(_repoRoot, fileName)))

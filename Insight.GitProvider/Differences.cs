@@ -33,11 +33,15 @@ namespace Insight.GitProvider
             DiffToParent1 = deltaToParent1 ?? new List<TreeEntryChanges>();
             DiffToParent2 = deltaToParent2 ?? new List<TreeEntryChanges>();
 
-            var intersect = DiffToParent1.Intersect(DiffToParent2).ToList();
-            ChangesInCommit = intersect;
+            // A file that differs from both parents was touched in the merge commit itself
+            // (conflict resolution or "evil merge"). We have to compare by path.
+            // TreeEntryChanges has no value equality, and the old oids differ per parent anyway.
+            var pathsToParent2 = new HashSet<string>(DiffToParent2.Select(change => change.Path));
+            ChangesInCommit = DiffToParent1.Where(change => pathsToParent2.Contains(change.Path)).ToList();
 
-            DiffExclusiveToParent1 = DiffToParent1.Except(intersect).ToList();
-            DiffExclusiveToParent2 = DiffToParent2.Except(intersect).ToList();
+            var pathsInBoth = new HashSet<string>(ChangesInCommit.Select(change => change.Path));
+            DiffExclusiveToParent1 = DiffToParent1.Where(change => !pathsInBoth.Contains(change.Path)).ToList();
+            DiffExclusiveToParent2 = DiffToParent2.Where(change => !pathsInBoth.Contains(change.Path)).ToList();
         }
     }
 }
