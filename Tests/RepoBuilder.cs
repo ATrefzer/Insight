@@ -41,6 +41,11 @@ namespace Tests
             Directory.CreateDirectory(repoDir);
 
             var repo = new Repository(Repository.Init(repoDir));
+
+            // The name of the initial branch depends on the local git configuration (init.defaultBranch).
+            // The tests expect "main", so point the unborn HEAD there explicitly.
+            repo.Refs.UpdateTarget("HEAD", "refs/heads/main");
+
             return new RepoBuilder(repo, repoDir);
         }
 
