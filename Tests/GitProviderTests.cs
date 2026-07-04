@@ -338,7 +338,12 @@ internal class GitProviderTests
 
     private static void IncrementOperations(FollowResult result, ChangeItem item)
     {
-        result.FinalName = item.ServerPath;
+        // The history is ordered newest first, so the first item seen has the final name.
+        if (result.FinalName == null)
+        {
+            result.FinalName = item.ServerPath;
+        }
+
         if (item.IsAdd())
         {
             result.Add++;

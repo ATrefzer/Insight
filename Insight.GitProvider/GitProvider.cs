@@ -190,7 +190,12 @@ namespace Insight.GitProvider
 
             VerifyScope(graph.GetNode(repo.Head.Tip.Sha));
 
-            var history = new ChangeSetHistory(changeSets.OrderByDescending(cs => cs.Date).ToList());
+            // The change sets were created in topological order (a commit is processed only after
+            // all of its parents). The history contract is newest first, so reverse the list.
+            // Sorting by date is not reliable: git stores timestamps with second precision and
+            // rebased commits may carry out of order dates.
+            changeSets.Reverse();
+            var history = new ChangeSetHistory(changeSets);
             return history;
         }
 
