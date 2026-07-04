@@ -66,10 +66,16 @@ namespace Insight.GitProvider
 
             // Remove deleted files and empty changes sets
             var headNode = graph.GetNode(GetMasterHead());
-            var allTrackedFiles = GetAllTrackedFiles();
-            var aliveIds = new HashSet<string>(allTrackedFiles.Select(file => headNode.Scope.GetId(file)));
 
+            // Verify first. If the scope drifted from the tracked files we get warnings here.
             VerifyScope(headNode);
+
+            // The scope may not contain every tracked file (see warnings above),
+            // so we must not use GetId here. It would throw.
+            var allTrackedFiles = GetAllTrackedFiles();
+            var aliveIds = new HashSet<string>(allTrackedFiles
+                .Select(file => headNode.Scope.GetIdOrDefault(file))
+                .Where(id => id != null));
 
             // Note we have to drop all Delete items from the history. This is safe.
             // A file can be deleted in one branch but maintained in another one.
