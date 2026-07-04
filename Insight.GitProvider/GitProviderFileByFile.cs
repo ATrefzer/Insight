@@ -163,7 +163,12 @@ namespace Insight.GitProvider
         private void ProcessHistoryForFile(string localPath, Dictionary<string, ChangeSet> history)
         {
             var id = Guid.NewGuid().ToString();
-            _idToLocalFile.Add(id, localPath);
+
+            // Runs in Parallel.ForEach. Dictionary.Add is not thread safe.
+            lock (_lockObj)
+            {
+                _idToLocalFile.Add(id, localPath);
+            }
 
             var gitFileLog = _gitCli.Log(localPath);
 
