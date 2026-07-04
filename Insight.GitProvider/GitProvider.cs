@@ -410,7 +410,10 @@ namespace Insight.GitProvider
             cs.Comment = commit.MessageShort;
             cs.Id = commit.Sha;
             cs.Committer = commit.Author.Name;
-            cs.Date = commit.Author.When.LocalDateTime; // ToString("yyyy-MM-dd'T'HH:mm:ssK")); // Instead of s or o
+
+            // Committer date, not author date. After a rebase or cherry-pick the author date
+            // may be older than the parent commit and would break the history ordering.
+            cs.Date = commit.Committer.When.LocalDateTime;
             return cs;
         }
 

@@ -22,7 +22,7 @@ namespace Insight.GitProvider
         /// %P   Parents (all sha1s in one line) First commit does not have a parent!
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
-        private const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
+        private const string LogFormat = "START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER";
 
         const string MainBranch = "master";
         private readonly string _workingDirectory;
