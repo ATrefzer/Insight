@@ -137,14 +137,19 @@ namespace Insight.GitProvider
 
             var changeSets = new List<ChangeSet>();
 
+            // A repository can have more than one root commit, for example when
+            // unrelated histories were merged. Start the traversal from all of them.
+            // Otherwise the merge commit joining the histories waits forever for the
+            // scope of a parent that is never processed.
             var initialNodes = graph.AllNodes.Where(node => node.Parents.Any() is false).ToList();
-
-            Debug.Assert(initialNodes.Count == 1);
-            var initialNode = initialNodes.First();
+            Debug.Assert(initialNodes.Count >= 1);
 
             var alreadyProcessed = new HashSet<string>();
             var nodesToProcess = new Queue<GraphNode>();
-            nodesToProcess.Enqueue(initialNode);
+            foreach (var initialNode in initialNodes)
+            {
+                nodesToProcess.Enqueue(initialNode);
+            }
             while (nodesToProcess.Any())
             {
                 var node = nodesToProcess.Dequeue();

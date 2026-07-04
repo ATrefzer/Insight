@@ -297,6 +297,38 @@ internal class GitProviderTests
     }
 
     /// <summary>
+    ///     Merging unrelated histories creates a second root commit.
+    /// </summary>
+    [Test]
+    public void TwoRoots_MergeUnrelatedHistories()
+    {
+        var repoName = Guid.NewGuid().ToString();
+        using (var repo = RepoBuilder.InitNewRepository(repoName))
+        {
+            repo.AddFile("A.txt");
+            repo.Commit("Add A");
+
+            repo.CheckoutOrphan("Import");
+            repo.DeleteFileFromDisk("A.txt");
+            repo.AddFile("B.txt");
+            repo.Commit("Add B as unrelated root");
+
+            repo.Checkout("main");
+            repo.Merge("Import");
+
+
+            var history = GetRawHistory(repoName);
+
+            // Two root commits and the merge commit (empty, nothing changed in it)
+            Assert.That(history.ChangeSets.Count, Is.EqualTo(3));
+
+            //                           C  A  M  D  R  C  Final
+            AssertFile(history, "A.txt", 1, 1, 0, 0, 0, 0, "A.txt");
+            AssertFile(history, "B.txt", 1, 1, 0, 0, 0, 0, "B.txt");
+        }
+    }
+
+    /// <summary>
     ///     Seed is the file name the file was first committed under.
     /// </summary>
     private void AssertFile(ChangeSetHistory history, string fileSeed, int changeSets, int add, int modify, int delete,

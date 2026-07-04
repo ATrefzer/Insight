@@ -62,6 +62,25 @@ namespace Tests
             _repo.CreateBranch(name);
         }
 
+        /// <summary>
+        /// Points HEAD to an unborn branch. The next commit becomes a new root commit
+        /// with no parents (unrelated history).
+        /// </summary>
+        public void CheckoutOrphan(string name)
+        {
+            _repo.Refs.UpdateTarget("HEAD", $"refs/heads/{name}");
+            _repo.Index.Clear();
+            _repo.Index.Write();
+        }
+
+        /// <summary>
+        /// Removes the file from the working directory only (no staging).
+        /// </summary>
+        public void DeleteFileFromDisk(string fileName)
+        {
+            File.Delete(Path.Combine(_repoRoot, fileName));
+        }
+
 
         public void AddFile(string fileName)
         {
