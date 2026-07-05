@@ -45,6 +45,7 @@ namespace Tests
 
             // The name of the initial branch depends on the local git configuration (init.defaultBranch).
             // The tests expect "main", so point the unborn HEAD there explicitly.
+            // The very first commit now is done in branch main independent of init.defaultBranch.
             repo.Refs.UpdateTarget("HEAD", "refs/heads/main");
 
             return new RepoBuilder(repo, repoDir);

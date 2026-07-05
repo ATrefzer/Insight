@@ -358,6 +358,12 @@ internal class GitProviderTests
             // Build the merged tree (A + B + C) in the index and commit it with three parents.
             repo.AddFile("B.txt");
             repo.AddFile("C.txt");
+            
+            // Note: Here we only simulate a merge. We manipulate the index by manually adding 
+            // all files from the feature branches (B.txt and C.txt) and assume this is the 
+            // merged result. Then we construct a merge commit with three parents: 
+            // main, Feature1, and Feature2. This tests whether CommitMerge correctly 
+            // creates a commit with multiple parents, not whether the merge algorithm works.
             repo.CommitMerge("Octopus merge", "Feature1", "Feature2");
 
             repo.ModifyFileAppend("B.txt", "Modify after merge");
