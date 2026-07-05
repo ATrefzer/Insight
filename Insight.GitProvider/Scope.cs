@@ -63,8 +63,17 @@ namespace Insight.GitProvider
                 throw new Exception($"Tracking renaming but from path '{fromServerPath}' is not available");
             }
 
+            // If the target path is already tracked (scope drift) remove the stale entry
+            // from both maps first. Otherwise Add would throw.
+            Debug.Assert(_serverPathToId.ContainsKey(toServerPath) is false);
+            Remove(toServerPath);
+
             _serverPathToId.Remove(fromServerPath);
             _serverPathToId.Add(toServerPath, id);
+
+            // Keep the reverse map in sync. Otherwise GetServerPath returns the old path
+            // after a rename.
+            _idToServerPath[id] = toServerPath;
         }
 
         public void Remove(string serverPath)
@@ -119,8 +128,10 @@ namespace Insight.GitProvider
 
         public string Add(string serverPath)
         {
+            // If the path is already tracked (scope drift) remove it from both maps.
+            // Removing from the forward map alone would leave a stale reverse entry.
             Debug.Assert(_serverPathToId.ContainsKey(serverPath) is false);
-            _serverPathToId.Remove(serverPath);
+            Remove(serverPath);
 
             var newId = Guid.NewGuid();
             _serverPathToId.Add(serverPath, newId);

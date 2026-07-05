@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 using LibGit2Sharp;
@@ -41,6 +42,12 @@ namespace Tests
             Directory.CreateDirectory(repoDir);
 
             var repo = new Repository(Repository.Init(repoDir));
+
+            // The name of the initial branch depends on the local git configuration (init.defaultBranch).
+            // The tests expect "main", so point the unborn HEAD there explicitly.
+            // The very first commit now is done in branch main independent of init.defaultBranch.
+            repo.Refs.UpdateTarget("HEAD", "refs/heads/main");
+
             return new RepoBuilder(repo, repoDir);
         }
 
@@ -55,6 +62,25 @@ namespace Tests
         public void CreateBranch(string name)
         {
             _repo.CreateBranch(name);
+        }
+
+        /// <summary>
+        /// Points HEAD to an unborn branch. The next commit becomes a new root commit
+        /// with no parents (unrelated history).
+        /// </summary>
+        public void CheckoutOrphan(string name)
+        {
+            _repo.Refs.UpdateTarget("HEAD", $"refs/heads/{name}");
+            _repo.Index.Clear();
+            _repo.Index.Write();
+        }
+
+        /// <summary>
+        /// Removes the file from the working directory only (no staging).
+        /// </summary>
+        public void DeleteFileFromDisk(string fileName)
+        {
+            File.Delete(Path.Combine(_repoRoot, fileName));
         }
 
 
@@ -78,6 +104,25 @@ namespace Tests
             return _repo.Commit(shortMessage, GetSignature(), GetSignature());
         }
 
+        /// <summary>
+        /// Creates a merge commit with the current HEAD and the given branches as parents
+        /// (octopus merge). The staged index is used as the merge result.
+        /// </summary>
+        public Commit CommitMerge(string shortMessage, params string[] branchNames)
+        {
+            var parents = new List<Commit> { _repo.Head.Tip };
+            foreach (var branchName in branchNames)
+            {
+                parents.Add(_repo.Branches[branchName].Tip);
+            }
+
+            var tree = _repo.ObjectDatabase.CreateTree(_repo.Index);
+            var commit = _repo.ObjectDatabase.CreateCommit(GetSignature(), GetSignature(), shortMessage, tree, parents, false);
+
+            _repo.Refs.UpdateTarget(_repo.Refs.Head.ResolveToDirectReference(), commit.Id);
+            return commit;
+        }
+
         public void Merge(string branchName)
         {
             var branchFrom = _repo.Branches[branchName];
@@ -85,6 +130,15 @@ namespace Tests
                 new MergeOptions { FastForwardStrategy = FastForwardStrategy.NoFastForward });
             
 
+        }
+
+        /// <summary>
+        /// Overwrites the file content. Useful to resolve a merge conflict.
+        /// </summary>
+        public void WriteFile(string fileName, string content)
+        {
+            File.WriteAllText(Path.Combine(_repoRoot, fileName), content);
+            Commands.Stage(_repo, fileName);
         }
 
         public void ModifyFileAppend(string fileName, string content)

@@ -58,14 +58,14 @@ namespace Insight.GitProvider
             parser.WorkItemRegex = _workItemRegex;
             var (history, graph) = parser.ParseLogString(log);
 
-            // Extract master branch by tracking backwards
-            var headHash = GetMasterHead();
+            // Extract the checked out branch by tracking backwards
+            var headHash = GetHeadHash();
 
             var allTrackedFiles = GetAllTrackedFiles(headHash);
             var trackedFileToId = allTrackedFiles.ToDictionary(serverPath => serverPath, serverPath => Guid.NewGuid().ToString());
             var aliveIds = new HashSet<string>(trackedFileToId.Values);
 
-            // History is ordered descending by data. Track files while modified.
+            // History is ordered descending by date. Track files while modified.
             foreach (var changeSet in history.ChangeSets)
             {
                 foreach (var item in changeSet.Items)
@@ -76,8 +76,18 @@ namespace Insight.GitProvider
                         {
                             item.Id = id;
                         }
+                        else if (item.IsAdd())
+                        {
+                            // The Add is the oldest change of the file. It has to get the id too,
+                            // otherwise every file is undercounted by one commit and files that
+                            // were never modified after the Add vanish entirely.
+                            // Stop tracking here: anything older under this path is a different file.
+                            item.Id = id;
+                            trackedFileToId.Remove(item.ServerPath);
+                        }
                         else
                         {
+                            // Delete etc. in another branch. Situation unclear - stop tracking.
                             trackedFileToId.Remove(item.ServerPath);
                         }
                     }

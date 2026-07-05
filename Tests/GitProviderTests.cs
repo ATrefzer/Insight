@@ -138,6 +138,45 @@ internal class GitProviderTests
     {
     }
 
+    /// <summary>
+    ///     A conflict resolution differs from both parents, so it is a change done
+    ///     in the merge commit itself and has to show up in the history.
+    /// </summary>
+    [Test]
+    public void TwoBranches_ConflictMerge_ResolutionCountsAsChange()
+    {
+        var repoName = Guid.NewGuid().ToString();
+        using (var repo = RepoBuilder.InitNewRepository(repoName))
+        {
+            repo.AddFile("A.txt");
+            repo.Commit("Add A");
+
+            repo.CreateBranch("Feature");
+            repo.Checkout("Feature");
+
+            repo.ModifyFileAppend("A.txt", "Modified in Feature");
+            repo.Commit("Modify A in Feature");
+
+            repo.Checkout("main");
+
+            repo.ModifyFileAppend("A.txt", "Modified in main");
+            repo.Commit("Modify A in main");
+
+            repo.Merge("Feature"); // Conflict in A.txt
+            repo.WriteFile("A.txt", "Resolved");
+            repo.Commit("Merge Feature into main");
+
+
+            var history = GetRawHistory(repoName);
+
+            Assert.That(history.ChangeSets.Count, Is.EqualTo(4));
+
+            // Add, modify in Feature, modify in main, resolution in the merge commit
+            //                           C  A  M  D  R  C  Final
+            AssertFile(history, "A.txt", 4, 1, 3, 0, 0, 0, "A.txt");
+        }
+    }
+
     [Test]
     public void TwoBranches_NoConflictMerge_ModifyAfterMerge()
     {
@@ -258,6 +297,92 @@ internal class GitProviderTests
     }
 
     /// <summary>
+    ///     Merging unrelated histories creates a second root commit.
+    /// </summary>
+    [Test]
+    public void TwoRoots_MergeUnrelatedHistories()
+    {
+        var repoName = Guid.NewGuid().ToString();
+        using (var repo = RepoBuilder.InitNewRepository(repoName))
+        {
+            repo.AddFile("A.txt");
+            repo.Commit("Add A");
+
+            repo.CheckoutOrphan("Import");
+            repo.DeleteFileFromDisk("A.txt");
+            repo.AddFile("B.txt");
+            repo.Commit("Add B as unrelated root");
+
+            repo.Checkout("main");
+            repo.Merge("Import");
+
+
+            var history = GetRawHistory(repoName);
+
+            // Two root commits and the merge commit (empty, nothing changed in it)
+            Assert.That(history.ChangeSets.Count, Is.EqualTo(3));
+
+            //                           C  A  M  D  R  C  Final
+            AssertFile(history, "A.txt", 1, 1, 0, 0, 0, 0, "A.txt");
+            AssertFile(history, "B.txt", 1, 1, 0, 0, 0, 0, "B.txt");
+        }
+    }
+
+    /// <summary>
+    ///     An octopus merge has more than two parents. File ids from all merged
+    ///     branches have to survive the merge.
+    /// </summary>
+    [Test]
+    public void OctopusMerge_ThreeParents_IdsSurvive()
+    {
+        var repoName = Guid.NewGuid().ToString();
+        using (var repo = RepoBuilder.InitNewRepository(repoName))
+        {
+            repo.AddFile("A.txt");
+            repo.Commit("Add A");
+
+            repo.CreateBranch("Feature1");
+            repo.CreateBranch("Feature2");
+
+            repo.Checkout("Feature1");
+            repo.AddFile("B.txt");
+            repo.Commit("Add B");
+
+            repo.Checkout("main");
+            repo.Checkout("Feature2");
+            repo.AddFile("C.txt");
+            repo.Commit("Add C");
+
+            repo.Checkout("main");
+
+            // Build the merged tree (A + B + C) in the index and commit it with three parents.
+            repo.AddFile("B.txt");
+            repo.AddFile("C.txt");
+            
+            // Note: Here we only simulate a merge. We manipulate the index by manually adding 
+            // all files from the feature branches (B.txt and C.txt) and assume this is the 
+            // merged result. Then we construct a merge commit with three parents: 
+            // main, Feature1, and Feature2. This tests whether CommitMerge correctly 
+            // creates a commit with multiple parents, not whether the merge algorithm works.
+            repo.CommitMerge("Octopus merge", "Feature1", "Feature2");
+
+            repo.ModifyFileAppend("B.txt", "Modify after merge");
+            repo.Commit("Modify B");
+
+
+            var history = GetRawHistory(repoName);
+
+            // Add A, Add B, Add C, octopus merge (empty), modify B
+            Assert.That(history.ChangeSets.Count, Is.EqualTo(5));
+
+            //                           C  A  M  D  R  C  Final
+            AssertFile(history, "A.txt", 1, 1, 0, 0, 0, 0, "A.txt");
+            AssertFile(history, "B.txt", 2, 1, 1, 0, 0, 0, "B.txt");
+            AssertFile(history, "C.txt", 1, 1, 0, 0, 0, 0, "C.txt");
+        }
+    }
+
+    /// <summary>
     ///     Seed is the file name the file was first committed under.
     /// </summary>
     private void AssertFile(ChangeSetHistory history, string fileSeed, int changeSets, int add, int modify, int delete,
@@ -299,7 +424,12 @@ internal class GitProviderTests
 
     private static void IncrementOperations(FollowResult result, ChangeItem item)
     {
-        result.FinalName = item.ServerPath;
+        // The history is ordered newest first, so the first item seen has the final name.
+        if (result.FinalName == null)
+        {
+            result.FinalName = item.ServerPath;
+        }
+
         if (item.IsAdd())
         {
             result.Add++;

@@ -32,11 +32,6 @@ namespace Insight.GitProvider
     {
         private Statistics _stats;
 
-        public override void Initialize(string projectBase, string cachePath, string workItemRegex)
-        {
-            base.Initialize(projectBase, cachePath, workItemRegex);
-        }
-
         public static string GetClass()
         {
             var type = typeof(GitProvider);
@@ -59,17 +54,20 @@ namespace Insight.GitProvider
 
         private void UpdateHistory(IProgress progress)
         {
-            Warnings = new List<WarningMessage>();
-            _stats = new Statistics();
-
             var (history, graph) = GetRawHistory(progress);
 
             // Remove deleted files and empty changes sets
-            var headNode = graph.GetNode(GetMasterHead());
-            var allTrackedFiles = GetAllTrackedFiles();
-            var aliveIds = new HashSet<string>(allTrackedFiles.Select(file => headNode.Scope.GetId(file)));
+            var headNode = graph.GetNode(GetHeadHash());
 
+            // Verify first. If the scope drifted from the tracked files we get warnings here.
             VerifyScope(headNode);
+
+            // The scope may not contain every tracked file (see warnings above),
+            // so we must not use GetId here. It would throw.
+            var allTrackedFiles = GetAllTrackedFiles();
+            var aliveIds = new HashSet<string>(allTrackedFiles
+                .Select(file => headNode.Scope.GetIdOrDefault(file))
+                .Where(id => id != null));
 
             // Note we have to drop all Delete items from the history. This is safe.
             // A file can be deleted in one branch but maintained in another one.
@@ -87,6 +85,10 @@ namespace Insight.GitProvider
         /// </summary>
         public (ChangeSetHistory, Graph) GetRawHistory(IProgress progress)
         {
+            // GetRawHistory is also called directly (tests), so initialize here.
+            Warnings = new List<WarningMessage>();
+            _stats = new Statistics();
+
             Graph graph;
             ChangeSetHistory history;
             using (var repo = new Repository(_projectBase))
@@ -106,19 +108,8 @@ namespace Insight.GitProvider
 
         private bool IsMergeWithUnprocessedParents(GraphNode node)
         {
-            if (IsMerge(node))
-            {
-                var mergeInto = node.Parents[0];
-                var mergeFrom = node.Parents[1];
-
-                if (mergeFrom.Scope == null || mergeInto.Scope == null)
-                {
-                    // We can't process this merge commit yet. But we end up here again.
-                    return true;
-                }
-            }
-
-            return false;
+            // We can't process a merge commit before all parents are done. But we end up here again.
+            return IsMerge(node) && node.Parents.Any(parent => parent.Scope == null);
         }
 
         /// <summary>
@@ -131,14 +122,19 @@ namespace Insight.GitProvider
 
             var changeSets = new List<ChangeSet>();
 
+            // A repository can have more than one root commit, for example when
+            // unrelated histories were merged. Start the traversal from all of them.
+            // Otherwise the merge commit joining the histories waits forever for the
+            // scope of a parent that is never processed.
             var initialNodes = graph.AllNodes.Where(node => node.Parents.Any() is false).ToList();
-
-            Debug.Assert(initialNodes.Count == 1);
-            var initialNode = initialNodes.First();
+            Debug.Assert(initialNodes.Count >= 1);
 
             var alreadyProcessed = new HashSet<string>();
             var nodesToProcess = new Queue<GraphNode>();
-            nodesToProcess.Enqueue(initialNode);
+            foreach (var initialNode in initialNodes)
+            {
+                nodesToProcess.Enqueue(initialNode);
+            }
             while (nodesToProcess.Any())
             {
                 var node = nodesToProcess.Dequeue();
@@ -171,7 +167,7 @@ namespace Insight.GitProvider
                 // Create change items
                 foreach (var change in differences.ChangesInCommit)
                 {
-                    var item = CreateChangeItem(change, scope, deletedServerPathToId);
+                    var item = CreateChangeItem(change, scope, deletedServerPathToId, node.CommitHash);
                     cs.Items.Add(item);
                 }
 
@@ -182,20 +178,14 @@ namespace Insight.GitProvider
                 }
             }
 
-            VerifyScope(graph.GetNode(repo.Head.Tip.Sha));
-
-            var history = new ChangeSetHistory(changeSets.OrderByDescending(cs => cs.Date).ToList());
+            // The change sets were created in topological order (a commit is processed only after
+            // all of its parents). The history contract is newest first, so reverse the list.
+            // Sorting by date is not reliable: git stores timestamps with second precision and
+            // rebased commits may carry out of order dates.
+            changeSets.Reverse();
+            var history = new ChangeSetHistory(changeSets);
             return history;
         }
-
-        private void BreakOnHash(GraphNode node, string hash)
-        {
-            if (node.CommitHash.StartsWith(hash, StringComparison.InvariantCultureIgnoreCase))
-            {
-                Debugger.Break();
-            }
-        }
-
 
         /// <summary>
         ///     Returns the deleted files, no longer in scope (server path -> id)
@@ -207,16 +197,15 @@ namespace Insight.GitProvider
 
             if (node.Parents.Count == 0)
             {
-                // Called once for the first commit
+                // Called once for each root commit
                 scope = new Scope();
-                UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId);
+                UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId, node.CommitHash);
             }
             else if (node.Parents.Count == 1)
             {
                 var parent = node.Parents.Single();
-                scope = parent.Scope;
+                Debug.Assert(parent.Scope != null);
 
-                Debug.Assert(scope != null);
                 if (parent.Children.Count > 1)
                 {
                     // We follow two branches, so each one gets its own copy.
@@ -224,17 +213,18 @@ namespace Insight.GitProvider
                 }
                 else
                 {
+                    // Safe to reuse: a parent with a single child is never read again.
                     scope = parent.Scope;
                 }
 
-                UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId);
+                UpdateScopeSingleOrNoParent(deltas, scope, deletedServerPathToId, node.CommitHash);
             }
-            else if (IsMerge(node))
+            else
             {
-                var mergeInto = node.Parents[0];
-                var mergeFrom = node.Parents[1];
+                Debug.Assert(IsMerge(node));
 
-                var mergeFromScope = mergeFrom.Scope;
+                var mergeInto = node.Parents[0];
+                var mergeFromScopes = node.Parents.Skip(1).Select(parent => parent.Scope).ToList();
 
                 // We have to clone the merge scope. The same node may be processed later again as a parent node. Therefore we
                 // have to keep its scope untouched.
@@ -242,54 +232,57 @@ namespace Insight.GitProvider
 
                 scope = mergeIntoScope;
 
-                UpdateScopeTwoParents(deltas, mergeIntoScope, mergeFromScope, deletedServerPathToId, node.CommitHash);
-            }
-            else
-            {
-                Debug.Assert(false);
+                UpdateScopeMergeParents(deltas, mergeIntoScope, mergeFromScopes, deletedServerPathToId, node.CommitHash);
             }
 
             return (scope, deletedServerPathToId);
         }
 
 
-        private void UpdateScopeSingleOrNoParent(Differences deltas, Scope scope, Dictionary<string, string> deleted)
+        private void UpdateScopeSingleOrNoParent(Differences deltas, Scope scope, Dictionary<string, string> deleted, string commitHash)
         {
             foreach (var change in deltas.ChangesInCommit)
             {
-                // These are the changes done on the merge commit itself (fixing conflicts etc)
-                ApplyChangesToScope(scope, change, deleted);
+                ApplyChangesToScope(scope, change, deleted, commitHash);
             }
         }
 
         /// <summary>
-        /// Update the scope of mergeInto to reflect the changes made in the branch we merge from.
+        /// Update the scope of mergeInto to reflect the changes made in the branch(es) we merge from.
         /// When files are removed I collect them in the "deleted" dictionary.
         /// These are needed later to assign the id to the deleted file.
         /// </summary>
-        private void UpdateScopeTwoParents(Differences deltas, Scope mergeIntoScope, Scope mergeFromScope,  Dictionary<string, string> deleted, string commitHash)
+        private void UpdateScopeMergeParents(Differences deltas, Scope mergeIntoScope, IReadOnlyList<Scope> mergeFromScopes, Dictionary<string, string> deleted, string commitHash)
         {
             foreach (var change in deltas.DiffExclusiveToParent1)
             {
-                // These are the changes done on the feature branch. We merge them into the scope.
-                UpdateScopeFromMergeSource(mergeIntoScope, mergeFromScope, change, deleted, commitHash);
+                // These are the changes done on the feature branch(es). We merge them into the scope.
+                UpdateScopeFromMergeSource(mergeIntoScope, mergeFromScopes, change, deleted, commitHash);
             }
 
             foreach (var change in deltas.ChangesInCommit)
             {
                 // These are the changes done on the merge commit itself (fixing conflicts etc)
-                ApplyChangesToScope(mergeIntoScope, change, deleted);
+                ApplyChangesToScope(mergeIntoScope, change, deleted, commitHash);
             }
         }
 
-        private void UpdateScopeFromMergeSource(Scope mergeIntoScope, Scope mergeFromScope, TreeEntryChanges change,
+        private void UpdateScopeFromMergeSource(Scope mergeIntoScope, IReadOnlyList<Scope> mergeFromScopes, TreeEntryChanges change,
             IDictionary<string, string> deleted, string commitHash)
         {
             // Merge changes from feature branch. Apply all Ids we can find without ambiguity.
 
             if (change.Status == ChangeKind.Added)
             {
-                var idFrom = mergeFromScope.GetIdOrDefault(change.Path);
+                // The file may come from any of the merged branches. If they disagree
+                // about the id the situation is ambiguous and we reset tracking below.
+                var idsFrom = mergeFromScopes
+                    .Select(mergeFromScope => mergeFromScope.GetIdOrDefault(change.Path))
+                    .Where(id => id != null)
+                    .Distinct()
+                    .ToList();
+                var idFrom = idsFrom.Count == 1 ? idsFrom[0] : null;
+
                 var idInto = mergeIntoScope.GetIdOrDefault(change.Path);
                 if (idFrom != null && idInto == null &&
                     mergeIntoScope.GetServerPathOrDefault(Guid.Parse(idFrom)) == null)
@@ -309,20 +302,15 @@ namespace Insight.GitProvider
                 }
 
                 // In all other cases reset tracking
-                mergeIntoScope.Remove(change.Path);
-                mergeIntoScope.Add(change.Path);
-                _stats.ResetRenameTrackingOnFile++;
-                Warnings.Add(new WarningMessage(commitHash, $"Reset file rename tracking for {change.Path}."));
+                ResetTracking(mergeIntoScope, change.Path, commitHash);
             }
-            else if (change.Status == ChangeKind.Modified)
+            else if (change.Status == ChangeKind.Modified || change.Status == ChangeKind.TypeChanged)
             {
                 // Id must be known in main branch.
                 Debug.Assert(mergeIntoScope.IsKnown(change.Path));
             }
             else if (change.Status == ChangeKind.Deleted)
             {
-                // Neither of the (verified against the tree) parent scopes know this file!?!
-
                 var id = mergeIntoScope.GetIdOrDefault(change.Path);
                 if (id != null)
                 {
@@ -334,50 +322,90 @@ namespace Insight.GitProvider
             {
                 if (mergeIntoScope.IsKnown(change.OldPath) is false)
                 {
-                    mergeIntoScope.Remove(change.Path);
-                    mergeIntoScope.Add(change.Path);
+                    ResetTracking(mergeIntoScope, change.Path, commitHash);
                 }
                 else
                 {
                     mergeIntoScope.Update(change.OldPath, change.Path);
                 }
             }
+            else if (change.Status == ChangeKind.Copied)
+            {
+                // The copy source is ambiguous in a merge. The target is a new start.
+                ResetTracking(mergeIntoScope, change.Path, commitHash);
+            }
             else
             {
-                Debug.Fail("Not handled!");
+                // Should not appear in a committed tree diff. Do not crash the whole sync.
+                Debug.Fail($"Not handled: {change.Status}");
+                ResetTracking(mergeIntoScope, change.Path, commitHash);
             }
         }
 
-        private static void ApplyChangesToScope(Scope scope, TreeEntryChanges change, IDictionary<string, string> deleted)
+        /// <summary>
+        /// We can no longer follow the identity of the file. It starts over with a new id.
+        /// </summary>
+        private void ResetTracking(Scope scope, string serverPath, string commitHash)
         {
-            // Single parent
+            scope.Remove(serverPath);
+            scope.Add(serverPath);
+            _stats.ResetRenameTrackingOnFile++;
+            Warnings.Add(new WarningMessage(commitHash, $"Reset file rename tracking for {serverPath}."));
+        }
+
+        private void ApplyChangesToScope(Scope scope, TreeEntryChanges change, IDictionary<string, string> deleted, string commitHash)
+        {
+            // Single parent or changes done in a merge commit itself.
 
             if (change.Status == ChangeKind.Added)
             {
                 scope.Add(change.Path);
             }
-            else if (change.Status == ChangeKind.Modified)
+            else if (change.Status == ChangeKind.Modified || change.Status == ChangeKind.TypeChanged)
             {
                 // Scope is not affected
             }
             else if (change.Status == ChangeKind.Deleted)
             {
-                var id = scope.GetId(change.Path);
-                scope.Remove(change.Path);
-                deleted.Add(change.Path, id);
+                var id = scope.GetIdOrDefault(change.Path);
+                if (id != null)
+                {
+                    scope.Remove(change.Path);
+                    deleted.Add(change.Path, id);
+                }
+                else
+                {
+                    // Scope drift: the file was not tracked, so there is nothing to remove.
+                    Warnings.Add(new WarningMessage(commitHash, $"Deleted file was not tracked: {change.Path}"));
+                }
             }
             else if (change.Status == ChangeKind.Renamed)
             {
-                scope.Update(change.OldPath, change.Path);
+                if (scope.IsKnown(change.OldPath) is false)
+                {
+                    // Scope drift: we don't know the source of the rename.
+                    ResetTracking(scope, change.Path, commitHash);
+                }
+                else
+                {
+                    scope.Update(change.OldPath, change.Path);
+                }
+            }
+            else if (change.Status == ChangeKind.Copied)
+            {
+                // A copy is a new start for the target file.
+                scope.Add(change.Path);
             }
             else
             {
-                Debug.Fail("Not handled!");
+                // Conflicted, Unreadable etc. should not appear in a committed tree diff.
+                Debug.Fail($"Not handled: {change.Status}");
+                ResetTracking(scope, change.Path, commitHash);
             }
         }
 
         private ChangeItem CreateChangeItem(TreeEntryChanges change, Scope scope,
-            Dictionary<string, string> deletedServerPathToId)
+            Dictionary<string, string> deletedServerPathToId, string commitHash)
         {
             var item = new ChangeItem();
             item.Kind = ToChangeKind(change.Status);
@@ -391,7 +419,15 @@ namespace Insight.GitProvider
             if (item.Id == null)
             {
                 Debug.Assert(change.Status == ChangeKind.Deleted);
-                item.Id = deletedServerPathToId[change.Path];
+                if (deletedServerPathToId.TryGetValue(change.Path, out var deletedId) is false)
+                {
+                    // Scope drift: we never tracked this file. Use a one time id.
+                    // CleanupHistory drops the item because the id is not alive at head.
+                    deletedId = Guid.NewGuid().ToString();
+                    Warnings.Add(new WarningMessage(commitHash, $"No id found for {change.Path}. Using a one time id."));
+                }
+
+                item.Id = deletedId;
             }
 
 
@@ -404,12 +440,15 @@ namespace Insight.GitProvider
             cs.Comment = commit.MessageShort;
             cs.Id = commit.Sha;
             cs.Committer = commit.Author.Name;
-            cs.Date = commit.Author.When.LocalDateTime; // ToString("yyyy-MM-dd'T'HH:mm:ssK")); // Instead of s or o
+
+            // Committer date, not author date. After a rebase or cherry-pick the author date
+            // may be older than the parent commit and would break the history ordering.
+            cs.Date = commit.Committer.When.LocalDateTime;
             return cs;
         }
 
         /// <summary>
-        ///     Calculates the difference in working tree to each parent
+        ///     Calculates the difference of the commit tree to each parent tree.
         /// </summary>
         private Differences CalculateDiffs(Repository repo, Commit commit)
         {
@@ -419,31 +458,17 @@ namespace Insight.GitProvider
 
             if (parents.Length == 0)
             {
-                var diffToParent = new List<TreeEntryChanges>();
-                foreach (var change in repo.Diff.Compare<TreeChanges>(null, commit.Tree, options))
-                {
-                    diffToParent.Add(change);
-                }
-
+                // Root commit: diff against the empty tree.
+                var diffToParent = repo.Diff.Compare<TreeChanges>(null, commit.Tree, options).ToList();
                 return new Differences(diffToParent);
             }
 
-            if (parents.Length == 1)
-            {
-                var diffToParent = repo.Diff.Compare<TreeChanges>(parents[0].Tree, commit.Tree, options).ToList();
-                return new Differences(diffToParent);
-            }
+            // Regular commits have one parent, merge commits two or more (octopus).
+            var diffsToParents = parents
+                .Select(parent => repo.Diff.Compare<TreeChanges>(parent.Tree, commit.Tree, options).ToList())
+                .ToList();
 
-            // Merge commit has two parents
-            Debug.Assert(parents.Length == 2);
-
-            var parentMergeInto = parents[0];
-            var diffToParent1 = repo.Diff.Compare<TreeChanges>(parentMergeInto.Tree, commit.Tree, options).ToList();
-
-            var parentMergeFrom = parents[1];
-            var diffToParent2 = repo.Diff.Compare<TreeChanges>(parentMergeFrom.Tree, commit.Tree, options).ToList();
-
-            return new Differences(diffToParent1, diffToParent2);
+            return new Differences(diffsToParents);
         }
 
         /// <summary>
@@ -478,7 +503,7 @@ namespace Insight.GitProvider
         {
             if (node.Scope == null)
             {
-                throw new Exception("Node has node scope assigned!");
+                throw new Exception("Node has no scope assigned!");
             }
 
             var expectedServerPaths = GetAllTrackedFiles(node.CommitHash);
@@ -508,6 +533,8 @@ namespace Insight.GitProvider
                     return KindOfChange.Rename;
                 case ChangeKind.Copied:
                     return KindOfChange.Copy;
+                case ChangeKind.TypeChanged:
+                    return KindOfChange.TypeChanged;
             }
 
             return KindOfChange.None;
@@ -528,7 +555,8 @@ namespace Insight.GitProvider
 
         private bool IsMerge(GraphNode graphNode)
         {
-            return graphNode.Parents.Count == 2;
+            // An octopus merge can have more than two parents.
+            return graphNode.Parents.Count >= 2;
         }
     }
 }

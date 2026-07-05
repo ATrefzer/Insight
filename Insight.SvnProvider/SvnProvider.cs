@@ -264,7 +264,11 @@ namespace Insight.SvnProvider
                     progress.Message($"Calculating work {count}/{all}");
                 });
 
-            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
+            // Lower case keys are the lookup contract. Paths differing only in casing
+            // would make a plain ToDictionary throw on duplicate keys.
+            return fileToContribution
+                .GroupBy(pair => pair.Key.ToLowerInvariant())
+                .ToDictionary(group => group.Key, group => group.First().Value);
         }
 
         private string Blame(string path)

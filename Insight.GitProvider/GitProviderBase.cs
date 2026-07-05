@@ -139,9 +139,9 @@ namespace Insight.GitProvider
             return trackedServerPaths.Select(sp => _mapper.MapToLocalFile(sp)).ToList();
         }
 
-        protected string GetMasterHead()
+        protected string GetHeadHash()
         {
-            return _gitCli.GetMasterHead(_projectBase);
+            return _gitCli.GetHeadHash();
         }
 
 
@@ -186,7 +186,11 @@ namespace Insight.GitProvider
                                  progress.Message($"Calculating work {count}/{all}");
                              });
 
-            return fileToContribution.ToDictionary(pair => pair.Key.ToLowerInvariant(), pair => pair.Value);
+            // Lower case keys are the lookup contract. Git can track paths that differ
+            // only in casing, so a plain ToDictionary could throw on duplicate keys.
+            return fileToContribution
+                .GroupBy(pair => pair.Key.ToLowerInvariant())
+                .ToDictionary(group => group.Key, group => group.First().Value);
         }
 
         protected ChangeSetHistory ParseLogString(string gitLogString)
@@ -250,13 +254,24 @@ namespace Insight.GitProvider
         {
             var name = new StringBuilder();
 
-            name.Append(localFile.FullName.GetHashCode().ToString("X"));
+            // Stable hash. string.GetHashCode is randomized per process on .NET (Core),
+            // which would defeat the cache on every restart.
+            name.Append(GetStableHash(localFile.FullName));
             name.Append("_");
             name.Append(revision);
             name.Append("_");
             name.Append(localFile.Name);
 
             return Path.Combine(GetHistoryCache(), name.ToString());
+        }
+
+        private static string GetStableHash(string text)
+        {
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(text.ToLowerInvariant()));
+                return Convert.ToHexString(bytes, 0, 8);
+            }
         }
 
         protected void SaveHistory(ChangeSetHistory history)

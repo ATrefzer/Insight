@@ -22,7 +22,7 @@ namespace Insight.GitProvider
         /// %P   Parents (all sha1s in one line) First commit does not have a parent!
         /// Log of the whole branch or a single file shall have the same output for easier parsing.
         /// </summary>
-        private const string LogFormat = "START_HEADER%n%H%n%aN%n%ad%n%P%n%s%nEND_HEADER";
+        private const string LogFormat = "START_HEADER%n%H%n%aN%n%cd%n%P%n%s%nEND_HEADER";
 
         const string MainBranch = "master";
         private readonly string _workingDirectory;
@@ -106,7 +106,9 @@ namespace Insight.GitProvider
 
             var program = "git";
             var args = "diff-index -M -C --quiet HEAD";
-            var result = ExecuteCommandLine(program, args);
+
+            // A non zero exit code means "changes found" here, so don't treat it as an error.
+            var result = ExecuteCommandLine(program, args, throwOnError: false);
 
             // Exit code 0 = no changes
             return result.ExitCode != 0;
@@ -168,7 +170,9 @@ namespace Insight.GitProvider
         {
             var program = "git";
             var args = "symbolic-ref --short -q HEAD";
-            var result = ExecuteCommandLine(program, args);
+
+            // Exits with 1 (and no output) on a detached HEAD. Not an error here.
+            var result = ExecuteCommandLine(program, args, throwOnError: false);
             return result.StdOut.Trim();
         }
 
@@ -176,32 +180,38 @@ namespace Insight.GitProvider
         {
             const string program = "git";
             const string args = "symbolic-ref --short -q HEAD";
-            var result = ExecuteCommandLine(program, args);
+            var result = ExecuteCommandLine(program, args, throwOnError: false);
             return string.Compare(result.StdOut.Trim('\n'), _branch, System.StringComparison.OrdinalIgnoreCase) == 0;
         }
 
-        private ProcessResult ExecuteCommandLine(string program, string args)
+        private ProcessResult ExecuteCommandLine(string program, string args, bool throwOnError = true)
         {
             var result = _runner.RunProcess(program, args, _workingDirectory);
 
-            if (!string.IsNullOrEmpty(result.StdErr))
+            // Decide by exit code, not by stderr. Git writes harmless warnings
+            // (line ending hints, rename limit etc.) to stderr while succeeding.
+            if (throwOnError && result.ExitCode != 0)
             {
-                throw new ProviderException(result.StdErr);
+                var message = string.IsNullOrEmpty(result.StdErr)
+                    ? $"'{program} {args}' failed with exit code {result.ExitCode}."
+                    : result.StdErr;
+                throw new ProviderException(message);
             }
 
             return result;
         }
 
-        public string GetMasterHead(string repoDirectory)
+        /// <summary>
+        /// Returns the hash of the commit HEAD points to.
+        /// Note: We must not read .git\refs\heads\... directly. The loose ref file
+        /// disappears as soon as git packs the refs (git gc).
+        /// </summary>
+        public string GetHeadHash()
         {
-            var branch = GetCheckedOutBranch();
-            var masterRefPath = Path.Combine(repoDirectory, $".git\\refs\\heads\\{branch}");
-            if (!File.Exists(masterRefPath))
-            {
-                throw new Exception("Can't locate master's head.");
-            }
-            var lines = File.ReadAllLines(masterRefPath);
-            return lines.Single().Substring(0, 40);
+            const string program = "git";
+            const string args = "rev-parse HEAD";
+            var result = ExecuteCommandLine(program, args);
+            return result.StdOut.Trim();
         }
     }
 }
