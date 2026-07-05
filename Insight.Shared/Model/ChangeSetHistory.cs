@@ -55,15 +55,20 @@ namespace Insight.Shared.Model
                         continue;
                     }
 
-                    if (filter != null && !filter.IsAccepted(item.LocalPath))
-                    {
-                        ignoredIds.Add(id);
-                        continue;
-                    }
-
                     if (!artifacts.ContainsKey(id))
                     {
                         // The changeset where we see the item the first time is the latest revision!
+                        // Whether we track this file at all is decided here, once, using its current
+                        // (= latest) path. Older items of the same id often carry a path from before
+                        // a rename, which by now no longer exists on disk and would never pass the
+                        // filter or the Exists() check - that must not throw away commits we already
+                        // counted for this id.
+
+                        if (filter != null && !filter.IsAccepted(item.LocalPath))
+                        {
+                            ignoredIds.Add(id);
+                            continue;
+                        }
 
                         if (!Exists(item))
                         {
