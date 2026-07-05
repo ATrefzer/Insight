@@ -39,6 +39,10 @@ DiffExclusiveToParent1 = DiffToParent1.Where(c => !pathsInBoth.Contains(c.Path))
 
 Deine Tests merken das nicht, weil alle Merge-Tests konfliktfrei sind — dort *ist* die Schnittmenge auch semantisch leer.
 
+
+
+**Anmerkung: Funktioniert hat das trotzdem! Vermutlich wurden interen die gleichen TreeEntryChanges Instanzen im Merge Commit verwendet. So ist es auf jeden Fall klar.**
+
 ### 🔴 B2: `Scope.Update` pflegt die Rückwärts-Map nicht
 
 [Scope.cs:59-68](https://claude.ai/epitaxy/Insight.GitProvider/Scope.cs:59): Bei einem Rename wird nur `_serverPathToId` aktualisiert — **`_idToServerPath[id]` zeigt danach für immer auf den alten Pfad.** Die Klasseninvariante "beide Maps spiegeln sich" ist nach dem ersten Rename gebrochen. Konsumenten sind genau die heiklen Merge-Checks: [GitProvider.cs:295](https://claude.ai/epitaxy/Insight.GitProvider/GitProvider.cs:295) (`GetServerPathOrDefault`) und [GitProvider.cs:305](https://claude.ai/epitaxy/Insight.GitProvider/GitProvider.cs:305) (`GetServerPath(...) == change.Path`) — letzterer Vergleich liefert nach einem früheren Rename fälschlich `false` und triggert unnötige Tracking-Resets. Fix ist eine Zeile: in `Update` auch `_idToServerPath[id] = toServerPath;` setzen. Verwandt: `Scope.Add` ([Scope.cs:122-123](https://claude.ai/epitaxy/Insight.GitProvider/Scope.cs:122)) macht `Debug.Assert(nicht enthalten)` und ruft dann trotzdem `_serverPathToId.Remove(serverPath)` auf — falls der Pfad im Release doch existiert, bleibt der alte Eintrag in `_idToServerPath` als Leiche zurück. Nutze dort dein eigenes `Remove(serverPath)`, das beide Maps räumt.
@@ -92,8 +96,6 @@ Deine Tests merken das nicht, weil alle Merge-Tests konfliktfrei sind — dort *
 3. Sortierung auf topologische Sequenz statt Author-Date umstellen (B5) — du hast den Graphen bereits, es ist fast geschenkt.
 
 Gesamteindruck: Das ist durchdachte Arbeit an einem Problem, das härter ist, als es aussieht — die Kommentare zeigen, dass du die Fallstricke verstanden hast. Die gefundenen Bugs sind fast alle vom Typ "stille Annahme, die reale Repos brechen" (Referenz-Equality, packed refs, Rebases), nicht Denkfehler im Algorithmus selbst. Der Kern — Scope-Propagation durch die DAG mit Reset bei Ambiguität — hält.
-
-
 
 
 
